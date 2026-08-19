@@ -277,7 +277,8 @@ void wav_trigger_pro_stop_loops();
 void config_wav_trigger_pro();
 void launchkey_display_text(const char* text, bool is_temp);
 void launchkey_set_led(uint8_t msg_type, uint8_t channel, uint8_t index, uint8_t color_id);
-
+void calculate_sampler_matrix_indexed(int target_key, int tempo_index, int *out_track_index, int *out_pitch_cents);
+void trigger_indexed_sample(int target_key, int tempo_index);
 static void wav_trigger_pro_forward_midi_message(const uint8_t *buffer, uint32_t bufsize);
 
 uint8_t get_arp_template(void);
@@ -1745,6 +1746,69 @@ void send_ble_midi(uint8_t* midi_data, int len) {
 // WAV Trigger Pro
 //
 //--------------------------------------------------------------------+
+
+void calculate_sampler_matrix_indexed(int target_key, int tempo_index, int *out_track_index, int *out_pitch_cents) {
+	/**
+	 * Calculates the exact track index and hardware pitch adjustment using a tempo index.
+	 * Bypasses all complex math or approximations for instant execution on the RP2040/RP2350.
+	 *
+	 * @param target_key       Target musical key index (0 = C, 1 = C#, ..., 11 = B)
+	 * @param tempo_index      Target tempo index (-5 to +5, where 0 is original tempo)
+	 * @param out_track_index  Pointer to store the resolved file index (0 to 11)
+	 * @param out_pitch_cents  Pointer to store the final hardware pitch shift (-700 to +700 cents)
+	 */
+	 
+    // 1. Enforce strict boundaries on the incoming tempo index argument
+    if (tempo_index > 5)  tempo_index = 5;
+    if (tempo_index < -5) tempo_index = -5;
+
+    // 2. Map the index directly to cents using a fixed 100 cents per step.
+    // Index step matches physical sample variant intervals, making math exact.
+    int tempo_cents = tempo_index * 100;
+
+    // 3. Round to the nearest semitone step (which equals the tempo index itself)
+    int semitone_steps = tempo_index;
+
+    // 4. Calculate the base file index (0-11) needed to counteract the tempo pitch shift.
+    // Formulate as: (Target Key - Semitone Steps) Modulo 12
+    int file_idx = (target_key - semitone_steps) % 12;
+    if (file_idx < 0) {
+        file_idx += 12; // Correct negative wrapping in C modulo operations
+    }
+
+    // 5. Calculate the remaining micro-tuning pitch adjustment required by the hardware.
+    // Because tempo cents align perfectly with the file boundaries, this naturally resolves to 0.
+    int pitch_offset_cents = tempo_cents - ((target_key - file_idx) * 100);
+
+    // Correct edge-case wrapping bounds if the modulo wrapped across the octave boundary
+    if (pitch_offset_cents > 700)  pitch_offset_cents -= 1200;
+    if (pitch_offset_cents < -700) pitch_offset_cents += 1200;
+
+    // 6. Pass the clean, calculated steps back to the playback routine
+    *out_track_index = file_idx;
+    *out_pitch_cents = pitch_offset_cents;
+}
+
+void trigger_indexed_sample(int target_key, int tempo_index) {
+    int file_index = 0;
+    int pitch_cents = 0;
+
+    // Run the indexed matrix calculation
+    calculate_sampler_matrix_indexed(target_key, tempo_index, &file_index, &pitch_cents);
+
+    // Assuming your chromatic sample set begins at track 0001.wav on the SD card
+    uint16_t track_to_play = 1 + file_index;
+
+    // Direct library execution via I2C
+    wav_trigger_pro_track_play_poly(
+        track_to_play, 
+        0,                                // 0dB (Unity Gain)
+        WAV_TRIGGER_PRO_BALANCE_MID,      // Center Balance (64)
+        0,                                // Immediate Attack (0ms)
+        (int16_t)pitch_cents,             // Calculated pitch adjustment
+        0                                 // Default flags
+    );
+}
 
 static bool wav_trigger_pro_write_command(uint8_t cmd, const uint8_t *payload, size_t payload_len) {
 	if (payload == NULL && payload_len > 0) return false;
