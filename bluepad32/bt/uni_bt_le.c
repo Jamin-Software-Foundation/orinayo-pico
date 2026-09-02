@@ -99,6 +99,8 @@ void play_chord(bool on, bool up, uint8_t green, uint8_t red, uint8_t yellow, ui
 void gamepad_bluetooth_handle_data();
 void config_guitar(uint8_t mode);
 void handle_group_change();
+void next_style_group();
+void prev_style_group();
 
 extern int applied_velocity;
 extern int transpose;
@@ -963,8 +965,8 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else if (event_data[4] == 8)   {but2 = 1; yellow = 0;}	// root note up/down
 			else if (event_data[4] == 16)  {but3 = 1; blue = 0;}	// 3rd note up/root note down
 			else if (event_data[4] == 32)  {but4 = 1; orange = 0;}	// 5th note up/root note down							
-			else if (event_data[4] == 64)  {nextStyleGroup();}		// increment style groups
-			else if (event_data[4] == 128) {prevStyleGroup();}		// decrement style group		
+			else if (event_data[4] == 64)  {next_style_group();}	// increment style groups
+			else if (event_data[4] == 128) {prev_style_group();}	// decrement style group		
 		}
 		else
 
@@ -1512,14 +1514,14 @@ bool uni_bt_le_is_enabled() {
     return ble_enabled;
 }
 
-void nextStyleGroup() {
+void next_style_group() {
 	style_group++;
-	if (style_group > 20) nextStyleGroup = 0;
+	if (style_group > 20) style_group = 0;
 	handle_group_change();
 }
 
-void prevStyleGroup() {
+void prev_style_group() {
 	style_group--;
-	if (style_group < 0) nextStyleGroup = 20;
+	if (style_group < 0) style_group = 20;
 	handle_group_change();	
 }
