@@ -98,6 +98,7 @@ void midi_seqtrak_tempo(int tempo);
 void play_chord(bool on, bool up, uint8_t green, uint8_t red, uint8_t yellow, uint8_t blue, uint8_t orange);
 void gamepad_bluetooth_handle_data();
 void config_guitar(uint8_t mode);
+void handle_group_change();
 
 extern int applied_velocity;
 extern int transpose;
@@ -154,6 +155,7 @@ extern uint8_t logo_knob_up;
 extern uint8_t logo_knob_down;
 
 extern int active_strum_pattern;
+extern int style_group;
 extern bool enable_seqtrak;
 extern bool enable_modx;
 
@@ -904,10 +906,10 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			if (event_data[4] == 2)   	   config_guitar(1);		// ketron arranger
 			else if (event_data[4] == 4)   config_guitar(2);		// ample guitar
 			else if (event_data[4] == 8)   config_guitar(3);		// midi drums
-			else if (event_data[4] == 16)  config_guitar(4);		// yamaha seqtrak
+			else if (event_data[4] == 16)  config_guitar(4);		// wav trigger pro
 			else if (event_data[4] == 32)  config_guitar(5);		// yamaha modx/montage					
 			else if (event_data[4] == 64)  config_guitar(11);		// mpc sample
-			else if (event_data[4] == 128) config_guitar(19);		// wav trigger pro	
+			else if (event_data[4] == 128) config_guitar(19);		// yamaha seqtrak
 		}		
 		
 		// detect paddle neutral
@@ -961,8 +963,8 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else if (event_data[4] == 8)   {but2 = 1; yellow = 0;}	// root note up/down
 			else if (event_data[4] == 16)  {but3 = 1; blue = 0;}	// 3rd note up/root note down
 			else if (event_data[4] == 32)  {but4 = 1; orange = 0;}	// 5th note up/root note down							
-			else if (event_data[4] == 64)  {}						// nothing
-			else if (event_data[4] == 128) {}						// nothing			
+			else if (event_data[4] == 64)  {nextStyleGroup();}		// increment style groups
+			else if (event_data[4] == 128) {prevStyleGroup();}		// decrement style group		
 		}
 		else
 
@@ -1508,4 +1510,16 @@ bool uni_bt_le_is_enabled() {
     ble_enabled = val.u8;
 
     return ble_enabled;
+}
+
+void nextStyleGroup() {
+	style_group++;
+	if (style_group > 20) nextStyleGroup = 0;
+	handle_group_change();
+}
+
+void prevStyleGroup() {
+	style_group--;
+	if (style_group < 0) nextStyleGroup = 20;
+	handle_group_change();	
 }

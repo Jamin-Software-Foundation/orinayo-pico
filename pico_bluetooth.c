@@ -1356,8 +1356,8 @@ void gamepad_bluetooth_handle_data() {
 		return;			
 	}
 
-	if (mbut2 != menu) {									// menu - select registrations/style groups
-		if (enable_arranger_mode) midi_ketron_footsw(8, mbut2 ? true : false);						// 	user defined from footswitch	
+	if (mbut2 != menu) {																			// menu - select registrations/style groups
+		if (enable_arranger_mode) midi_ketron_footsw(8, mbut2 ? true : false);						// user defined from footswitch	
 		menu = mbut2;
 
 		if (green && blue && orange) 
@@ -1529,64 +1529,8 @@ void gamepad_bluetooth_handle_data() {
 		}
 		
 		// Now check what device ia active and act accordingly
-		
-		if (enable_mpx_looper)
-		{
-			if (mbut2) {
-				// do nothing. single drum group active
-			}
-		}
-		else
-			
-		if (enable_nanobox_tangerine) 
-		{
-			if (mbut2)  {				
-				midi_send_program_change(0xCF, style_group + 2); // select preset on channel 16 and skip both 1010 pianos					
-			}
-		}
-		else
-			
-		if (enable_wav_trigger_pro) 
-		{
-			if (mbut2)  {				
-				sampler_midi_note(0x9F, 36 + style_group, 127);			 // select and load preset  
-			}
-		}		
-		else
-			
-		if (enable_synth) 
-		{
-			if (mbut2)  {
-				midi_send_program_change(0xC0, style_group); // select synth patch
-			}
-		}		
-		else
-	
-		if (enable_seqtrak) 
-		{
-			if (mbut2) {
-				midi_send_program_change(0xC0, style_group % 8);	// set PC to project no
-				midi_send_control_change(0xB0, 0, 64); 				// MSB 64						
-				midi_send_control_change(0xB0, 32, 0); 				// LSB 0
-			}
-		}
-		else 
-			
-		if (enable_modx) 
-		{
-			if (mbut2) {
-				// TODO - FIX!!!
-				midi_send_program_change(0xC0, style_group % 16);	// set PC to performance/set list no						
-				midi_send_control_change(0xB0, 0, 62); 				// MSB 62	
-				midi_send_control_change(0xB0, 32, 0); 				// LSB 0 Page 1											
-			}
-		}
-		else if (!enable_ample_guitar) {
-			if (mbut2) {
-				midi_send_control_change(0xB3, 15, style_group + 1);// select style group
-			}							
-		}
-			
+		handle_group_change();
+					
 		finished_processing = true;			
 		return;		
 	}		
@@ -1925,6 +1869,68 @@ void gamepad_bluetooth_handle_data() {
 	}	
 
 	finished_processing = true;				
+}
+
+void handle_group_change() {
+	// action a style_group change
+	
+	if (enable_mpx_looper)
+	{
+		if (mbut2) {
+			// do nothing. single drum group active
+		}
+	}
+	else
+		
+	if (enable_nanobox_tangerine) 
+	{
+		if (mbut2)  {				
+			midi_send_program_change(0xCF, style_group + 2); // select preset on channel 16 and skip both 1010 pianos					
+		}
+	}
+	else
+		
+	if (enable_wav_trigger_pro) 
+	{
+		if (mbut2)  {				
+			sampler_midi_note(0x9F, 36 + style_group, 127);			 // select and load preset  
+		}
+	}		
+	else
+		
+	if (enable_synth) 
+	{
+		if (mbut2)  {
+			midi_send_program_change(0xC0, style_group); // select synth patch
+		}
+	}		
+	else
+
+	if (enable_seqtrak) 
+	{
+		if (mbut2) {
+			midi_send_program_change(0xC0, style_group % 8);	// set PC to project no
+			midi_send_control_change(0xB0, 0, 64); 				// MSB 64						
+			midi_send_control_change(0xB0, 32, 0); 				// LSB 0
+		}
+	}
+	else 
+		
+	if (enable_modx) 
+	{
+		if (mbut2) {
+			// TODO - FIX!!!
+			midi_send_program_change(0xC0, style_group % 16);	// set PC to performance/set list no						
+			midi_send_control_change(0xB0, 0, 62); 				// MSB 62	
+			midi_send_control_change(0xB0, 32, 0); 				// LSB 0 Page 1											
+		}
+	}
+	else if (!enable_ample_guitar) {
+		if (mbut2) {
+			midi_send_control_change(0xB3, 15, style_group + 1);// select style group
+		}							
+	}
+	
 }
 
 int compDown(const void *a, const void *b) {
