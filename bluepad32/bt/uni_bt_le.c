@@ -825,7 +825,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		else		
 		
 		if (query_state == 1) 	{
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false); 
+			// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false); 
 				
 			if (liberlive_enabled) {			
 				// Write Chord Key Mapping			
@@ -853,7 +853,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 				
 			if (sonicake_neouke_enabled) {
-				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true); 				
+				// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true); 				
 				query_state = 2;
 			}
 		}
@@ -870,7 +870,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		else
 
 		if (query_state == 3) 	{
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true); 	
+			// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true); 	
 
 			if (liberlive_enabled) {
 				//uint8_t set_drum[10] = {177, 30, 23, 5, 0, 46, 24, 0, 1, 1}; // drum group, item, paddle, difficulty, auto-bass
@@ -930,7 +930,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			ll_cannot_fire = (event_data[5] == 0); // when paddle in neutral
 			
 			if (ll_have_fired && ll_cannot_fire) {
-				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);			
+				// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);			
 				ll_have_fired = false;	
 
 				left = 1; 			
@@ -1201,13 +1201,13 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				ll_cannot_fire = true;
 				
 				gamepad_bluetooth_handle_data();						
-				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
+				// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
 			}	
 		}
 		else
 			
 		if (sonicake_neouke_enabled) {
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);	
+			// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);	
 			config_guitar(4);								// WAV Trigger Ppro (default)
 			
 			// detect key press
@@ -1353,7 +1353,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			}	
 
 			gamepad_bluetooth_handle_data();						
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);			
+			// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);			
 		}
     }
 }
@@ -1479,7 +1479,8 @@ void uni_bt_le_on_gap_event_advertising_report(const uint8_t* packet, uint16_t s
 
     if (name[0] == 'N' && name[1] == 'e' && name[2] == 'o' && name[3] == 'U' && name[4] == 'k' && name[5] == 'e') {
 		
-		if (!sonicake_neouke_enabled) {			
+		if (!sonicake_neouke_enabled) {		
+			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
 			sonicake_neouke_enabled = true;
 			hog_connect(addr, addr_type);		
 			return;	

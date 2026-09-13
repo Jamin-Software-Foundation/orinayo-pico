@@ -17,8 +17,8 @@
 #include "tusb.h"
 #include "pio_usb.h"
 #include "pico_bluetooth.h"
-#include "ble_midi_controller.h"
-#include "ble_midi_client.h"
+//#include "ble_midi_controller.h"
+//#include "ble_midi_client.h"
 #include "async_timer.h"
 #include "storage.h"
 #include "looper.h"
@@ -58,7 +58,7 @@ void pico_set_led(bool led_on) {
     gpio_put(PICO_DEFAULT_LED_PIN, led_on);
 #elif defined(CYW43_WL_GPIO_LED_PIN)
     // Ask the wifi "driver" to set the GPIO on or off
-    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_on);
+    // cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_on);
 #endif
 }
 
@@ -221,7 +221,7 @@ uint8_t previous_guitar_note = 0;
 
 bool midi_keyboard_connected = false;
 
-void send_ble_midi(uint8_t* midi_data, int len);
+//void send_ble_midi(uint8_t* midi_data, int len);
 void midi_task(void);
 void midi_start_stop(bool start);
 void midi_send_note(uint8_t command, uint8_t note, uint8_t velocity);
@@ -368,7 +368,7 @@ int main() {
     while (true) {
 		tud_task(); // tinyusb device task		
 		
-		if (enable_midi_drums) cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);			
+		//if (enable_midi_drums) cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);			
 		
 		while (tud_midi_available()) {
 			uint8_t buffer[4] = {0};			
@@ -382,7 +382,7 @@ int main() {
 			uart_write_blocking(UART_ID, buffer, 4);
 			uart_tx_wait_blocking(UART_ID); 			
 		
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);				
+			// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);				
 		}
 
 		while (uart_is_readable(UART_ID)) {
@@ -459,7 +459,7 @@ void name_received_cb(tuh_xfer_t* xfer) {
 			irig_pro_connected = true;
 			
 			config_wav_trigger_pro();
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
+			// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
 		}
 		else
 			
@@ -469,7 +469,7 @@ void name_received_cb(tuh_xfer_t* xfer) {
 			launchkey_connected = true;
 			
 			config_wav_trigger_pro();;
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
+			// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
 		}
 		else
 			
@@ -478,7 +478,7 @@ void name_received_cb(tuh_xfer_t* xfer) {
 			midi_keyboard_connected = true;
 			
 			config_wav_trigger_pro();;
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
+			// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
 		}
 		else
 			
@@ -486,14 +486,14 @@ void name_received_cb(tuh_xfer_t* xfer) {
 			midi_keyboard_connected = false;
 			enable_mpx_looper = true;	
 			config_mpx_looper();
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
+			// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
 		}
 		else
 			
 		if (name[0] == 'M' && name[1] == 'P' && name[2] == 'C' && name[3] == ' ' && name[4] == 'S' && name[5] == 'a' && name[6] == 'm' && name[7] == 'p' && name[8] == 'l' && name[9] == 'e') {		
 			midi_keyboard_connected = false;
 			enable_mpc_sample = true;	
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
+			// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
 		}
 		else
 			
@@ -508,7 +508,7 @@ void name_received_cb(tuh_xfer_t* xfer) {
 			// Buttons       (B) Note On/Off 0x20 - 0x2F (16 buttons)
 			
 			midi_keyboard_connected = true;
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
+			// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
 		}
 		else
 
@@ -516,7 +516,7 @@ void name_received_cb(tuh_xfer_t* xfer) {
 			midi_keyboard_connected = false;
 			enable_nanobox_tangerine = true;
 			config_nanobox_tangerine();
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
+			// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
 		}
     }
 }
@@ -526,7 +526,7 @@ void tuh_mount_cb(uint8_t daddr) {
 
     // Request the Product String (the device name)
     // 0x0409 is the Language ID for English (US)
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);	
+	// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);	
     tuh_descriptor_get_product_string(daddr, 0x0409, temp_buf, sizeof(temp_buf), name_received_cb, 0);
 }
 
@@ -536,7 +536,7 @@ void tuh_umount_cb(uint8_t daddr) {
 		launchkey_connected = false;
 		launchkey_daw_mode = false;
 	}
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);	
+	// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);	
 }
 
 void tuh_midi_mount_cb(uint8_t idx, const tuh_midi_mount_cb_t* mount_cb_data) {
@@ -566,7 +566,7 @@ void tuh_midi_umount_cb(uint8_t idx) {
 		launchkey_daw_mode    = false;
 		irig_pro_connected	  = false;
 	}
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
+	// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
 }
 
 //--------------------------------------------------------------------+
@@ -1127,7 +1127,7 @@ void tuh_midi_rx_cb(uint8_t idx, uint32_t xferred_bytes) {
 			}
 		}
 	
-		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
+		// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
 	}
 }
 
@@ -1137,11 +1137,11 @@ void tuh_midi_tx_cb(uint8_t idx, uint32_t xferred_bytes) {
 }
 
 void tud_mount_cb(void) {
-  cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+  // cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
 }
 
 void tud_umount_cb(void) {
-  cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
+  // cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
 }
 
 void tud_suspend_cb(bool remote_wakeup_en) {
@@ -1149,12 +1149,12 @@ void tud_suspend_cb(bool remote_wakeup_en) {
 	// remote_wakeup_en : if host allow us  to perform remote wakeup
 	// Within 7ms, device must draw an average of current less than 2.5 mA from bus	
   (void) remote_wakeup_en;
-  cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
+  // cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
 }
 
 void tud_resume_cb(void) {
 	// Invoked when usb bus is resumed	
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+	// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
 }
 
 //--------------------------------------------------------------------+
@@ -1724,7 +1724,7 @@ void midi_n_stream_write(uint8_t itf, uint8_t cable_num, uint8_t *buffer, uint32
 	wav_trigger_pro_forward_midi_message(buffer, bufsize);
 }
 
-void send_ble_midi(uint8_t* midi_data, int len) {
+//void send_ble_midi(uint8_t* midi_data, int len) {
 	/**
 	* @brief Send a MIDI 1.0 byte stream to the connected BLE MIDI peripheral.
 	*
@@ -1736,10 +1736,10 @@ void send_ble_midi(uint8_t* midi_data, int len) {
 	* @param midi_data Pointer to the MIDI byte stream.
 	* @param len       Number of bytes to send (must fit in a uint8_t, max 255).
 	*/	
-	if (midi_data == NULL || len <= 0 || len > 255) return;
-	if (!ble_midi_controller_is_ready()) return;
-	ble_midi_client_stream_write((uint8_t)len, midi_data);
-}
+	//if (midi_data == NULL || len <= 0 || len > 255) return;
+	//if (!ble_midi_controller_is_ready()) return;
+	//ble_midi_client_stream_write((uint8_t)len, midi_data);
+//}
 
 //--------------------------------------------------------------------+
 //

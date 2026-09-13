@@ -1,5 +1,5 @@
 #include "pico_bluetooth.h"
-#include "ble_midi_controller.h"
+//#include "ble_midi_controller.h"
 
 #include <stddef.h>
 #include <string.h>
@@ -353,7 +353,7 @@ static void pico_bluetooth_on_init_complete(void) {
   // BAO disable BLE for now
   //ble_midi_controller_scan_begin();
 
-  cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+  //cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
 }
 
 static uni_error_t pico_bluetooth_on_device_discovered(bd_addr_t addr, const char* name, uint16_t cod, uint8_t rssi) {
@@ -372,7 +372,7 @@ static uni_error_t pico_bluetooth_on_device_discovered(bd_addr_t addr, const cha
   // Check if it's a Gamepad controller
   if (name && (strstr(name, "STANDARD GAMEPAD"))) {
     // PICO_INFO("Gamepad controller detected! Attempting connection...\n");
-	 cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+	 //cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
   }
 
   // As an example, if you want to filter out keyboards, do:
@@ -402,14 +402,14 @@ static void pico_bluetooth_on_device_disconnected(uni_hid_device_t* d) {
   // Re-enable scanning when a device is disconnected
   uni_bt_start_scanning_and_autoconnect_safe();
   
-  cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);  
+  //cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);  
   // PICO_DEBUG("[BT] Restarted scanning (device disconnected)\n");
 }
 
 static uni_error_t pico_bluetooth_on_device_ready(uni_hid_device_t* d) {
 	(void) d;	
 	// You can reject the connection by returning an error.
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false); 
+	//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false); 
     
 	//storage_load_tracks();			
 	
@@ -1199,7 +1199,7 @@ void gamepad_bluetooth_handle_data() {
 		
 		if (mbut0) {
 			style_started = !style_started;
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, style_started);	
+			//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, style_started);	
 		}
 
 		finished_processing = true;
@@ -1836,7 +1836,7 @@ void gamepad_bluetooth_handle_data() {
 			}						
 		}
 
-		if (!style_started) cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, !!dpad_right);	
+		//if (!style_started) cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, !!dpad_right);	
 
 		finished_processing = true;		
 		return;
@@ -1862,7 +1862,7 @@ void gamepad_bluetooth_handle_data() {
 			}
 		}
 		
-		if (!style_started) cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, !!dpad_left);
+		//if (!style_started) cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, !!dpad_left);
 
 		finished_processing = true;		
 		return;

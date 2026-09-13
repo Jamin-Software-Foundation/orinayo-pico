@@ -101,7 +101,7 @@ static void scan_timer_cb(btstack_timer_source_t* timer_)
 
     led_on = !led_on;
     BLEMC_client_t *mp = (BLEMC_client_t*)(timer_->context);
-    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_on);
+    //cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, led_on);
     // update the midi_peripheral list timeout field and delete entries with expired timers
     for (uint8_t idx = 0; idx < mp->n_midi_peripherals;) {
         if (--mp->midi_peripherals[idx].timeout <= 0) {
@@ -172,7 +172,7 @@ static void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint
             else if (state == BLEMC_WAIT_FOR_ENABLE_NOTIFICATIONS_COMPLETE) {
                 state = BLEMC_WAIT_FOR_MIDI_DATA_RX;
                 printf("ready to receive MIDI data\r\n");
-                cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+                //cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
                 hci_connection_t * con = hci_connection_for_handle(con_handle);
                 //printf("HCI Connection: bdaddr=%s type=%u", bd_addr_to_str(con->address), con->address_type);
                 last_connected_bd_addr_type = con->address_type;
@@ -421,7 +421,7 @@ static void handle_hci_event(uint8_t packet_type, uint16_t channel, uint8_t *pac
             }
             midi_client.n_midi_peripherals = 0;
             midi_service_emit_state(con_handle, false); // pass the connection handle to the client application to this library
-            cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
+            //cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
             con_handle = HCI_CON_HANDLE_INVALID;
             midi_is_ready = false;
             if ((keep_client_connected && state != BLEMC_WAIT_FOR_DISCONNECTION) || state == BLEMC_WAIT_FOR_CONNECTION) { // then disconnected from previous to connect to next
@@ -702,7 +702,7 @@ void ble_midi_client_scan_begin()
 void ble_midi_client_scan_end()
 {
     btstack_run_loop_remove_timer(&scan_timer);
-    cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
+    //cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
 	
     if (state != BLEMC_WAIT_FOR_SCAN_COMPLETE)
         return;
