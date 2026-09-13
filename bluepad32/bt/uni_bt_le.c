@@ -854,7 +854,8 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 				
 			if (sonicake_neouke_enabled) {
-				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true); 				
+				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+				config_guitar(4);									// WAV Trigger Ppro (default) 								
 				query_state = 2;
 			}
 		}
@@ -1208,8 +1209,11 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		else
 			
 		if (sonicake_neouke_enabled) {
-			config_guitar(4);								// WAV Trigger Ppro (default)
-			
+			left = 1; 										// end previous strum		
+			green = 0; red = 0; yellow = 0; blue = 0; orange = 0;
+			finished_processing = true;			
+			gamepad_bluetooth_handle_data();
+				
 			// detect key press
 
 			if (event_data[3] == 20) {
@@ -1372,6 +1376,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				chord_selected = true;
 			}	
 			
+			finished_processing = true;
 			gamepad_bluetooth_handle_data();						
 
 			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, flash_led);	
