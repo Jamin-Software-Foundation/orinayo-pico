@@ -1477,6 +1477,7 @@ void uni_bt_le_on_gap_event_advertising_report(const uint8_t* packet, uint16_t s
     if (name[0] == 'N' && name[1] == 'e' && name[2] == 'o' && name[3] == 'U' && name[4] == 'k' && name[5] == 'e') {
 		
 		if (!sonicake_neouke_enabled) {
+			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);				
 			sonicake_neouke_enabled = true;
 			hog_connect(addr, addr_type);		
 			return;	
