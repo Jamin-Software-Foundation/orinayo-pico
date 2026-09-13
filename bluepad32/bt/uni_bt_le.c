@@ -786,10 +786,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 	bool chord_selected = false;
 	bool handling_required = false;
 	
-	uint8_t event_data[16];
-	uint8_t liberlive_name[16] = {0x00, 0x00, 0xff, 0x03, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb};	
-	uint8_t sonicake_neouke_name[16] = {0x03, 0xB8, 0x0E, 0x5A, 0xED, 0xE8, 0x4B, 0x33, 0xA7, 0x51, 0x6C, 0xE3, 0x4E, 0xC4, 0xC7, 0x00};	
-			
+	uint8_t event_data[16];	
     uint8_t type_of_packet;	
     type_of_packet = hci_event_packet_get_type(packet);
 	
@@ -814,19 +811,21 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		
 		if (query_state == 0) 
 		{
-			if (liberlive_enabled) {				
-				gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, liberlive_name);						
+			if (liberlive_enabled) {
+				uint8_t characteristics_id[16] = {0x00, 0x00, 0xff, 0x03, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb};				
+				gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, characteristics_id);						
 			}
 			else
 				
 			if (sonicake_neouke_enabled) {
-				gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, sonicake_neouke_name);										
+				uint8_t characteristics_id[16] = {0x77, 0x72, 0xE5, 0xDB, 0x38, 0x68, 0x41, 0x12, 0xA1, 0xA9, 0xF2, 0x66, 0x9D, 0x10, 0x6B, 0xF3};	
+				gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, characteristics_id);										
 			}
 		}
 		else		
 		
 		if (query_state == 1) 	{
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false); 
+			//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false); 
 				
 			if (liberlive_enabled) {			
 				// Write Chord Key Mapping			
@@ -871,7 +870,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		else
 
 		if (query_state == 3) 	{
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true); 	
+			//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true); 	
 
 			if (liberlive_enabled) {
 				//uint8_t set_drum[10] = {177, 30, 23, 5, 0, 46, 24, 0, 1, 1}; // drum group, item, paddle, difficulty, auto-bass
@@ -931,7 +930,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			ll_cannot_fire = (event_data[5] == 0); // when paddle in neutral
 			
 			if (ll_have_fired && ll_cannot_fire) {
-				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);			
+				//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);			
 				ll_have_fired = false;	
 
 				left = 1; 			
@@ -1202,12 +1201,13 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				ll_cannot_fire = true;
 				
 				gamepad_bluetooth_handle_data();						
-				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
+				//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
 			}	
 		}
 		else
 			
 		if (sonicake_neouke_enabled) {
+			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);				
 			// detect key press
 
 			if (event_data[3] == 20) {
