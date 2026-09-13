@@ -309,7 +309,8 @@ bool is_wav_trigger_connected() {
     return wav_trigger_pro_get_version(version, sizeof(version));
 }
 
-static bool __no_inline_not_in_flash_func(get_bootsel_button)(void) {
+static inline bool get_bootsel_button(void) {
+	// BOOTSEL lives on QSPI CS; this mirrors the Pico SDK/TinyUSB sequence.
 	const uint CS_PIN_INDEX = 1;
 	uint32_t flags = save_and_disable_interrupts();
 
@@ -396,16 +397,27 @@ int main() {
 	
 	wav_trigger_pro_connected = is_wav_trigger_connected();	
 	bool bootsel_prev_pressed = false;
+	uint32_t next_bootsel_poll_ms = to_ms_since_boot(get_absolute_time());
 	
     while (true) {
 		tud_task(); // tinyusb device task		
 
-		bool bootsel_pressed = get_bootsel_button();
-		if (bootsel_pressed && !bootsel_prev_pressed) {
-			mbut0 = 1; logo = 0;
-			gamepad_bluetooth_handle_data();
+		uint32_t now_ms = to_ms_since_boot(get_absolute_time());
+		if ((int32_t)(now_ms - next_bootsel_poll_ms) >= 0) {
+			bool bootsel_pressed = get_bootsel_button();
+			if (bootsel_pressed && !bootsel_prev_pressed) {
+				uint8_t prev_mbut0 = mbut0;
+				uint8_t prev_logo = logo;
+				mbut0 = 1; logo = 0;
+				gamepad_bluetooth_handle_data();
+				mbut0 = prev_mbut0;
+				logo = prev_logo;
+			}
+			bootsel_prev_pressed = bootsel_pressed;
+			do {
+				next_bootsel_poll_ms += 5;
+			} while ((int32_t)(now_ms - next_bootsel_poll_ms) >= 0);
 		}
-		bootsel_prev_pressed = bootsel_pressed;
 		
 		if (enable_midi_drums) cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);			
 		
