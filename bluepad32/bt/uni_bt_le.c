@@ -77,6 +77,7 @@
 
 bool liberlive_enabled = false;
 bool sonicake_neouke_enabled = false;
+bool flash_led = true;
 
 static bool is_scanning;
 static bool ble_enabled;
@@ -817,8 +818,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			}
 			else
 				
-			if (sonicake_neouke_enabled) {
-				//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);					
+			if (sonicake_neouke_enabled) {					
 				uint8_t characteristics_id[16] = {0x77, 0x72, 0xE5, 0xDB, 0x38, 0x68, 0x41, 0x12, 0xA1, 0xA9, 0xF2, 0x66, 0x9D, 0x10, 0x6B, 0xF3};	
 				gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, characteristics_id);										
 			}
@@ -826,7 +826,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		else		
 		
 		if (query_state == 1) 	{
-			// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false); 
+			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false); 
 				
 			if (liberlive_enabled) {			
 				// Write Chord Key Mapping			
@@ -854,7 +854,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 				
 			if (sonicake_neouke_enabled) {
-				// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true); 				
+				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true); 				
 				query_state = 2;
 			}
 		}
@@ -871,7 +871,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		else
 
 		if (query_state == 3) 	{
-			// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true); 	
+			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true); 	
 
 			if (liberlive_enabled) {
 				//uint8_t set_drum[10] = {177, 30, 23, 5, 0, 46, 24, 0, 1, 1}; // drum group, item, paddle, difficulty, auto-bass
@@ -931,7 +931,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			ll_cannot_fire = (event_data[5] == 0); // when paddle in neutral
 			
 			if (ll_have_fired && ll_cannot_fire) {
-				// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);			
+				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);			
 				ll_have_fired = false;	
 
 				left = 1; 			
@@ -1202,25 +1202,26 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				ll_cannot_fire = true;
 				
 				gamepad_bluetooth_handle_data();						
-				// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
+				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
 			}	
 		}
 		else
 			
 		if (sonicake_neouke_enabled) {
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
 			config_guitar(4);								// WAV Trigger Ppro (default)
 			
 			// detect key press
 
 			if (event_data[3] == 20) {
-				but2 = 1; yellow = 0;						// 7b			
+				dpad_right = 1; right = 0;					// UP								
+				but2 = 1; yellow = 0;						// 7b								
 				but0 = 1; red = 0;								
 				chord_selected = true;
 			}
 			else
 				
 			if (event_data[3] == 19) {
+				dpad_right = 1; right = 0;					// UP								
 				but1 = 1; green = 0;						// 7							
 				but0 = 1; red = 0;										
 				but2 = 1; yellow = 0;				
@@ -1230,6 +1231,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 
 			if (event_data[3] == 127) {						// TODO
+				dpad_right = 1; right = 0;					// UP							
 				but2 = 1; yellow = 0;						// 5b			
 				but1 = 1; green = 0;								
 				but0 = 1; red = 0;								
@@ -1238,12 +1240,14 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 				
 			if (event_data[3] == 15 || event_data[3] == 16) {
+				dpad_right = 1; right = 0;					// UP								
 				but0 = 1; red = 0;							// 6m							
 				chord_selected = true;
 			}
 			else
 				
 			if (event_data[3] == 17) {
+				dpad_right = 1; right = 0;					// UP								
 				but0 = 1; red = 0;							// 6
 				but2 = 1; yellow = 0;
 				but3 = 1; blue = 0;								
@@ -1252,12 +1256,14 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 				
 			if (event_data[3] == 13) {
-				but1 = 1; green = 0;						// 5								
+				dpad_left = 1;	left = 0;					// DOWN				
+				but1 = 1; green = 0;						// 5	
 				chord_selected = true;
 			}
 			else
 				
 			if (event_data[3] == 12) {
+				dpad_right = 1; right = 0;					// UP					
 				but1 = 1; green = 0;						// 5sus							
 				but2 = 1; yellow = 0;						
 				chord_selected = true;
@@ -1265,6 +1271,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 				
 			if (event_data[3] == 14) {
+				dpad_right = 1; right = 0;					// UP					
 				but1 = 1; green = 0;						// 5/7
 				but0 = 1; red = 0;							
 				chord_selected = true;
@@ -1272,12 +1279,14 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 				
 			if (event_data[3] == 1) {
+				dpad_left = 1;	left = 0;					// DOWN					
 				but2 = 1; yellow = 0;						// 1
 				chord_selected = true;
 			}
 			else
 				
 			if (event_data[3] == 0) {
+				dpad_right = 1; right = 0;					// UP					
 				but2 = 1; yellow = 0;						// 1sus
 				but4 = 1; orange = 0;							
 				chord_selected = true;
@@ -1285,6 +1294,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 
 			if (event_data[3] == 2) {
+				dpad_right = 1; right = 0;					// UP					
 				but2 = 1; yellow = 0;						// 1/3
 				but3 = 1; blue = 0;							
 				chord_selected = true;
@@ -1292,12 +1302,14 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else						
 				
 			if (event_data[3] == 10) {
-				but4 = 1; orange = 0;						// 4								
+				dpad_left = 1;	left = 0;					// DOWN					
+				but4 = 1; orange = 0;						// 4			
 				chord_selected = true;
 			}
 			else
 				
 			if (event_data[3] == 127) {						// TODO
+				dpad_right = 1; right = 0;					// UP				
 				but4 = 1; orange = 0;						// 3b
 				but3 = 1; blue = 0;		
 				but0 = 1; red = 0;							
@@ -1306,6 +1318,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 
 			if (event_data[3] == 9) {
+				dpad_right = 1; right = 0;					// UP					
 				but4 = 1; orange = 0;						// 4/6
 				but3 = 1; blue = 0;							
 				chord_selected = true;
@@ -1313,12 +1326,14 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else						
 				
 			if (event_data[3] == 3 || event_data[3] == 4) {
+				dpad_right = 1; right = 0;					// UP					
 				but3 = 1; blue = 0;							// 2m
 				chord_selected = true;
 			}
 			else
 				
 			if (event_data[3] == 5) {
+				dpad_right = 1; right = 0;					// UP					
 				but3 = 1; blue = 0;							// 2
 				but0 = 1; red = 0;							
 				chord_selected = true;
@@ -1326,6 +1341,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 				
 			if (event_data[3] == 11) {
+				dpad_right = 1; right = 0;					// UP					
 				but4 = 1; orange = 0;						// 4m
 				but0 = 1; red = 0;							
 				chord_selected = true;
@@ -1333,6 +1349,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 				
 			if (event_data[3] == 6 || event_data[3] == 7) {
+				dpad_right = 1; right = 0;					// UP					
 				but1 = 1; green = 0;						// 3m
 				but3 = 1; blue = 0;								
 				chord_selected = true;
@@ -1340,6 +1357,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 				
 			if (event_data[3] == 8) {
+				dpad_right = 1; right = 0;					// UP					
 				but1 = 1; green = 0;						// 3
 				but2 = 1; yellow = 0;								
 				but3 = 1; blue = 0;								
@@ -1348,13 +1366,16 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 				
 			if (event_data[3] == 127) {						// TODO
+				dpad_right = 1; right = 0;					// UP				
 				but1 = 1; green = 0;						// 5m
 				but4 = 1; orange = 0;															
 				chord_selected = true;
 			}	
-
+			
 			gamepad_bluetooth_handle_data();						
-			// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);			
+
+			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, flash_led);	
+			flash_led = !flash_led;			
 		}
     }
 }

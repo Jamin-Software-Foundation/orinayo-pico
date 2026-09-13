@@ -65,9 +65,9 @@ pico_generate_pio_header(tinyusb_pico_pio_usb ${PICO_PIO_USB_PATH}/src/usb_tx.pi
 pico_generate_pio_header(tinyusb_pico_pio_usb ${PICO_PIO_USB_PATH}/src/usb_rx.pio)
 
 # Add source files 
-add_library(orinayobt STATIC pico_bluetooth.c async_timer.c display.c storage.c)
+add_library(orinayobt STATIC pico_bluetooth.c async_timer.c display.c storage.c ble_midi_controller.c)
 target_include_directories(orinayobt PUBLIC ${CMAKE_CURRENT_LIST_DIR} ${PICO_TINYUSB_PATH}/src ${PICO_TINYUSB_PATH}/src/class/audio ${PICO_TINYUSB_PATH}/src/class/midi ${CMAKE_CURRENT_LIST_DIR}/bluepad32/include ${PICO_BLE_MIDI_PATH} ${RING_BUFFER_PATH} ${PICO_SDK_PATH}/lib/btstack/src ${CMAKE_CURRENT_LIST_DIR}/pico_pio_usb/src)
-target_link_libraries(orinayobt pico_stdlib hardware_i2c hardware_clocks pico_cyw43_arch_none pico_cyw43_arch_threadsafe_background tinyusb_device tinyusb_host tinyusb_board pico_btstack_classic pico_pio_usb tinyusb_pico_pio_usb pico_btstack_ble pico_btstack_cyw43 bluepad32 ring_buffer_lib)
+target_link_libraries(orinayobt pico_stdlib hardware_i2c hardware_clocks pico_cyw43_arch_none pico_cyw43_arch_threadsafe_background tinyusb_device tinyusb_host tinyusb_board pico_btstack_classic pico_pio_usb tinyusb_pico_pio_usb pico_btstack_ble pico_btstack_cyw43 bluepad32 ble_midi_client_lib ring_buffer_lib)
 add_compile_definitions(orinayobt PICO_CYW43_ARCH_THREADSAFE_BACKGROUND)
 
 add_executable(${PROJECT_NAME} main.c usb_descriptors.c tap_tempo.c looper.c note_scheduler.c ghost_note.c)
