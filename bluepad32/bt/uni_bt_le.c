@@ -162,6 +162,7 @@ extern int active_strum_pattern;
 extern int style_group;
 extern bool enable_seqtrak;
 extern bool enable_modx;
+extern bool style_started;
 
 // Temporal space for SDP in BLE
 static uint8_t hid_descriptor_storage[HID_MAX_DESCRIPTOR_LEN * CONFIG_BLUEPAD32_MAX_DEVICES];
@@ -855,7 +856,11 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				
 			if (sonicake_neouke_enabled) {
 				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
-				config_guitar(4);									// WAV Trigger Ppro (default) 								
+				
+				config_guitar(4);									// WAV Trigger Ppro (default) 
+				but6 = 1; pitch = 0; but0 = 1; red = 0;				// Select strum type red button	
+				gamepad_bluetooth_handle_data();
+				
 				query_state = 2;
 			}
 		}
@@ -1216,6 +1221,16 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				
 			// detect key press
 
+			if (event_data[3] == 18) 
+			{
+				if (style_started) {						// next style
+					dpad_down = 1; starpower = 0;
+				} else {									// start
+					mbut0 = 1; logo = 0;					
+				}
+			}
+			else
+				
 			if (event_data[3] == 20) {
 				dpad_right = 1; right = 0;					// UP								
 				but2 = 1; yellow = 0;						// 7b								
@@ -1321,7 +1336,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			}
 			else
 
-			if (event_data[3] == 9) {
+			if (event_data[3] == 11) {
 				dpad_right = 1; right = 0;					// UP					
 				but4 = 1; orange = 0;						// 4/6
 				but3 = 1; blue = 0;							
@@ -1344,7 +1359,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			}
 			else
 				
-			if (event_data[3] == 11) {
+			if (event_data[3] == 9) {
 				dpad_right = 1; right = 0;					// UP					
 				but4 = 1; orange = 0;						// 4m
 				but0 = 1; red = 0;							

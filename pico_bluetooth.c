@@ -1356,7 +1356,7 @@ void gamepad_bluetooth_handle_data() {
 		return;			
 	}
 
-	if (mbut2 != menu) {																			// menu - select registrations/style groups
+	if (mbut2 != menu) {									// menu - select registrations/style groups
 		if (enable_arranger_mode) midi_ketron_footsw(8, mbut2 ? true : false);						// user defined from footswitch	
 		menu = mbut2;
 
