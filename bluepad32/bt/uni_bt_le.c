@@ -1386,6 +1386,7 @@ void uni_bt_le_on_hci_event_le_meta(const uint8_t* packet, uint16_t size) {
 			else
 				
 			if (sonicake_neouke_enabled) { // 03b80e5a-ede8-4b33-a751-6ce34ec4c700
+				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);			
 				uint8_t service_name[16] = {0x03, 0xB8, 0x0E, 0x5A, 0xED, 0xE8, 0x4B, 0x33, 0xA7, 0x51, 0x6C, 0xE3, 0x4E, 0xC4, 0xC7, 0x00} ;			
 				gatt_client_discover_primary_services_by_uuid128(handle_gatt_client_event, connection_handle, service_name);
 				gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, NULL);				
@@ -1479,8 +1480,7 @@ void uni_bt_le_on_gap_event_advertising_report(const uint8_t* packet, uint16_t s
 
     if (name[0] == 'N' && name[1] == 'e' && name[2] == 'o' && name[3] == 'U' && name[4] == 'k' && name[5] == 'e') {
 		
-		if (!sonicake_neouke_enabled) {		
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
+		if (!sonicake_neouke_enabled) {				
 			sonicake_neouke_enabled = true;
 			hog_connect(addr, addr_type);		
 			return;	
