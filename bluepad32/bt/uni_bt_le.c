@@ -818,6 +818,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 				
 			if (sonicake_neouke_enabled) {
+				//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);					
 				uint8_t characteristics_id[16] = {0x77, 0x72, 0xE5, 0xDB, 0x38, 0x68, 0x41, 0x12, 0xA1, 0xA9, 0xF2, 0x66, 0x9D, 0x10, 0x6B, 0xF3};	
 				gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, characteristics_id);										
 			}
@@ -882,7 +883,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 	}		
 	else
 					
-    if (type_of_packet == GATT_EVENT_NOTIFICATION) {
+    if (type_of_packet == GATT_EVENT_NOTIFICATION) {		
 		if (gamepad_guitar_connected) return;
 
 		memcpy(event_data, value, value_length);
@@ -1207,7 +1208,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		else
 			
 		if (sonicake_neouke_enabled) {
-			// cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);	
+			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
 			config_guitar(4);								// WAV Trigger Ppro (default)
 			
 			// detect key press
@@ -1385,8 +1386,7 @@ void uni_bt_le_on_hci_event_le_meta(const uint8_t* packet, uint16_t size) {
 			} 
 			else
 				
-			if (sonicake_neouke_enabled) { // 03b80e5a-ede8-4b33-a751-6ce34ec4c700
-				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);			
+			if (sonicake_neouke_enabled) { // 03b80e5a-ede8-4b33-a751-6ce34ec4c700		
 				uint8_t service_name[16] = {0x03, 0xB8, 0x0E, 0x5A, 0xED, 0xE8, 0x4B, 0x33, 0xA7, 0x51, 0x6C, 0xE3, 0x4E, 0xC4, 0xC7, 0x00} ;			
 				gatt_client_discover_primary_services_by_uuid128(handle_gatt_client_event, connection_handle, service_name);
 				gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, NULL);				
