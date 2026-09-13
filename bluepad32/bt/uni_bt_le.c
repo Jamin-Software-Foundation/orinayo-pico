@@ -884,7 +884,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 	else
 					
     if (type_of_packet == GATT_EVENT_NOTIFICATION) {		
-		if (gamepad_guitar_connected) return;
+		//if (gamepad_guitar_connected) return;
 
 		memcpy(event_data, value, value_length);
 
