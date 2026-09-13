@@ -26,6 +26,10 @@
 #include "pico/stdlib.h"
 #include "hardware/watchdog.h"
 #include "hardware/i2c.h"
+#include "hardware/sync.h"
+#include "hardware/regs/io_qspi.h"
+#include "hardware/structs/ioqspi.h"
+#include "hardware/structs/sio.h"
 
 // Pico W devices use a GPIO on the WIFI chip for the LED,
 // so when building for Pico W, CYW43_WL_GPIO_LED_PIN will be defined
@@ -305,6 +309,34 @@ bool is_wav_trigger_connected() {
     return wav_trigger_pro_get_version(version, sizeof(version));
 }
 
+static bool __no_inline_not_in_flash_func(get_bootsel_button)(void) {
+	const uint CS_PIN_INDEX = 1;
+	uint32_t flags = save_and_disable_interrupts();
+
+	hw_write_masked(&ioqspi_hw->io[CS_PIN_INDEX].ctrl,
+					GPIO_OVERRIDE_LOW << IO_QSPI_GPIO_QSPI_SS_CTRL_OEOVER_LSB,
+					IO_QSPI_GPIO_QSPI_SS_CTRL_OEOVER_BITS);
+
+	for (volatile int i = 0; i < 1000; ++i) {
+		__nop();
+	}
+
+#ifdef __ARM_ARCH_6M__
+	const uint32_t cs_bit = (1u << 1);
+#else
+	const uint32_t cs_bit = SIO_GPIO_HI_IN_QSPI_CSN_BITS;
+#endif
+
+	bool cs_high = (sio_hw->gpio_hi_in & cs_bit);
+
+	hw_write_masked(&ioqspi_hw->io[CS_PIN_INDEX].ctrl,
+					GPIO_OVERRIDE_NORMAL << IO_QSPI_GPIO_QSPI_SS_CTRL_OEOVER_LSB,
+					IO_QSPI_GPIO_QSPI_SS_CTRL_OEOVER_BITS);
+
+	restore_interrupts(flags);
+	return !cs_high;
+}
+
 //--------------------------------------------------------------------+
 //
 // core main handle handlers
@@ -363,10 +395,17 @@ int main() {
 	sleep_ms(500);	
 	
 	wav_trigger_pro_connected = is_wav_trigger_connected();	
-	
+	bool bootsel_prev_pressed = false;
 	
     while (true) {
 		tud_task(); // tinyusb device task		
+
+		bool bootsel_pressed = get_bootsel_button();
+		if (bootsel_pressed && !bootsel_prev_pressed) {
+			mbut0 = 1; logo = 0;
+			gamepad_bluetooth_handle_data();
+		}
+		bootsel_prev_pressed = bootsel_pressed;
 		
 		if (enable_midi_drums) cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);			
 		
