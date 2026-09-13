@@ -76,6 +76,7 @@
 #include "uni_property.h"
 
 bool liberlive_enabled = false;
+bool sonicake_neouke_enabled = false;
 
 static bool is_scanning;
 static bool ble_enabled;
@@ -787,7 +788,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 	
 	uint8_t event_data[16];
 	uint8_t liberlive_name[16] = {0x00, 0x00, 0xff, 0x03, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb};	
-	uint8_t sonic_master_name[16] = {0x77, 0x72, 0xE5, 0xDB, 0x38, 0x68, 0x41, 0x12, 0xA1, 0xA9, 0xF2, 0x66, 0x9D, 0x10, 0x6B, 0xF3};	
+	uint8_t sonicake_neouke_name[16] = {0x03, 0xB8, 0x0E, 0x5A, 0xED, 0xE8, 0x4B, 0x33, 0xA7, 0x51, 0x6C, 0xE3, 0x4E, 0xC4, 0xC7, 0x00};	
 			
     uint8_t type_of_packet;	
     type_of_packet = hci_event_packet_get_type(packet);
@@ -815,6 +816,11 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		{
 			if (liberlive_enabled) {				
 				gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, liberlive_name);						
+			}
+			else
+				
+			if (sonicake_neouke_enabled) {
+				gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, sonicake_neouke_name);										
 			}
 		}
 		else		
@@ -845,6 +851,12 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				
 				query_state = 2;
 			}
+			else
+				
+			if (sonicake_neouke_enabled) {
+				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true); 				
+				query_state = 2;
+			}
 		}
 		else
 			
@@ -873,7 +885,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 					
     if (type_of_packet == GATT_EVENT_NOTIFICATION) {
 		if (gamepad_guitar_connected) return;
-			
+
 		memcpy(event_data, value, value_length);
 
 		joy_up = false;  
@@ -899,299 +911,448 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		mbut1 = 0;
 		mbut2 = 0;
 		mbut3 = 0;
-		
-
-		// detect config changes - tap tempo pressed		
-
-		if (event_data[1] >= 16 && event_data[5] == 0) 
-		{
-			if (event_data[4] == 2)   	   config_guitar(1);		// ketron arranger
-			else if (event_data[4] == 4)   config_guitar(2);		// ample guitar
-			else if (event_data[4] == 8)   config_guitar(3);		// midi drums
-			else if (event_data[4] == 16)  config_guitar(4);		// wav trigger pro
-			else if (event_data[4] == 32)  config_guitar(5);		// yamaha modx/montage					
-			else if (event_data[4] == 64)  config_guitar(11);		// mpc sample
-			else if (event_data[4] == 128) config_guitar(19);		// yamaha seqtrak
-		}		
-		
-		// detect paddle neutral
-		
-		ll_cannot_fire = (event_data[5] == 0); // when paddle in neutral
-		
-		if (ll_have_fired && ll_cannot_fire) {
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);			
-			ll_have_fired = false;	
-
-			left = 1; 			
-			green = 0; red = 0; yellow = 0; blue = 0; orange = 0;
-			gamepad_bluetooth_handle_data();	
-			return;
-		}	
-		
-		// detect tempo changes
-		
-		if (event_data[7] != current_tempo) {
-			current_tempo = event_data[7];
 			
-			if (enable_seqtrak) midi_seqtrak_tempo(current_tempo);
-			if (enable_modx) 	midi_modx_tempo(current_tempo);			
-		}
-		
-		// detect key change
+		if (liberlive_enabled) {			
+			// detect config changes - tap tempo pressed		
 
-		uint8_t old_key = transpose;
-		
-		if (event_data[1] == 0) transpose = 0;	// C
-		else if (event_data[1] == 1) transpose = 2;		// D
-		else if (event_data[1] == 2) transpose = 4;		// E
-		else if (event_data[1] == 3) transpose = 5;		// F
-		else if (event_data[1] == 4) transpose = 7;		// G
-		else if (event_data[1] == 5) transpose = 9;		// A
-		else if (event_data[1] == 6) transpose = 11;	// B
-					
-		if (old_key != transpose && event_data[5] == 0) 
-		{
-			if (enable_seqtrak) midi_seqtrak_key(transpose);
-		}		
+			if (event_data[1] >= 16 && event_data[5] == 0) 
+			{
+				if (event_data[4] == 2)   	   config_guitar(1);		// ketron arranger
+				else if (event_data[4] == 4)   config_guitar(2);		// ample guitar
+				else if (event_data[4] == 8)   config_guitar(3);		// midi drums
+				else if (event_data[4] == 16)  config_guitar(4);		// wav trigger pro
+				else if (event_data[4] == 32)  config_guitar(5);		// yamaha modx/montage					
+				else if (event_data[4] == 64)  config_guitar(11);		// mpc sample
+				else if (event_data[4] == 128) config_guitar(19);		// yamaha seqtrak
+			}		
+			
+			// detect paddle neutral
+			
+			ll_cannot_fire = (event_data[5] == 0); // when paddle in neutral
+			
+			if (ll_have_fired && ll_cannot_fire) {
+				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);			
+				ll_have_fired = false;	
+
+				left = 1; 			
+				green = 0; red = 0; yellow = 0; blue = 0; orange = 0;
+				gamepad_bluetooth_handle_data();	
+				return;
+			}	
+			
+			// detect tempo changes
+			
+			if (event_data[7] != current_tempo) {
+				current_tempo = event_data[7];
 				
-		// detect strum style - - stop/config pressed
-		
-		if (event_data[5] == 64 ) {		// guitar play mode selection
-			handling_required = true;
-			but6 = 1; pitch = 0;				
+				if (enable_seqtrak) midi_seqtrak_tempo(current_tempo);
+				if (enable_modx) 	midi_modx_tempo(current_tempo);			
+			}
 			
-			if (event_data[4] == 2)   	   {but1 = 1; green = 0;}	// full chord up/down
-			else if (event_data[4] == 4)   {but0 = 1; red = 0;}		// chord up/root note down	
-			else if (event_data[4] == 8)   {but2 = 1; yellow = 0;}	// root note up/down
-			else if (event_data[4] == 16)  {but3 = 1; blue = 0;}	// 3rd note up/root note down
-			else if (event_data[4] == 32)  {but4 = 1; orange = 0;}	// 5th note up/root note down							
-			else if (event_data[4] == 64)  {next_style_group();}	// increment style groups
-			else if (event_data[4] == 128) {prev_style_group();}	// decrement style group		
-		}
-		else
+			// detect key change
 
-		// detect key press
-
-		if (event_data[4] == 2) {
-			but2 = 1; yellow = 0;		// 7b			
-			but0 = 1; red = 0;								
-			chord_selected = true;
-		}
-		else
+			uint8_t old_key = transpose;
 			
-		if (event_data[2] == 8) {
-			but1 = 1; green = 0;		// 7							
-			but0 = 1; red = 0;										
-			but2 = 1; yellow = 0;				
-			but3 = 1; blue = 0;								
-			chord_selected = true;
-		}
-		else
-
-		if (event_data[3] == 4) {
-			but2 = 1; yellow = 0;			// 5b			
-			but1 = 1; green = 0;								
-			but0 = 1; red = 0;								
-			chord_selected = true;
-		}
-		else
-			
-		if (event_data[4] == 4) {
-			but0 = 1; red = 0;				// 6m							
-			chord_selected = true;
-		}
-		else
-			
-		if (event_data[2] == 16 || event_data[3] == 8) {
-			but0 = 1; red = 0;		// 6
-			but2 = 1; yellow = 0;
-			but3 = 1; blue = 0;								
-			chord_selected = true;
-		}
-		else
-			
-		if (event_data[4] == 8) {
-			but1 = 1; green = 0;		// 5								
-			chord_selected = true;
-		}
-		else
-			
-		if (event_data[2] == 32) {
-			but1 = 1; green = 0;		// 5sus							
-			but2 = 1; yellow = 0;						
-			chord_selected = true;
-		}
-		else
-			
-		if (event_data[3] == 16) {
-			but1 = 1; green = 0;		// 5/7
-			but0 = 1; red = 0;							
-			chord_selected = true;
-		}													
-		else
-			
-		if (event_data[4] == 16) {
-			but2 = 1; yellow = 0;		// 1
-			chord_selected = true;
-		}
-		else
-			
-		if (event_data[2] == 64) {
-			but2 = 1; yellow = 0;		// 1sus
-			but4 = 1; orange = 0;							
-			chord_selected = true;
-		}
-		else
-
-		if (event_data[3] == 32) {
-			but2 = 1; yellow = 0;		// 1/3
-			but3 = 1; blue = 0;							
-			chord_selected = true;
-		}
-		else						
-			
-		if (event_data[4] == 32) {
-			but4 = 1; orange = 0;		// 4								
-			chord_selected = true;
-		}
-		else
-			
-		if (event_data[2] == 128) {
-			but4 = 1; orange = 0;		// 3b
-			but3 = 1; blue = 0;		
-			but0 = 1; red = 0;							
-			chord_selected = true;
-		}
-		else
-
-		if (event_data[3] == 64) {
-			but4 = 1; orange = 0;		// 4/6
-			but3 = 1; blue = 0;							
-			chord_selected = true;
-		}
-		else						
-			
-		if (event_data[4] == 64) {
-			but3 = 1; blue = 0;		// 2m
-			chord_selected = true;
-		}
-		else
-			
-		if (event_data[3] == 1) {
-			but3 = 1; blue = 0;		// 2
-			but0 = 1; red = 0;							
-			chord_selected = true;
-		}
-		else
-			
-		if (event_data[3] == 128) {
-			but4 = 1; orange = 0;		// 4m
-			but0 = 1; red = 0;							
-			chord_selected = true;
-		}	
-		else
-			
-		if (event_data[4] == 128) {
-			but1 = 1; green = 0;		// 3m
-			but3 = 1; blue = 0;								
-			chord_selected = true;
-		}
-		else
-			
-		if (event_data[3] == 2) {
-			but1 = 1; green = 0;		// 3
-			but2 = 1; yellow = 0;								
-			but3 = 1; blue = 0;								
-			chord_selected = true;
-		}						
-		else
-			
-		if (event_data[4] == 1) {
-			but1 = 1; green = 0;		// 5m
-			but4 = 1; orange = 0;															
-			chord_selected = true;
-		}	
-
-
-		
+			if (event_data[1] == 0) transpose = 0;	// C
+			else if (event_data[1] == 1) transpose = 2;		// D
+			else if (event_data[1] == 2) transpose = 4;		// E
+			else if (event_data[1] == 3) transpose = 5;		// F
+			else if (event_data[1] == 4) transpose = 7;		// G
+			else if (event_data[1] == 5) transpose = 9;		// A
+			else if (event_data[1] == 6) transpose = 11;	// B
 						
-		if (event_data[5] == 15) {										// Paddle A+B
-			handling_required = true;	
-
-			if (event_data[10] < 48) { 									// UP
-				mbut0 = 1; logo = 0;
-			}
-			else
-				
-			if (event_data[10] > 58) { 									// DOWN
-				mbut0 = 1; logo = 0;
-			}							
-
-		}	
-		else							
-		
-		if (event_data[5] == 12) {										// Paddle A
-			handling_required = true;	
+			if (old_key != transpose && event_data[5] == 0) 
+			{
+				if (enable_seqtrak) midi_seqtrak_key(transpose);
+			}		
+					
+			// detect strum style - - stop/config pressed
 			
-			if (event_data[9] < 48) { 									// UP
-				applied_velocity = (50 - event_data[9]) / 50;
+			if (event_data[5] == 64 ) {		// guitar play mode selection
+				handling_required = true;
+				but6 = 1; pitch = 0;				
+				
+				if (event_data[4] == 2)   	   {but1 = 1; green = 0;}	// full chord up/down
+				else if (event_data[4] == 4)   {but0 = 1; red = 0;}		// chord up/root note down	
+				else if (event_data[4] == 8)   {but2 = 1; yellow = 0;}	// root note up/down
+				else if (event_data[4] == 16)  {but3 = 1; blue = 0;}	// 3rd note up/root note down
+				else if (event_data[4] == 32)  {but4 = 1; orange = 0;}	// 5th note up/root note down							
+				else if (event_data[4] == 64)  {next_style_group();}	// increment style groups
+				else if (event_data[4] == 128) {prev_style_group();}	// decrement style group		
+			}
+			else
 
-				if (chord_selected) {
-					dpad_right = 1; right = 0;
-				} else {
-					joy_down = true; joystick_down = 0;					// break						
-				}								
+			// detect key press
 
+			if (event_data[4] == 2) {
+				but2 = 1; yellow = 0;		// 7b			
+				but0 = 1; red = 0;								
+				chord_selected = true;
 			}
 			else
 				
-			if (event_data[9] > 58) { 									// DOWN
-				applied_velocity = event_data[9] / 50;
-				
-				if (chord_selected) {
-					dpad_left = 1;	left = 0;	
-				} else {
-					joy_up = true; joystick_up = 0;						// fill								
-				}								
+			if (event_data[2] == 8) {
+				but1 = 1; green = 0;		// 7							
+				but0 = 1; red = 0;										
+				but2 = 1; yellow = 0;				
+				but3 = 1; blue = 0;								
+				chord_selected = true;
 			}
+			else
+
+			if (event_data[3] == 4) {
+				but2 = 1; yellow = 0;		// 5b			
+				but1 = 1; green = 0;								
+				but0 = 1; red = 0;								
+				chord_selected = true;
+			}
+			else
 				
+			if (event_data[4] == 4) {
+				but0 = 1; red = 0;			// 6m							
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[2] == 16 || event_data[3] == 8) {
+				but0 = 1; red = 0;			// 6
+				but2 = 1; yellow = 0;
+				but3 = 1; blue = 0;								
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[4] == 8) {
+				but1 = 1; green = 0;		// 5								
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[2] == 32) {
+				but1 = 1; green = 0;		// 5sus							
+				but2 = 1; yellow = 0;						
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[3] == 16) {
+				but1 = 1; green = 0;		// 5/7
+				but0 = 1; red = 0;							
+				chord_selected = true;
+			}													
+			else
+				
+			if (event_data[4] == 16) {
+				but2 = 1; yellow = 0;		// 1
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[2] == 64) {
+				but2 = 1; yellow = 0;		// 1sus
+				but4 = 1; orange = 0;							
+				chord_selected = true;
+			}
+			else
+
+			if (event_data[3] == 32) {
+				but2 = 1; yellow = 0;		// 1/3
+				but3 = 1; blue = 0;							
+				chord_selected = true;
+			}
+			else						
+				
+			if (event_data[4] == 32) {
+				but4 = 1; orange = 0;		// 4								
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[2] == 128) {
+				but4 = 1; orange = 0;		// 3b
+				but3 = 1; blue = 0;		
+				but0 = 1; red = 0;							
+				chord_selected = true;
+			}
+			else
+
+			if (event_data[3] == 64) {
+				but4 = 1; orange = 0;		// 4/6
+				but3 = 1; blue = 0;							
+				chord_selected = true;
+			}
+			else						
+				
+			if (event_data[4] == 64) {
+				but3 = 1; blue = 0;			// 2m
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[3] == 1) {
+				but3 = 1; blue = 0;			// 2
+				but0 = 1; red = 0;							
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[3] == 128) {
+				but4 = 1; orange = 0;		// 4m
+				but0 = 1; red = 0;							
+				chord_selected = true;
+			}	
+			else
+				
+			if (event_data[4] == 128) {
+				but1 = 1; green = 0;		// 3m
+				but3 = 1; blue = 0;								
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[3] == 2) {
+				but1 = 1; green = 0;		// 3
+				but2 = 1; yellow = 0;								
+				but3 = 1; blue = 0;								
+				chord_selected = true;
+			}						
+			else
+				
+			if (event_data[4] == 1) {
+				but1 = 1; green = 0;		// 5m
+				but4 = 1; orange = 0;															
+				chord_selected = true;
+			}	
+
+
+			
+							
+			if (event_data[5] == 15) {										// Paddle A+B
+				handling_required = true;	
+
+				if (event_data[10] < 48) { 									// UP
+					mbut0 = 1; logo = 0;
+				}
+				else
+					
+				if (event_data[10] > 58) { 									// DOWN
+					mbut0 = 1; logo = 0;
+				}							
+
+			}	
+			else							
+			
+			if (event_data[5] == 12) {										// Paddle A
+				handling_required = true;	
+				
+				if (event_data[9] < 48) { 									// UP
+					applied_velocity = (50 - event_data[9]) / 50;
+
+					if (chord_selected) {
+						dpad_right = 1; right = 0;
+					} else {
+						joy_down = true; joystick_down = 0;					// break						
+					}								
+
+				}
+				else
+					
+				if (event_data[9] > 58) { 									// DOWN
+					applied_velocity = event_data[9] / 50;
+					
+					if (chord_selected) {
+						dpad_left = 1;	left = 0;	
+					} else {
+						joy_up = true; joystick_up = 0;						// fill								
+					}								
+				}
+					
+			}
+			else
+				
+			if (event_data[5] == 3) {										// Paddle B
+				handling_required = true;	
+
+				if (event_data[10] < 48) { 									// UP
+					applied_velocity = (50 - event_data[10]) / 50;							
+				
+					if (chord_selected) {
+						dpad_right = 1; right = 0;
+					} else {	
+						dpad_down = 1; starpower = 0; orange = 0; but4 = 1;	// prev style	
+					}								
+				}
+				else
+					
+				if (event_data[10] > 58) { 									// DOWN
+					applied_velocity = event_data[10] / 50;
+
+					if (chord_selected) {
+						dpad_left = 1;	left = 0;	
+
+					} else {
+						dpad_down = 1; starpower = 0; 						// next style																															
+					}								
+				}							
+
+			}
+
+			if (handling_required && !ll_have_fired) {			
+				ll_have_fired = true;
+				ll_cannot_fire = true;
+				
+				gamepad_bluetooth_handle_data();						
+				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
+			}	
 		}
 		else
 			
-		if (event_data[5] == 3) {										// Paddle B
-			handling_required = true;	
+		if (sonicake_neouke_enabled) {
+			// detect key press
 
-			if (event_data[10] < 48) { 									// UP
-				applied_velocity = (50 - event_data[10]) / 50;							
-			
-				if (chord_selected) {
-					dpad_right = 1; right = 0;
-				} else {	
-					dpad_down = 1; starpower = 0; orange = 0; but4 = 1;	// prev style	
-				}								
+			if (event_data[3] == 20) {
+				but2 = 1; yellow = 0;						// 7b			
+				but0 = 1; red = 0;								
+				chord_selected = true;
 			}
 			else
 				
-			if (event_data[10] > 58) { 									// DOWN
-				applied_velocity = event_data[10] / 50;
+			if (event_data[3] == 19) {
+				but1 = 1; green = 0;						// 7							
+				but0 = 1; red = 0;										
+				but2 = 1; yellow = 0;				
+				but3 = 1; blue = 0;								
+				chord_selected = true;
+			}
+			else
 
-				if (chord_selected) {
-					dpad_left = 1;	left = 0;	
+			if (event_data[3] == 127) {						// TODO
+				but2 = 1; yellow = 0;						// 5b			
+				but1 = 1; green = 0;								
+				but0 = 1; red = 0;								
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[3] == 15 || event_data[3] == 16) {
+				but0 = 1; red = 0;							// 6m							
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[3] == 17) {
+				but0 = 1; red = 0;							// 6
+				but2 = 1; yellow = 0;
+				but3 = 1; blue = 0;								
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[3] == 13) {
+				but1 = 1; green = 0;						// 5								
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[3] == 12) {
+				but1 = 1; green = 0;						// 5sus							
+				but2 = 1; yellow = 0;						
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[3] == 14) {
+				but1 = 1; green = 0;						// 5/7
+				but0 = 1; red = 0;							
+				chord_selected = true;
+			}													
+			else
+				
+			if (event_data[3] == 1) {
+				but2 = 1; yellow = 0;						// 1
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[3] == 0) {
+				but2 = 1; yellow = 0;						// 1sus
+				but4 = 1; orange = 0;							
+				chord_selected = true;
+			}
+			else
 
-				} else {
-					dpad_down = 1; starpower = 0; 						// next style																															
-				}								
-			}							
+			if (event_data[3] == 2) {
+				but2 = 1; yellow = 0;						// 1/3
+				but3 = 1; blue = 0;							
+				chord_selected = true;
+			}
+			else						
+				
+			if (event_data[3] == 10) {
+				but4 = 1; orange = 0;						// 4								
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[3] == 127) {						// TODO
+				but4 = 1; orange = 0;						// 3b
+				but3 = 1; blue = 0;		
+				but0 = 1; red = 0;							
+				chord_selected = true;
+			}
+			else
 
-		}
+			if (event_data[3] == 9) {
+				but4 = 1; orange = 0;						// 4/6
+				but3 = 1; blue = 0;							
+				chord_selected = true;
+			}
+			else						
+				
+			if (event_data[3] == 3 || event_data[3] == 4) {
+				but3 = 1; blue = 0;							// 2m
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[3] == 5) {
+				but3 = 1; blue = 0;							// 2
+				but0 = 1; red = 0;							
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[3] == 11) {
+				but4 = 1; orange = 0;						// 4m
+				but0 = 1; red = 0;							
+				chord_selected = true;
+			}	
+			else
+				
+			if (event_data[3] == 6 || event_data[3] == 7) {
+				but1 = 1; green = 0;						// 3m
+				but3 = 1; blue = 0;								
+				chord_selected = true;
+			}
+			else
+				
+			if (event_data[3] == 8) {
+				but1 = 1; green = 0;						// 3
+				but2 = 1; yellow = 0;								
+				but3 = 1; blue = 0;								
+				chord_selected = true;
+			}						
+			else
+				
+			if (event_data[3] == 127) {						// TODO
+				but1 = 1; green = 0;						// 5m
+				but4 = 1; orange = 0;															
+				chord_selected = true;
+			}	
 
-		if (handling_required && !ll_have_fired) {			
-			ll_have_fired = true;
-			ll_cannot_fire = true;
-			
 			gamepad_bluetooth_handle_data();						
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
-		}	
+			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);			
+		}
     }
 }
 
@@ -1219,7 +1380,15 @@ void uni_bt_le_on_hci_event_le_meta(const uint8_t* packet, uint16_t size) {
 				ll_cannot_fire = true;
 				ll_have_fired = false;
 				
-			}  			
+			} 
+			else
+				
+			if (sonicake_neouke_enabled) { // 03b80e5a-ede8-4b33-a751-6ce34ec4c700
+				uint8_t service_name[16] = {0x03, 0xB8, 0x0E, 0x5A, 0xED, 0xE8, 0x4B, 0x33, 0xA7, 0x51, 0x6C, 0xE3, 0x4E, 0xC4, 0xC7, 0x00} ;			
+				gatt_client_discover_primary_services_by_uuid128(handle_gatt_client_event, connection_handle, service_name);
+				gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, NULL);				
+			}
+	
 			else {	
 			/*
 				device = uni_hid_device_get_instance_for_address(event_addr);
@@ -1303,6 +1472,16 @@ void uni_bt_le_on_gap_event_advertising_report(const uint8_t* packet, uint16_t s
 			return;	
 		}
 	}
+	else
+		
+    if (name[0] == 'N' && name[1] == 'e' && name[2] == 'o' && name[3] == 'U' && name[4] == 'k' && name[5] == 'e') {
+		
+		if (!sonicake_neouke_enabled) {
+			sonicake_neouke_enabled = true;
+			hog_connect(addr, addr_type);		
+			return;	
+		}
+	}
 	
     if (uni_hid_device_get_instance_for_address(addr)) {
         // Ignore, address already found
@@ -1369,6 +1548,8 @@ void uni_bt_le_on_hci_disconnection_complete(uint16_t channel, const uint8_t* pa
     ARG_UNUSED(size);
 
 	liberlive_enabled = false;
+	sonicake_neouke_enabled = false;
+	
     resume_scanning_hint();
 }
 
