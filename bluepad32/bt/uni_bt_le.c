@@ -1221,13 +1221,8 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				
 			// detect key press
 
-			if (event_data[3] == 18) 
-			{
-				if (style_started) {						// next style
-					dpad_down = 1; starpower = 0;
-				} else {									// start
-					mbut0 = 1; logo = 0;					
-				}
+			if (event_data[3] == 18) {									
+				mbut0 = 1; logo = 0;						// start/stop				
 			}
 			else
 				
@@ -1290,7 +1285,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 				
 			if (event_data[3] == 14) {
-				dpad_right = 1; right = 0;					// UP					
+				dpad_left = 1;	left = 0;					// DOWN						
 				but1 = 1; green = 0;						// 5/7
 				but0 = 1; red = 0;							
 				chord_selected = true;
@@ -1313,7 +1308,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 
 			if (event_data[3] == 2) {
-				dpad_right = 1; right = 0;					// UP					
+				dpad_left = 1;	left = 0;					// DOWN					
 				but2 = 1; yellow = 0;						// 1/3
 				but3 = 1; blue = 0;							
 				chord_selected = true;
@@ -1337,7 +1332,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 
 			if (event_data[3] == 11) {
-				dpad_right = 1; right = 0;					// UP					
+				dpad_left = 1;	left = 0;					// DOWN						
 				but4 = 1; orange = 0;						// 4/6
 				but3 = 1; blue = 0;							
 				chord_selected = true;
