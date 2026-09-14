@@ -778,7 +778,8 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
     UNUSED(packet_type);
     UNUSED(channel);
     UNUSED(size);
-
+	
+	static int previous_pad = -1;
 	static int query_state;
 	static int current_tempo = 0;
 		
@@ -1230,7 +1231,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				dpad_right = 1; right = 0;					// UP								
 				but2 = 1; yellow = 0;						// 7b								
 				but0 = 1; red = 0;								
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}
 			else
 				
@@ -1240,7 +1241,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				but0 = 1; red = 0;										
 				but2 = 1; yellow = 0;				
 				but3 = 1; blue = 0;								
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}
 			else
 
@@ -1249,14 +1250,14 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				but2 = 1; yellow = 0;						// 5b			
 				but1 = 1; green = 0;								
 				but0 = 1; red = 0;								
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}
 			else
 				
 			if (event_data[3] == 15 || event_data[3] == 16) {
 				dpad_right = 1; right = 0;					// UP								
 				but0 = 1; red = 0;							// 6m							
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}
 			else
 				
@@ -1265,14 +1266,14 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				but0 = 1; red = 0;							// 6
 				but2 = 1; yellow = 0;
 				but3 = 1; blue = 0;								
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}
 			else
 				
-			if (event_data[3] == 13) {
-				dpad_left = 1;	left = 0;					// DOWN				
+			if (event_data[3] == 13) {	
+				if (event_data[3] == previous_pad) {dpad_right = 1; right = 0;}	else {dpad_left = 1; left = 0;}			
 				but1 = 1; green = 0;						// 5	
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}
 			else
 				
@@ -1280,7 +1281,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				dpad_right = 1; right = 0;					// UP					
 				but1 = 1; green = 0;						// 5sus							
 				but2 = 1; yellow = 0;						
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}
 			else
 				
@@ -1288,14 +1289,14 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				dpad_left = 1;	left = 0;					// DOWN						
 				but1 = 1; green = 0;						// 5/7
 				but0 = 1; red = 0;							
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}													
 			else
 				
 			if (event_data[3] == 1) {
-				dpad_left = 1;	left = 0;					// DOWN					
+				if (event_data[3] == previous_pad) {dpad_right = 1; right = 0;}	else {dpad_left = 1; left = 0;}				
 				but2 = 1; yellow = 0;						// 1
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}
 			else
 				
@@ -1303,7 +1304,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				dpad_right = 1; right = 0;					// UP					
 				but2 = 1; yellow = 0;						// 1sus
 				but4 = 1; orange = 0;							
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}
 			else
 
@@ -1311,14 +1312,14 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				dpad_left = 1;	left = 0;					// DOWN					
 				but2 = 1; yellow = 0;						// 1/3
 				but3 = 1; blue = 0;							
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}
 			else						
 				
 			if (event_data[3] == 10) {
-				dpad_left = 1;	left = 0;					// DOWN					
+				if (event_data[3] == previous_pad) {dpad_right = 1; right = 0;}	else {dpad_left = 1; left = 0;}				
 				but4 = 1; orange = 0;						// 4			
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}
 			else
 				
@@ -1327,7 +1328,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				but4 = 1; orange = 0;						// 3b
 				but3 = 1; blue = 0;		
 				but0 = 1; red = 0;							
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}
 			else
 
@@ -1335,14 +1336,14 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				dpad_left = 1;	left = 0;					// DOWN						
 				but4 = 1; orange = 0;						// 4/6
 				but3 = 1; blue = 0;							
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}
 			else						
 				
 			if (event_data[3] == 3 || event_data[3] == 4) {
 				dpad_right = 1; right = 0;					// UP					
 				but3 = 1; blue = 0;							// 2m
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}
 			else
 				
@@ -1350,7 +1351,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				dpad_right = 1; right = 0;					// UP					
 				but3 = 1; blue = 0;							// 2
 				but0 = 1; red = 0;							
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}
 			else
 				
@@ -1358,7 +1359,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				dpad_right = 1; right = 0;					// UP					
 				but4 = 1; orange = 0;						// 4m
 				but0 = 1; red = 0;							
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}	
 			else
 				
@@ -1366,7 +1367,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				dpad_right = 1; right = 0;					// UP					
 				but1 = 1; green = 0;						// 3m
 				but3 = 1; blue = 0;								
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}
 			else
 				
@@ -1375,7 +1376,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				but1 = 1; green = 0;						// 3
 				but2 = 1; yellow = 0;								
 				but3 = 1; blue = 0;								
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}						
 			else
 				
@@ -1383,7 +1384,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				dpad_right = 1; right = 0;					// UP				
 				but1 = 1; green = 0;						// 5m
 				but4 = 1; orange = 0;															
-				chord_selected = true;
+				previous_pad = event_data[3];
 			}	
 			
 			finished_processing = true;
