@@ -1303,7 +1303,8 @@ void gamepad_bluetooth_handle_data() {
 				style_change_requested = true;
 				
 				if (next_or_previous) {			// play fill before style change request
-					sampler_trigger_fill();
+					// TODO
+					//sampler_trigger_fill();
 				}						
 			}				
 		}			
@@ -1694,7 +1695,8 @@ void gamepad_bluetooth_handle_data() {
 		{
 			if (joy_up && style_started) 
 			{
-				sampler_trigger_fill();
+				// TODO
+				//sampler_trigger_fill();
 				style_change_requested = true;						
 			}				
 		}		

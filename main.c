@@ -283,6 +283,7 @@ static void wav_trigger_pro_forward_midi_message(const uint8_t *buffer, uint32_t
 
 uint8_t get_arp_template(void);
 void midi_n_stream_write(uint8_t itf, uint8_t cable_num, uint8_t *buffer, uint32_t bufsize);
+void handle_keyboard_events(uint8_t keycode);
 
 enum {
 	// Balanced size: enough to batch multiple MIDI packets per callback while keeping stack usage small.
@@ -589,16 +590,7 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
         // Process up to 6 simultaneous active keypresses (Boot Keyboard Protocol)
         for (int i = 0; i < 6; i++) {
             uint8_t keycode = kbd_report->keycode[i];
-            if (keycode != 0) {
-                // keycode contains the raw USB HID scancode (e.g., 0x04 for 'A')
-                //printf("Key Pressed Scancode: 0x%02X\n", keycode);
-				
-				if (keycode == 40) { // ENTER
-					but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 1; green = 0; red = 0; blue = 0; yellow = 0; orange = 0;					
-					mbut0 = 1; logo = 0;										// start/stop
-					gamepad_bluetooth_handle_data();				
-				}
-            }
+            if (keycode != 0) handle_keyboard_events(keycode);
         }
 
         // Continue listening for subsequent keyboard events
@@ -617,6 +609,149 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
 
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize) {
     (void) instance; (void) report_id; (void) report_type; (void) buffer; (void) bufsize;
+}
+
+//--------------------------------------------------------------------+
+//
+// Keyboard Controller 
+//
+//--------------------------------------------------------------------+
+
+void handle_keyboard_events(uint8_t keycode) {
+	// keycode contains the raw USB HID scancode (e.g., 0x04 for 'A')
+	//printf("Key Pressed Scancode: 0x%02X\n", keycode);
+	/*
+	------------------------------
+	## Alphanumeric Keys (A–Z, 0–9)
+
+	| Key | Hex Scancode | Decimal | | Key | Hex Scancode | Decimal |
+	|---|---|---|---|---|---|---|
+	| A | 0x04 | 4 | | S | 0x16 | 22 |
+	| B | 0x05 | 5 | | T | 0x17 | 23 |
+	| C | 0x06 | 6 | | U | 0x18 | 24 |
+	| D | 0x07 | 7 | | V | 0x19 | 25 |
+	| E | 0x08 | 8 | | W | 0x1A | 26 |
+	| F | 0x09 | 9 | | X | 0x1B | 27 |
+	| G | 0x0A | 10 | | Y | 0x1C | 28 |
+	| H | 0x0B | 11 | | Z | 0x1D | 29 |
+	| I | 0x0C | 12 | | 1 (and !) | 0x1E | 30 |
+	| J | 0x0D | 13 | | 2 (and @) | 0x1F | 31 |
+	| K | 0x0E | 14 | | 3 (and #) | 0x20 | 32 |
+	| L | 0x0F | 15 | | 4 (and $) | 0x21 | 33 |
+	| M | 0x10 | 16 | | 5 (and %) | 0x22 | 34 |
+	| N | 0x11 | 17 | | 6 (and ^) | 0x23 | 35 |
+	| O | 0x12 | 18 | | 7 (and &) | 0x24 | 36 |
+	| P | 0x13 | 19 | | 8 (and *) | 0x25 | 37 |
+	| Q | 0x14 | 20 | | 9 (and () | 0x26 | 38 |
+	| R | 0x15 | 21 | | 0 (and )) | 0x27 | 39 |
+
+	------------------------------
+	## Navigation, System & Editing Controls
+
+	| Key | Hex Scancode | Decimal |
+	|---|---|---|
+	| ENTER (Return) | 0x28 | 40 |
+	| ESCAPE | 0x29 | 41 |
+	| BACKSPACE | 0x2A | 42 |
+	| TAB | 0x2B | 43 |
+	| SPACEBAR | 0x2C | 44 |
+	| CAPS LOCK | 0x39 | 57 |
+	| PRINTSCREEN | 0x46 | 70 |
+	| SCROLL LOCK | 0x47 | 71 |
+	| PAUSE (Break) | 0x48 | 72 |
+	| INSERT | 0x49 | 73 |
+	| HOME | 0x4A | 74 |
+	| PAGE UP | 0x4B | 75 |
+	| DELETE (Forward Delete) | 0x4C | 76 |
+	| END | 0x4D | 77 |
+	| PAGE DOWN | 0x4E | 78 |
+	| RIGHT ARROW | 0x4F | 79 |
+	| LEFT ARROW | 0x50 | 80 |
+	| DOWN ARROW | 0x51 | 81 |
+	| UP ARROW | 0x52 | 82 |
+
+	------------------------------
+	## Function Keys (F1–F12)
+
+	| Key | Hex Scancode | Decimal | | Key | Hex Scancode | Decimal |
+	|---|---|---|---|---|---|---|
+	| F1 | 0x3A | 58 | | F7 | 0x40 | 64 |
+	| F2 | 0x3B | 59 | | F8 | 0x41 | 65 |
+	| F3 | 0x3C | 60 | | F9 | 0x42 | 66 |
+	| F4 | 0x3D | 61 | | F10 | 0x43 | 67 |
+	| F5 | 0x3E | 62 | | F11 | 0x44 | 68 |
+	| F6 | 0x3F | 63 | | F12 | 0x45 | 69 |
+
+	------------------------------
+	## Punctuation & Symbols
+
+	| Key | Hex Scancode | Decimal |
+	|---|---|---|
+	| - (Minus / Underscore) | 0x2D | 45 |
+	| = (Equal / Plus) | 0x2E | 46 |
+	| [ (Left Bracket / Brace) | 0x2F | 47 |
+	| ] (Right Bracket / Brace) | 0x30 | 48 |
+	| \ (Backslash / Pipe) | 0x31 | 49 |
+	| ; (Semicolon / Colon) | 0x33 | 51 |
+	| ' (Apostrophe / Quote) | 0x34 | 52 |
+	| ` (Grave Accent / Tilde) | 0x35 | 53 |
+	| , (Comma / Less Than) | 0x36 | 54 |
+	| . (Period / Greater Than) | 0x37 | 55 |
+	| / (Slash / Question Mark) | 0x38 | 56 |
+
+	------------------------------
+	## Numeric Keypad (NumPad)
+
+	| Key | Hex Scancode | Decimal | | Key | Hex Scancode | Decimal |
+	|---|---|---|---|---|---|---|
+	| Num Lock | 0x53 | 83 | | Keypad 6 | 0x5E | 94 |
+	| Keypad / | 0x54 | 84 | | Keypad 7 | 0x5F | 95 |
+	| Keypad * | 0x55 | 85 | | Keypad 8 | 0x60 | 96 |
+	| Keypad - | 0x56 | 86 | | Keypad 9 | 0x61 | 97 |
+	| Keypad + | 0x57 | 87 | | Keypad 0 | 0x62 | 98 |
+	| Keypad ENTER | 0x58 | 88 | | Keypad . | 0x63 | 99 |
+	| Keypad 1 | 0x59 | 89 | | Non-US \ | 0x64 | 100 |
+	| Keypad 2 | 0x5A | 90 | | Keypad = | 0x67 | 103 |
+	| Keypad 3 | 0x5B | 91 | | | | |
+	| Keypad 4 | 0x5C | 92 | | | | |
+	| Keypad 5 | 0x5D | 93 | | | | |
+
+	------------------------------
+	## ⚠️ A Note on Modifier Keys (Shift, Ctrl, Alt, Gui)
+	Modifier keys are unique. Standard keyboards do not report modifiers inside the 6-key keycode[] array. Instead, they are reported as a single bitmask byte inside the hid_keyboard_report_t struct (usually mapped under report->modifier).
+	If you need to evaluate them, test the bits against these constant definitions:
+
+	* Left CTRL: 0x01 (Bit 0)
+	* Left SHIFT: 0x02 (Bit 1)
+	* Left ALT: 0x04 (Bit 2)
+	* Left GUI (Windows/Cmd Key): 0x08 (Bit 3)
+	* Right CTRL: 0x10 (Bit 4)
+	* Right SHIFT: 0x20 (Bit 5)
+	* Right ALT (AltGr): 0x40 (Bit 6)
+	* Right GUI: 0x80 (Bit 7)
+
+	------------------------------	
+	*/
+	
+	but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 0; green = 0; red = 0; blue = 0; yellow = 0; orange = 0; starpower = 0; pitch = 0; logo = 0;
+				
+	if (keycode == 40 || keycode == 44) { 											
+		mbut0 = 1; 										// start/stop
+		gamepad_bluetooth_handle_data();				
+	}
+	else
+		
+	if (keycode == 79) { 								// -> key - next style					
+		dpad_down = 1; 			 					
+		gamepad_bluetooth_handle_data();				
+	}
+	else
+
+	if (keycode == 80) {								
+		dpad_down = 1; but4 = 1; 						// <- key - prev style
+		gamepad_bluetooth_handle_data();				
+	}	
+	
 }
 
 //--------------------------------------------------------------------+
@@ -926,7 +1061,7 @@ void process_midi_byte(uint8_t b) {
 				midi_data_count  = 0; 			// ready for next running-status pair
 				
 				if (cc_cmd == 0x73 && cc_value == 0x7F && launchkey_daw_mode) {
-					but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 1; green = 0; red = 0; blue = 0; yellow = 0; orange = 0;					
+					but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 0; green = 0; red = 0; blue = 0; yellow = 0; orange = 0;					
 					mbut0 = 1; logo = 0;										// start/stop
 					gamepad_bluetooth_handle_data();
 
@@ -937,14 +1072,14 @@ void process_midi_byte(uint8_t b) {
 				else
 
 				if (cc_cmd == 0x75 && cc_value == 0x7F && launchkey_daw_mode) {
-					but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 1; green = 0; red = 0; blue = 0; yellow = 0; orange = 0;					
+					but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 0; green = 0; red = 0; blue = 0; yellow = 0; orange = 0;					
 					joy_up = true; joystick_up = 0;								// fill
 					gamepad_bluetooth_handle_data();				
 				}	
 				else
 
 				if (cc_cmd == 0x6A && cc_value == 0x7F && launchkey_daw_mode) {
-					but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 1; green = 0; red = 0; blue = 0; yellow = 0; orange = 0;					
+					but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 0; green = 0; red = 0; blue = 0; yellow = 0; orange = 0;					
 					dpad_down = 1; starpower = 0;			// next style					
 					gamepad_bluetooth_handle_data();				
 				}
