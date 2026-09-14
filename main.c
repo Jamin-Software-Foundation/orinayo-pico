@@ -733,6 +733,7 @@ void handle_keyboard_events(uint8_t keycode) {
 	------------------------------	
 	*/
 	
+	bool trigger_sampler = false; 
 	but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 0; green = 0; red = 0; blue = 0; yellow = 0; orange = 0; starpower = 0; pitch = 0; logo = 0;
 				
 	if (keycode == 40 || keycode == 44 || keycode == 45) { 											
@@ -741,31 +742,33 @@ void handle_keyboard_events(uint8_t keycode) {
 	}
 	else
 		
-	if (keycode == 79 || keycode == 46) { 				// -> key - next style	[plus/=]				
+	if (keycode == 79 || (keycode == 46 && style_started)) { 		// -> key - next style	[plus/=]				
 		dpad_down = 1; 			 					
 		gamepad_bluetooth_handle_data();				
 	}
 	else
 
-	if (keycode == 80 || keycode == 39) {								
-		dpad_down = 1; but4 = 1; 						// <- key - prev style [0/)]
+	if (keycode == 80 || (keycode == 39 && style_started)) {								
+		dpad_down = 1; but4 = 1; 									// <- key - prev style [0/)]
 		gamepad_bluetooth_handle_data();				
 	}
 	else
-
-	if ((keycode == 82 || keycode == 81) && !style_started) 
-	{	
-		if (keycode == 81) {				// next style group
-			style_group = style_group + 1;
-			if (style_group > 20) style_group = 0;
-		}
-		else
-			
-		if (keycode == 82) {				// previous style group
-			style_group = style_group - 1;
-			if (style_group < 0) style_group = 20;								
-		}	
+	
+	if (keycode == 81 || (keycode == 46 && !style_started)) {	// next style group
+		style_group = style_group + 1;
+		if (style_group > 20) style_group = 0;
+		trigger_sampler	 = true;		
+	}
+	else
 		
+	if (keycode == 82 || (keycode == 39 && !style_started)) {	// previous style group
+		style_group = style_group - 1;
+		if (style_group < 0) style_group = 20;	
+		trigger_sampler	 = true;
+	}	
+	
+	if (trigger_sampler) 
+	{
 		if (enable_wav_trigger_pro) {
 			sampler_midi_note(0x9F, 36 + style_group, 127);	 // select and load preset
 		} 									
@@ -775,7 +778,6 @@ void handle_keyboard_events(uint8_t keycode) {
 			midi_send_program_change(0xCF, style_group + 2); // select preset on channel 16 and skip both 1010 pianos	
 		}	
 	}
-
 }
 
 //--------------------------------------------------------------------+
