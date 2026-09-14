@@ -735,20 +735,20 @@ void handle_keyboard_events(uint8_t keycode) {
 	
 	but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 0; green = 0; red = 0; blue = 0; yellow = 0; orange = 0; starpower = 0; pitch = 0; logo = 0;
 				
-	if (keycode == 40 || keycode == 44 || keycode == 86) { 											
+	if (keycode == 40 || keycode == 44 || keycode == 45) { 											
 		mbut0 = 1; 										// start/stop
 		gamepad_bluetooth_handle_data();				
 	}
 	else
 		
-	if (keycode == 79 || keycode == 103) { 				// -> key - next style					
+	if (keycode == 79 || keycode == 46) { 				// -> key - next style	[plus/=]				
 		dpad_down = 1; 			 					
 		gamepad_bluetooth_handle_data();				
 	}
 	else
 
-	if (keycode == 80 || keycode == 98) {								
-		dpad_down = 1; but4 = 1; 						// <- key - prev style
+	if (keycode == 80 || keycode == 39) {								
+		dpad_down = 1; but4 = 1; 						// <- key - prev style [0/)]
 		gamepad_bluetooth_handle_data();				
 	}
 	else
