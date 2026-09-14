@@ -87,7 +87,7 @@ extern "C" {
 //------------- CLASS -------------//
 #define CFG_TUD_CDC             0
 #define CFG_TUD_MSC             0
-#define CFG_TUD_HID             1 
+#define CFG_TUD_HID             0 
 #define CFG_TUD_MIDI            1 
 #define CFG_TUD_VENDOR          0
 
@@ -108,8 +108,14 @@ extern "C" {
 // Host class enablement.
 #define CFG_TUH_HUB                 1
 #define CFG_TUH_DEVICE_MAX          (3 * CFG_TUH_HUB + 1)
+
 #define CFG_TUH_MIDI                1
 #define CFG_TUH_MIDI_STREAM_API		1
+
+#define CFG_TUH_HID                 1
+#define CFG_TUH_HID_KEYBOARD        1
+#define TUH_CFG_RHP_PIO             1  // Ensures Host routes properly to PIO layer
+
 
 // Host MIDI buffers.
 // Use host bulk endpoint max size for portability across full/high speed devices.
