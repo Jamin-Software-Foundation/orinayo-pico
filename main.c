@@ -752,19 +752,30 @@ void handle_keyboard_events(uint8_t keycode) {
 		gamepad_bluetooth_handle_data();				
 	}
 	else
-	
-	if (keycode == 82 && !style_started) {				// next style group
-		style_group = style_group + 1;
-		if (style_group > 20) style_group = 0;
-	}
-	else
+
+	if ((keycode == 82 || keycode == 81) && !style_started) 
+	{	
+		if (keycode == 81) {				// next style group
+			style_group = style_group + 1;
+			if (style_group > 20) style_group = 0;
+		}
+		else
+			
+		if (keycode == 82) {				// previous style group
+			style_group = style_group - 1;
+			if (style_group < 0) style_group = 20;								
+		}	
 		
-	if (keycode == 81 && !style_started) {				// previous style group
-		style_group = style_group - 1;
-		if (style_group < 0) style_group = 20;								
-	}	
-	
-	
+		if (enable_wav_trigger_pro) {
+			sampler_midi_note(0x9F, 36 + style_group, 127);	 // select and load preset
+		} 									
+		else
+
+		if (enable_nanobox_tangerine) {
+			midi_send_program_change(0xCF, style_group + 2); // select preset on channel 16 and skip both 1010 pianos	
+		}	
+	}
+
 }
 
 //--------------------------------------------------------------------+
