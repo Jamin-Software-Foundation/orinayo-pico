@@ -379,7 +379,7 @@ static uni_error_t pico_bluetooth_on_device_discovered(bd_addr_t addr, const cha
   if (((cod & UNI_BT_COD_MINOR_MASK) & UNI_BT_COD_MINOR_KEYBOARD) == UNI_BT_COD_MINOR_KEYBOARD) {
     // PICO_DEBUG("[BT] Ignoring keyboard device\n");
     //return UNI_ERROR_IGNORE_DEVICE;
-	 cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
+	 cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);	
   }
 
   return UNI_ERROR_SUCCESS;

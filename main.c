@@ -569,6 +569,48 @@ void tuh_midi_umount_cb(uint8_t idx) {
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
 }
 
+void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len) {
+    uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
+
+    // Check if the mounted device is a keyboard
+    if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {
+        //printf("USB Keyboard mounted successfully!\n");
+        // Start requesting data events from the device
+        tuh_hid_receive_report(dev_addr, instance);
+    }
+}
+
+void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len) {
+    uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
+
+    if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {
+        hid_keyboard_report_t* kbd_report = (hid_keyboard_report_t*) report;
+
+        // Process up to 6 simultaneous active keypresses (Boot Keyboard Protocol)
+        for (int i = 0; i < 6; i++) {
+            uint8_t keycode = kbd_report->keycode[i];
+            if (keycode != 0) {
+                // keycode contains the raw USB HID scancode (e.g., 0x04 for 'A')
+                //printf("Key Pressed Scancode: 0x%02X\n", keycode);
+				
+				if (keycode == 40) { // ENTER
+					but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 1; green = 0; red = 0; blue = 0; yellow = 0; orange = 0;					
+					mbut0 = 1; logo = 0;										// start/stop
+					gamepad_bluetooth_handle_data();				
+				}
+            }
+        }
+
+        // Continue listening for subsequent keyboard events
+        tuh_hid_receive_report(dev_addr, instance);
+    }
+}
+
+// Handle unmount safely
+void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
+    //printf("USB Keyboard unmounted.\n");
+}
+
 //--------------------------------------------------------------------+
 //
 // Chord detection helpers 
