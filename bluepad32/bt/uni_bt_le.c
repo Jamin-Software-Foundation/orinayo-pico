@@ -1502,7 +1502,7 @@ void uni_bt_le_on_gap_event_advertising_report(const uint8_t* packet, uint16_t s
     gap_event_advertising_report_get_address(packet, addr);
     addr_type = gap_event_advertising_report_get_address_type(packet);
     adv_event_get_data(packet, &appearance, name);	
-	/*
+	
     if (name[0] == 'L' && name[1] == 'i' && name[2] == 'b' && name[3] == 'e' && name[4] == 'r') {
 		
 		if (!liberlive_enabled) {
@@ -1512,7 +1512,6 @@ void uni_bt_le_on_gap_event_advertising_report(const uint8_t* packet, uint16_t s
 		}
 	}
 	else
-	*/
 
     if (name[0] == 'N' && name[1] == 'e' && name[2] == 'o' && name[3] == 'U' && name[4] == 'k' && name[5] == 'e') {
 		

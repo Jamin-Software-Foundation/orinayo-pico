@@ -378,7 +378,8 @@ static uni_error_t pico_bluetooth_on_device_discovered(bd_addr_t addr, const cha
   // As an example, if you want to filter out keyboards, do:
   if (((cod & UNI_BT_COD_MINOR_MASK) & UNI_BT_COD_MINOR_KEYBOARD) == UNI_BT_COD_MINOR_KEYBOARD) {
     // PICO_DEBUG("[BT] Ignoring keyboard device\n");
-    return UNI_ERROR_IGNORE_DEVICE;
+    //return UNI_ERROR_IGNORE_DEVICE;
+	 cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
   }
 
   return UNI_ERROR_SUCCESS;
