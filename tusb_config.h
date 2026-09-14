@@ -112,7 +112,7 @@ extern "C" {
 #define CFG_TUH_MIDI                1
 #define CFG_TUH_MIDI_STREAM_API		1
 
-#define CFG_TUH_HID                 1
+#define CFG_TUH_HID                 4
 #define CFG_TUH_HID_KEYBOARD        1
 #define TUH_CFG_RHP_PIO             1  // Ensures Host routes properly to PIO layer
 
