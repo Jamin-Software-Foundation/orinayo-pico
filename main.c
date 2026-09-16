@@ -220,6 +220,7 @@ bool launchkey_connected = false;
 bool launchkey_daw_mode = false;
 bool irig_pro_connected = false;
 bool mute_midi_controller = false;
+bool flash_led = true;
 
 // 128-bit bitmask tracking currently held MIDI notes (one bit per note number).
 static uint32_t held_notes_mask[4] = {0};
@@ -609,7 +610,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
         tuh_hid_receive_report(dev_addr, instance);
 		
 		enable_wav_trigger_pro = true;	// assume WAV Trigger Pro is available
-		config_wav_trigger_pro();		
+		config_wav_trigger_pro();			
     }
 }
 
@@ -766,8 +767,14 @@ void handle_keyboard_events(uint8_t keycode) {
 	*/
 	
 	bool trigger_sampler = false; 
-	but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 0; green = 0; red = 0; blue = 0; yellow = 0; orange = 0; starpower = 0; pitch = 0; logo = 0;
-				
+
+	green = 0; red = 0; blue = 0; yellow = 0; orange = 0; starpower = 0; pitch = 0; logo = 0;	
+	but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 0; 
+	dpad_left = 0;	dpad_right = 0;	dpad_up = 0; dpad_down = 0;	
+	mbut0 = 0; mbut1 = 0; mbut2 = 0; mbut3 = 0;
+	joy_up = false;   joy_down = false;  knob_up = false; knob_down = false; 	
+
+	
 	if (keycode == 40 || keycode == 44 || keycode == 45) { 											
 		mbut0 = 1; 										// start/stop
 		gamepad_bluetooth_handle_data();				
@@ -798,6 +805,19 @@ void handle_keyboard_events(uint8_t keycode) {
 		if (style_group < 0) style_group = 20;	
 		trigger_sampler	 = true;
 	}
+	
+	
+	if (trigger_sampler) 
+	{
+		if (enable_wav_trigger_pro) {
+			sampler_midi_note(0x9F, 36 + style_group, 127);	 // select and load preset
+		} 									
+		else
+
+		if (enable_nanobox_tangerine) {
+			midi_send_program_change(0xCF, style_group + 2); // select preset on channel 16 and skip both 1010 pianos	
+		}	
+	}	
 
 	if (keycode >= 4 && keycode <= 29) {				// chord keys
 		left = 1; 												
@@ -964,22 +984,11 @@ void handle_keyboard_events(uint8_t keycode) {
 
 		}
 		
-		
 		finished_processing = true;
-		gamepad_bluetooth_handle_data();						
-		
-	}
-	
-	if (trigger_sampler) 
-	{
-		if (enable_wav_trigger_pro) {
-			sampler_midi_note(0x9F, 36 + style_group, 127);	 // select and load preset
-		} 									
-		else
+		gamepad_bluetooth_handle_data();	
 
-		if (enable_nanobox_tangerine) {
-			midi_send_program_change(0xCF, style_group + 2); // select preset on channel 16 and skip both 1010 pianos	
-		}	
+		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, flash_led);	
+		flash_led = !flash_led;					
 	}
 }
 
