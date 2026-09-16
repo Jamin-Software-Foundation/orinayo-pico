@@ -167,9 +167,24 @@ extern uint8_t but2;
 extern uint8_t but3; 
 extern uint8_t but4; 
 extern uint8_t but6; 
-extern uint8_t mbut0;
+extern uint8_t but7;   
+extern uint8_t but9;
 
+extern uint8_t mbut0;
+extern uint8_t mbut1;
+extern uint8_t mbut2;
+extern uint8_t mbut3;
+
+extern uint8_t dpad_left;	
+extern uint8_t dpad_right;
+extern uint8_t dpad_up;
 extern uint8_t dpad_down;
+
+extern bool joy_up;  
+extern bool joy_down;  
+extern bool knob_up; 
+extern bool knob_down;
+
 extern uint8_t logo;
 extern uint8_t starpower;
 extern uint8_t pitch;
@@ -179,8 +194,11 @@ extern uint8_t red;
 extern uint8_t yellow;
 extern uint8_t orange;
 extern uint8_t blue;
-extern bool joy_up; 
+
 extern uint8_t joystick_up;
+extern uint8_t joystick_down;  
+extern uint8_t logo_knob_up;  
+extern uint8_t logo_knob_down;
 
 static uint32_t old_p1 = 0;
 static uint32_t old_p2 = 0;
