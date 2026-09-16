@@ -313,7 +313,7 @@ static void wav_trigger_pro_forward_midi_message(const uint8_t *buffer, uint32_t
 
 uint8_t get_arp_template(void);
 void midi_n_stream_write(uint8_t itf, uint8_t cable_num, uint8_t *buffer, uint32_t bufsize);
-void handle_keyboard_events(uint8_t keycode);
+void handle_keyboard_events(uint8_t modifier, uint8_t keycode);
 
 enum {
 	// Balanced size: enough to batch multiple MIDI packets per callback while keeping stack usage small.
@@ -620,10 +620,34 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {
         hid_keyboard_report_t* kbd_report = (hid_keyboard_report_t*) report;
 
-        // Process up to 6 simultaneous active keypresses (Boot Keyboard Protocol)
+        // 1. Extract the modifier byte from the HID report
+        uint8_t modifier = kbd_report->modifier;
+
+        // 2. Optional: Check individual modifiers directly if needed
+        bool left_ctrl   = modifier & KEYBOARD_MODIFIER_LEFTCTRL;
+        bool left_shift  = modifier & KEYBOARD_MODIFIER_LEFTSHIFT;
+        bool left_alt    = modifier & KEYBOARD_MODIFIER_LEFTALT;
+        bool left_gui    = modifier & KEYBOARD_MODIFIER_LEFTGUI;
+
+        bool right_ctrl  = modifier & KEYBOARD_MODIFIER_RIGHTCTRL;
+        bool right_shift = modifier & KEYBOARD_MODIFIER_RIGHTSHIFT;
+        bool right_alt   = modifier & KEYBOARD_MODIFIER_RIGHTALT;
+        bool right_gui   = modifier & KEYBOARD_MODIFIER_RIGHTGUI;
+
+        // Process up to 6 simultaneous active keypresses 
         for (int i = 0; i < 6; i++) {
             uint8_t keycode = kbd_report->keycode[i];
-            if (keycode != 0) handle_keyboard_events(keycode);
+            
+            // Pass both the modifiers context and the keycode to your handler
+            if (keycode != 0) {
+                handle_keyboard_events(modifier, keycode);
+            }
+        }
+
+        // 3. Handle cases where ONLY a modifier is pressed or released (no keycode active)
+        // If no regular keys are pressed, you still want to register modifier state changes
+        if (kbd_report->keycode[0] == 0) {
+            handle_keyboard_events(modifier, 0);
         }
 
         // Continue listening for subsequent keyboard events
@@ -650,7 +674,7 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 //
 //--------------------------------------------------------------------+
 
-void handle_keyboard_events(uint8_t keycode) {
+void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 	// keycode contains the raw USB HID scancode (e.g., 0x04 for 'A')
 	//printf("Key Pressed Scancode: 0x%02X\n", keycode);
 	/*
@@ -773,10 +797,16 @@ void handle_keyboard_events(uint8_t keycode) {
 	dpad_left = 0;	dpad_right = 0;	dpad_up = 0; dpad_down = 0;	
 	mbut0 = 0; mbut1 = 0; mbut2 = 0; mbut3 = 0;
 	joy_up = false;   joy_down = false;  knob_up = false; knob_down = false; 	
+	joystick_up = 0; joystick_down = 0;  logo_knob_up = 0;  logo_knob_down = 0;	
 
+	if (keycode == 42) {
+		joy_up = true; joystick_up = 0;					// backspace - fill
+		gamepad_bluetooth_handle_data();
+	}
+	else
 	
-	if (keycode == 40 || keycode == 44 || keycode == 45) { 											
-		mbut0 = 1; 										// start/stop
+	if (keycode == 40 || keycode == 45) { 											
+		mbut0 = 1; 										// space/- start/stop
 		gamepad_bluetooth_handle_data();				
 	}
 	else
