@@ -195,6 +195,16 @@ extern uint8_t yellow;
 extern uint8_t orange;
 extern uint8_t blue;
 
+extern uint8_t up;
+extern uint8_t down;
+extern uint8_t left;
+extern uint8_t right;	
+
+extern uint8_t start;
+extern uint8_t menu;
+extern uint8_t logo;
+extern uint8_t config;	
+
 extern uint8_t joystick_up;
 extern uint8_t joystick_down;  
 extern uint8_t logo_knob_up;  
