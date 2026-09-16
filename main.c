@@ -796,7 +796,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 	bool trigger_sampler = false; 
 
 	green = 0; red = 0; blue = 0; yellow = 0; orange = 0; starpower = 0; pitch = 0; logo = 0;	
-	but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 0; 
+	but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 0; but6 = 0;  but7 = 0; but9 = 0; 
 	dpad_left = 0;	dpad_right = 0;	dpad_up = 0; dpad_down = 0;	
 	mbut0 = 0; mbut1 = 0; mbut2 = 0; mbut3 = 0;
 	joy_up = false;   joy_down = false;  knob_up = false; knob_down = false; 	
