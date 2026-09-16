@@ -1695,8 +1695,7 @@ void gamepad_bluetooth_handle_data() {
 		{
 			if (joy_up && style_started) 
 			{
-				// TODO
-				//sampler_trigger_fill();
+				sampler_trigger_fill();
 				style_change_requested = true;						
 			}				
 		}		
