@@ -159,6 +159,7 @@ extern bool enable_wav_trigger_pro;
 extern bool style_end_requested;
 extern bool style_end_started;
 extern bool preferences_changed;
+extern bool finished_processing;	
 
 extern uint8_t but0; 
 extern uint8_t but1;
@@ -578,6 +579,9 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
         //printf("USB Keyboard mounted successfully!\n");
         // Start requesting data events from the device
         tuh_hid_receive_report(dev_addr, instance);
+		
+		enable_wav_trigger_pro = true;	// assume WAV Trigger Pro is available
+		config_wav_trigger_pro();		
     }
 }
 
@@ -765,7 +769,178 @@ void handle_keyboard_events(uint8_t keycode) {
 		style_group = style_group - 1;
 		if (style_group < 0) style_group = 20;	
 		trigger_sampler	 = true;
-	}	
+	}
+
+	if (keycode >= 4 && keycode <= 29) {				// chord keys
+		left = 1; 												
+		finished_processing = true;			
+		gamepad_bluetooth_handle_data();				// end previous strum
+
+		if (keycode == 13) { 							// J
+			dpad_right = 1; right = 0;					// UP								
+			but2 = 1; yellow = 0;						// 7b								
+			but0 = 1; red = 0;								
+
+		}
+		else
+			
+		if (keycode == 24) { 							// U
+			dpad_right = 1; right = 0;					// UP								
+			but1 = 1; green = 0;						// 7							
+			but0 = 1; red = 0;										
+			but2 = 1; yellow = 0;				
+			but3 = 1; blue = 0;								
+
+		}
+		else
+
+		if (keycode == 16) { 							// M
+			dpad_right = 1; right = 0;					// UP							
+			but2 = 1; yellow = 0;						// 5b			
+			but1 = 1; green = 0;								
+			but0 = 1; red = 0;								
+
+		}
+		else
+			
+		if (keycode == 28) { 							// Y
+			dpad_right = 1; right = 0;					// UP								
+			but0 = 1; red = 0;							// 6m							
+
+		}
+		else
+			
+		if (keycode == 11) { 							// H
+			dpad_right = 1; right = 0;					// UP								
+			but0 = 1; red = 0;							// 6
+			but2 = 1; yellow = 0;
+			but3 = 1; blue = 0;								
+
+		}
+		else
+			
+		if (keycode == 23) { 							// T	
+			dpad_left = 1;	left = 0;					// DOWN			
+			but1 = 1; green = 0;						// 5	
+
+		}
+		else
+			
+		if (keycode == 10) { 							// G	
+			dpad_right = 1; right = 0;					// UP					
+			but1 = 1; green = 0;						// 5sus							
+			but2 = 1; yellow = 0;						
+
+		}
+		else
+			
+		if (keycode == 23) { 							// B
+			dpad_left = 1;	left = 0;					// DOWN						
+			but1 = 1; green = 0;						// 5/7
+			but0 = 1; red = 0;							
+
+		}													
+		else
+			
+		if (keycode == 20) { 							// Q	
+			dpad_left = 1;	left = 0;					// DOWN			
+			but2 = 1; yellow = 0;						// 1
+
+		}
+		else
+			
+		if (keycode == 4) { 							// A
+			dpad_right = 1; right = 0;					// UP					
+			but2 = 1; yellow = 0;						// 1sus
+			but4 = 1; orange = 0;							
+
+		}
+		else
+
+		if (keycode == 29) { 							// Z
+			dpad_left = 1;	left = 0;					// DOWN					
+			but2 = 1; yellow = 0;						// 1/3
+			but3 = 1; blue = 0;							
+
+		}
+		else						
+			
+		if (keycode == 21) { 							// R
+			dpad_left = 1;	left = 0;					// DOWN					
+			but4 = 1; orange = 0;						// 4			
+
+		}
+		else
+			
+		if (keycode == 9) { 							// F
+			dpad_right = 1; right = 0;					// UP					
+			but4 = 1; orange = 0;						// 4m
+			but0 = 1; red = 0;							
+
+		}		
+		else
+
+		if (keycode == 25) { 							// V
+			dpad_left = 1;	left = 0;					// DOWN						
+			but4 = 1; orange = 0;						// 4/6
+			but3 = 1; blue = 0;							
+
+		}		
+		else						
+			
+		if (keycode == 26) { 							// W
+			dpad_right = 1; right = 0;					// UP					
+			but3 = 1; blue = 0;							// 2m
+
+		}
+		else
+			
+		if (keycode == 22) { 							// S
+			dpad_right = 1; right = 0;					// UP					
+			but3 = 1; blue = 0;							// 2
+			but0 = 1; red = 0;							
+
+		}	
+		else
+			
+		if (keycode == 8) { 							// E
+			dpad_right = 1; right = 0;					// UP					
+			but1 = 1; green = 0;						// 3m
+			but3 = 1; blue = 0;								
+
+		}
+		else
+			
+		if (keycode == 7) { 							// D
+			dpad_right = 1; right = 0;					// UP					
+			but1 = 1; green = 0;						// 3
+			but2 = 1; yellow = 0;								
+			but3 = 1; blue = 0;								
+
+		}						
+		else
+			
+		if (keycode == 127) {							// TODO
+			dpad_right = 1; right = 0;					// UP				
+			but1 = 1; green = 0;						// 5m
+			but4 = 1; orange = 0;															
+
+		}
+		else
+			
+		if (keycode == 127) {							// TODO
+			dpad_right = 1; right = 0;					// UP				
+			but4 = 1; orange = 0;						// 3b
+			but3 = 1; blue = 0;		
+			but0 = 1; red = 0;							
+
+		}
+		
+		
+		finished_processing = true;
+		gamepad_bluetooth_handle_data();						
+		
+	}
 	
 	if (trigger_sampler) 
 	{
