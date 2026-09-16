@@ -220,7 +220,7 @@ bool launchkey_connected = false;
 bool launchkey_daw_mode = false;
 bool irig_pro_connected = false;
 bool mute_midi_controller = false;
-bool flash_led = true;
+bool keyboard_flash_led = true;
 
 // 128-bit bitmask tracking currently held MIDI notes (one bit per note number).
 static uint32_t held_notes_mask[4] = {0};
@@ -987,8 +987,8 @@ void handle_keyboard_events(uint8_t keycode) {
 		finished_processing = true;
 		gamepad_bluetooth_handle_data();	
 
-		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, flash_led);	
-		flash_led = !flash_led;					
+		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, keyboard_flash_led);	
+		keyboard_flash_led = !keyboard_flash_led;					
 	}
 }
 
