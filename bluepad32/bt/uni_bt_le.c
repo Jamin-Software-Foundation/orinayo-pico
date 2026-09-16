@@ -859,7 +859,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
 				
 				config_guitar(4);									// WAV Trigger Ppro (default) 
-				but6 = 1; pitch = 0; but0 = 1; red = 0;				// Select strum type red button	
+				but6 = 1; pitch = 0; but2 = 1; yellow = 0;			// Select strum type yellow button	
 				gamepad_bluetooth_handle_data();
 				
 				query_state = 2;
