@@ -122,7 +122,7 @@ void pico_set_led(bool led_on) {
 
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
-
+extern int transpose;
 extern int midi_current_step;
 extern int style_section;
 extern int old_style;
@@ -624,7 +624,7 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
         hid_keyboard_report_t* kbd_report = (hid_keyboard_report_t*) report;
         uint8_t modifier = kbd_report->modifier;
 
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 1; i++) {						// only the first key pressed
             uint8_t keycode = kbd_report->keycode[i];
             
             // Pass both the modifiers context and the keycode to your handler
@@ -1032,6 +1032,17 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 			sample_chord_velocity = sample_chord_velocity + 10;
 			if (sample_chord_velocity > 127) sample_chord_velocity = 127;
 		}		
+	}
+
+	if (keycode >= 86 && keycode <= 87) 		// Numpad + and - (key change)
+	{
+		if (keycode == 86) transpose--;
+		if (keycode == 87) transpose++;
+		
+		if (transpose > 11) transpose = 0;
+		if (transpose < 0) transpose = 11;
+		
+		if (enable_seqtrak) midi_seqtrak_key(transpose);
 	}
 }
 
