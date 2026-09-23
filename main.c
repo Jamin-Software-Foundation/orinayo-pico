@@ -990,8 +990,9 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		keyboard_flash_led = !keyboard_flash_led;					
 	}
 
-	if (keycode >= 70 && keycode <= 72) 		// prt-screen, scroll-lock & pause
-	{												
+	if (keycode >= 70 && keycode <= 72) { 		// prt-screen, scroll-lock & pause (mute control)
+		but6 = 1;
+												
 		if (keycode == 70) {but1 = 1; but3 = 1;}	// toggle mute drums
 		if (keycode == 71) {but0 = 1; but3 = 1;}	// toggle mute bass										
 		if (keycode == 72) {but1 = 1; but2 = 1;}	// toggle mute chords
@@ -1000,7 +1001,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		gamepad_bluetooth_handle_data();		
 	}
 	
-	if (keycode >= 73 && keycode <= 78) 		// ins, home, pgup, del end pgdwn
+	if (keycode >= 73 && keycode <= 78) 		// ins, home, pgup, del end pgdwn (vol control)
 	{	
 		if (keycode == 73)	{
 			sample_drum_velocity = sample_drum_velocity - 10;
