@@ -805,40 +805,34 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		joy_up = true; joystick_up = 0;					// BACKSPACE - fill
 		gamepad_bluetooth_handle_data();
 	}
-	else
 	
 	if (keycode == 40) { 											
 		mbut0 = 1; 										// ENTER start/stop
 		gamepad_bluetooth_handle_data();				
 	}
-	else
 		
 	if (keycode == 79) { 						// -> key - next style			
 		dpad_down = 1; 			 					
 		gamepad_bluetooth_handle_data();				
 	}
-	else
 
 	if (keycode == 80) {						// <- key - prev style 						
 		dpad_down = 1; but4 = 1; 
 		gamepad_bluetooth_handle_data();				
 	}
-	else
-	
+
 	if (keycode == 81 && !style_started) {		// ^ next style group
 		style_group = style_group + 1;
 		if (style_group > 20) style_group = 0;
 		trigger_sampler	 = true;		
 	}
-	else
-		
+	
 	if (keycode == 82 && !style_started) {		// v previous style group
 		style_group = style_group - 1;
 		if (style_group < 0) style_group = 20;	
 		trigger_sampler	 = true;
 	}
-	
-	
+		
 	if (trigger_sampler) 
 	{
 		if (enable_wav_trigger_pro) {
@@ -990,6 +984,26 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		keyboard_flash_led = !keyboard_flash_led;					
 	}
 
+	if (keycode >= 30 && keycode <= 34) {		// 1-5 (strum control)
+		but6 = 1;
+												
+		if (keycode == 30) {but1 = 1;}			// green - strum up/down
+		if (keycode == 31) {but0 = 1;}			// red - strum up bass down									
+		if (keycode == 32) {but2 = 1;}			// yellow - arp 1
+		if (keycode == 33) {but3 = 1;}			// yellow - arp 2
+		if (keycode == 34) {but4 = 1;}			// yellow - arp 3
+		
+		finished_processing = true;	
+		gamepad_bluetooth_handle_data();		
+	}
+	
+	if (keycode == 53) { 						// ` Tilde worship pads/backing track
+		but6 = 1; but1 = 1; but4 = 1;
+
+		finished_processing = true;	
+		gamepad_bluetooth_handle_data();	
+	}
+	
 	if (keycode >= 70 && keycode <= 72) { 		// prt-screen, scroll-lock & pause (mute control)
 		but6 = 1;
 												
@@ -1031,6 +1045,19 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		if (keycode == 78)	{
 			sample_chord_velocity = sample_chord_velocity + 10;
 			if (sample_chord_velocity > 127) sample_chord_velocity = 127;
+		}		
+	}
+
+	if (keycode >= 45 && keycode <= 46) 		// Main keyboard + and - (melody vol)
+	{
+		if (keycode == 45)	{
+			midi_guitar_volume = midi_guitar_volume - 10;
+			if (midi_guitar_volume < 10) midi_guitar_volume = 10;
+		}
+		
+		if (keycode == 46)	{
+			midi_guitar_volume = midi_guitar_volume + 10;
+			if (midi_guitar_volume > 127) midi_guitar_volume = 127;
 		}		
 	}
 
