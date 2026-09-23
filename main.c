@@ -984,14 +984,21 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		keyboard_flash_led = !keyboard_flash_led;					
 	}
 
-	if (keycode >= 30 && keycode <= 34) {		// 1-5 (strum control)
+	if (keycode >= 30 && keycode <= 39) {		// 1-7 (strum control)
 		but6 = 1;
 												
-		if (keycode == 30) {but1 = 1;}			// green - strum up/down
-		if (keycode == 31) {but0 = 1;}			// red - strum up bass down									
-		if (keycode == 32) {but2 = 1;}			// yellow - arp 1
-		if (keycode == 33) {but3 = 1;}			// yellow - arp 2
-		if (keycode == 34) {but4 = 1;}			// yellow - arp 3
+		if (keycode == 30) {but1 = 1;}					// green - strum up/down
+		if (keycode == 31) {but0 = 1;}					// red - strum up bass down									
+		if (keycode == 32) {but2 = 1;}					// yellow - arp 1
+		if (keycode == 33) {but3 = 1;}					// blue - arp 2
+		if (keycode == 34) {but4 = 1;}					// orange - arp 3
+
+		if (keycode == 35) {but1 = 1; but0 = 1;}		// green/red - neck low
+		if (keycode == 36) {but0 = 1; but2 = 1;}		// red/yellow - neck midrange
+		if (keycode == 37) {but2 = 1; but3 = 1;}		// yellow/blue - nect high
+		
+		if (keycode == 38) {transpose = 0;}				// reset song key to C
+		if (keycode == 39) {but3 = 1; but4 = 1;}		// blue/orange/blue - melody off
 		
 		finished_processing = true;	
 		gamepad_bluetooth_handle_data();		
