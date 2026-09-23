@@ -1009,7 +1009,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		
 		if (keycode == 76)	{
 			sample_drum_velocity = sample_drum_velocity + 10;
-			if (sample_drum_velocity > 127) sample_drum_velocity = 127
+			if (sample_drum_velocity > 127) sample_drum_velocity = 127;
 		}
 		
 		if (keycode == 74)	{
@@ -1019,7 +1019,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		
 		if (keycode == 77)	{
 			sample_bass_velocity = sample_bass_velocity + 10;
-			if (sample_bass_velocity > 127) sample_bass_velocity = 127
+			if (sample_bass_velocity > 127) sample_bass_velocity = 127;
 		}	
 
 		if (keycode == 75)	{
@@ -1029,7 +1029,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		
 		if (keycode == 78)	{
 			sample_chord_velocity = sample_chord_velocity + 10;
-			if (sample_chord_velocity > 127) sample_chord_velocity = 127
+			if (sample_chord_velocity > 127) sample_chord_velocity = 127;
 		}		
 	}
 }
