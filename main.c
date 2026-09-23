@@ -851,7 +851,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		}	
 	}	
 
-	if (keycode >= 4 && keycode <= 29) {				// chord keys
+	if (keycode >= 4 && keycode <= 29) {		// chord keys
 		left = 1; 												
 		finished_processing = true;			
 		gamepad_bluetooth_handle_data();				// end previous strum
@@ -988,6 +988,49 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 
 		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, keyboard_flash_led);	
 		keyboard_flash_led = !keyboard_flash_led;					
+	}
+
+	if (keycode >= 70 && keycode <= 72) 		// prt-screen, scroll-lock & pause
+	{												
+		if (keycode == 70) {but1 = 1; but3 = 1;}	// toggle mute drums
+		if (keycode == 71) {but0 = 1; but3 = 1;}	// toggle mute bass										
+		if (keycode == 72) {but1 = 1; but2 = 1;}	// toggle mute chords
+
+		finished_processing = true;	
+		gamepad_bluetooth_handle_data();		
+	}
+	
+	if (keycode >= 73 && keycode <= 78) 		// ins, home, pgup, del end pgdwn
+	{	
+		if (keycode == 73)	{
+			sample_drum_velocity = sample_drum_velocity - 10;
+			if (sample_drum_velocity < 10) sample_drum_velocity = 10;
+		}
+		
+		if (keycode == 76)	{
+			sample_drum_velocity = sample_drum_velocity + 10;
+			if (sample_drum_velocity > 127) sample_drum_velocity = 127
+		}
+		
+		if (keycode == 74)	{
+			sample_bass_velocity = sample_bass_velocity - 10;
+			if (sample_bass_velocity < 10) sample_bass_velocity = 10;
+		}
+		
+		if (keycode == 77)	{
+			sample_bass_velocity = sample_bass_velocity + 10;
+			if (sample_bass_velocity > 127) sample_bass_velocity = 127
+		}	
+
+		if (keycode == 75)	{
+			sample_chord_velocity = sample_chord_velocity - 10;
+			if (sample_chord_velocity < 10) sample_chord_velocity = 10;
+		}
+		
+		if (keycode == 78)	{
+			sample_chord_velocity = sample_chord_velocity + 10;
+			if (sample_chord_velocity > 127) sample_chord_velocity = 127
+		}		
 	}
 }
 
