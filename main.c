@@ -622,22 +622,8 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
 
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {
         hid_keyboard_report_t* kbd_report = (hid_keyboard_report_t*) report;
-
-        // 1. Extract the modifier byte from the HID report
         uint8_t modifier = kbd_report->modifier;
 
-        // 2. Optional: Check individual modifiers directly if needed
-        bool left_ctrl   = modifier & KEYBOARD_MODIFIER_LEFTCTRL;
-        bool left_shift  = modifier & KEYBOARD_MODIFIER_LEFTSHIFT;
-        bool left_alt    = modifier & KEYBOARD_MODIFIER_LEFTALT;
-        bool left_gui    = modifier & KEYBOARD_MODIFIER_LEFTGUI;
-
-        bool right_ctrl  = modifier & KEYBOARD_MODIFIER_RIGHTCTRL;
-        bool right_shift = modifier & KEYBOARD_MODIFIER_RIGHTSHIFT;
-        bool right_alt   = modifier & KEYBOARD_MODIFIER_RIGHTALT;
-        bool right_gui   = modifier & KEYBOARD_MODIFIER_RIGHTGUI;
-
-        // Process up to 6 simultaneous active keypresses 
         for (int i = 0; i < 6; i++) {
             uint8_t keycode = kbd_report->keycode[i];
             
@@ -647,7 +633,7 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
             }
         }
 
-        // 3. Handle cases where ONLY a modifier is pressed or released (no keycode active)
+        // Handle cases where ONLY a modifier is pressed or released (no keycode active)
         // If no regular keys are pressed, you still want to register modifier state changes
         if (kbd_report->keycode[0] == 0) {
             handle_keyboard_events(modifier, 0);
@@ -776,6 +762,9 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 	| Keypad 4 | 0x5C | 92 | | | | |
 	| Keypad 5 | 0x5D | 93 | | | | |
 
+	*/
+	
+	/*
 	------------------------------
 	## ⚠️ A Note on Modifier Keys (Shift, Ctrl, Alt, Gui)
 	Modifier keys are unique. Standard keyboards do not report modifiers inside the 6-key keycode[] array. Instead, they are reported as a single bitmask byte inside the hid_keyboard_report_t struct (usually mapped under report->modifier).
@@ -792,6 +781,16 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 
 	------------------------------	
 	*/
+
+	bool left_ctrl   = modifier & KEYBOARD_MODIFIER_LEFTCTRL;
+	bool left_shift  = modifier & KEYBOARD_MODIFIER_LEFTSHIFT;
+	bool left_alt    = modifier & KEYBOARD_MODIFIER_LEFTALT;
+	bool left_gui    = modifier & KEYBOARD_MODIFIER_LEFTGUI;
+
+	bool right_ctrl  = modifier & KEYBOARD_MODIFIER_RIGHTCTRL;
+	bool right_shift = modifier & KEYBOARD_MODIFIER_RIGHTSHIFT;
+	bool right_alt   = modifier & KEYBOARD_MODIFIER_RIGHTALT;
+	bool right_gui   = modifier & KEYBOARD_MODIFIER_RIGHTGUI;
 	
 	bool trigger_sampler = false; 
 
@@ -803,37 +802,37 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 	joystick_up = 0; joystick_down = 0;  logo_knob_up = 0;  logo_knob_down = 0;	
 
 	if (keycode == 42) {
-		joy_up = true; joystick_up = 0;					// backspace - fill
+		joy_up = true; joystick_up = 0;					// BACKSPACE - fill
 		gamepad_bluetooth_handle_data();
 	}
 	else
 	
-	if (keycode == 40 || keycode == 45) { 											
-		mbut0 = 1; 										// space/- start/stop
+	if (keycode == 40) { 											
+		mbut0 = 1; 										// ENTER start/stop
 		gamepad_bluetooth_handle_data();				
 	}
 	else
 		
-	if (keycode == 79 || (keycode == 46 && style_started)) { 		// -> key - next style	[plus/=]				
+	if (keycode == 79) { 						// -> key - next style			
 		dpad_down = 1; 			 					
 		gamepad_bluetooth_handle_data();				
 	}
 	else
 
-	if (keycode == 80 || (keycode == 39 && style_started)) {								
-		dpad_down = 1; but4 = 1; 									// <- key - prev style [0/)]
+	if (keycode == 80) {						// <- key - prev style 						
+		dpad_down = 1; but4 = 1; 
 		gamepad_bluetooth_handle_data();				
 	}
 	else
 	
-	if (keycode == 81 || (keycode == 46 && !style_started)) {	// next style group
+	if (keycode == 81 && !style_started) {		// ^ next style group
 		style_group = style_group + 1;
 		if (style_group > 20) style_group = 0;
 		trigger_sampler	 = true;		
 	}
 	else
 		
-	if (keycode == 82 || (keycode == 39 && !style_started)) {	// previous style group
+	if (keycode == 82 && !style_started) {		// v previous style group
 		style_group = style_group - 1;
 		if (style_group < 0) style_group = 20;	
 		trigger_sampler	 = true;
@@ -856,161 +855,128 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		left = 1; 												
 		finished_processing = true;			
 		gamepad_bluetooth_handle_data();				// end previous strum
-
-		if (keycode == 13) { 							// J
-			dpad_right = 1; right = 0;					// UP								
+		
+		if (right_shift || left_shift) {				// root note
+			dpad_left = 1;	left = 0;					// DOWN				
+		} else {										// chord or arpeggio note
+			dpad_right = 1; right = 0;					// UP				
+		}
+		
+		if (keycode == 13) { 							// J							
 			but2 = 1; yellow = 0;						// 7b								
 			but0 = 1; red = 0;								
-
 		}
 		else
 			
-		if (keycode == 24) { 							// U
-			dpad_right = 1; right = 0;					// UP								
+		if (keycode == 24) { 							// U							
 			but1 = 1; green = 0;						// 7							
 			but0 = 1; red = 0;										
 			but2 = 1; yellow = 0;				
 			but3 = 1; blue = 0;								
-
 		}
 		else
 
-		if (keycode == 16) { 							// M
-			dpad_right = 1; right = 0;					// UP							
+		if (keycode == 16) { 							// M							
 			but2 = 1; yellow = 0;						// 5b			
 			but1 = 1; green = 0;								
 			but0 = 1; red = 0;								
-
 		}
 		else
 			
-		if (keycode == 28) { 							// Y
-			dpad_right = 1; right = 0;					// UP								
+		if (keycode == 28) { 							// Y							
 			but0 = 1; red = 0;							// 6m							
-
 		}
 		else
 			
-		if (keycode == 11) { 							// H
-			dpad_right = 1; right = 0;					// UP								
+		if (keycode == 11) { 							// H							
 			but0 = 1; red = 0;							// 6
 			but2 = 1; yellow = 0;
 			but3 = 1; blue = 0;								
-
 		}
 		else
 			
-		if (keycode == 23) { 							// T	
-			dpad_left = 1;	left = 0;					// DOWN			
+		if (keycode == 23) { 							// T		
 			but1 = 1; green = 0;						// 5	
-
 		}
 		else
 			
-		if (keycode == 10) { 							// G	
-			dpad_right = 1; right = 0;					// UP					
+		if (keycode == 10) { 							// G						
 			but1 = 1; green = 0;						// 5sus							
 			but2 = 1; yellow = 0;						
-
 		}
 		else
 			
-		if (keycode == 23) { 							// B
-			dpad_left = 1;	left = 0;					// DOWN						
+		if (keycode == 23) { 							// B					
 			but1 = 1; green = 0;						// 5/7
 			but0 = 1; red = 0;							
-
 		}													
 		else
 			
-		if (keycode == 20) { 							// Q	
-			dpad_left = 1;	left = 0;					// DOWN			
+		if (keycode == 20) { 							// Q			
 			but2 = 1; yellow = 0;						// 1
-
 		}
 		else
 			
-		if (keycode == 4) { 							// A
-			dpad_right = 1; right = 0;					// UP					
+		if (keycode == 4) { 							// A				
 			but2 = 1; yellow = 0;						// 1sus
 			but4 = 1; orange = 0;							
-
 		}
 		else
 
-		if (keycode == 29) { 							// Z
-			dpad_left = 1;	left = 0;					// DOWN					
+		if (keycode == 29) { 							// Z			
 			but2 = 1; yellow = 0;						// 1/3
 			but3 = 1; blue = 0;							
-
 		}
 		else						
 			
-		if (keycode == 21) { 							// R
-			dpad_left = 1;	left = 0;					// DOWN					
+		if (keycode == 21) { 							// R				
 			but4 = 1; orange = 0;						// 4			
-
 		}
 		else
 			
-		if (keycode == 9) { 							// F
-			dpad_right = 1; right = 0;					// UP					
+		if (keycode == 9) { 							// F				
 			but4 = 1; orange = 0;						// 4m
 			but0 = 1; red = 0;							
-
 		}		
 		else
 
-		if (keycode == 25) { 							// V
-			dpad_left = 1;	left = 0;					// DOWN						
+		if (keycode == 25) { 							// V				
 			but4 = 1; orange = 0;						// 4/6
 			but3 = 1; blue = 0;							
-
 		}		
 		else						
 			
-		if (keycode == 26) { 							// W
-			dpad_right = 1; right = 0;					// UP					
+		if (keycode == 26) { 							// W				
 			but3 = 1; blue = 0;							// 2m
-
 		}
 		else
 			
-		if (keycode == 22) { 							// S
-			dpad_right = 1; right = 0;					// UP					
+		if (keycode == 22) { 							// S				
 			but3 = 1; blue = 0;							// 2
 			but0 = 1; red = 0;							
-
 		}	
 		else
 			
-		if (keycode == 8) { 							// E
-			dpad_right = 1; right = 0;					// UP					
+		if (keycode == 8) { 							// E				
 			but1 = 1; green = 0;						// 3m
 			but3 = 1; blue = 0;								
-
 		}
 		else
 			
-		if (keycode == 7) { 							// D
-			dpad_right = 1; right = 0;					// UP					
+		if (keycode == 7) { 							// D				
 			but1 = 1; green = 0;						// 3
 			but2 = 1; yellow = 0;								
 			but3 = 1; blue = 0;								
-
 		}						
 		else
 			
-		if (keycode == 127) {							// TODO
-			dpad_right = 1; right = 0;					// UP				
+		if (keycode == 127) {							// TODO			
 			but1 = 1; green = 0;						// 5m
 			but4 = 1; orange = 0;															
-
 		}
 		else
 			
-		if (keycode == 127) {							// TODO
-			dpad_right = 1; right = 0;					// UP				
+		if (keycode == 127) {							// TODO			
 			but4 = 1; orange = 0;						// 3b
 			but3 = 1; blue = 0;		
 			but0 = 1; red = 0;							
