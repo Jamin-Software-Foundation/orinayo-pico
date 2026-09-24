@@ -97,6 +97,7 @@ void midi_seqtrak_arp();
 void midi_seqtrak_key(uint8_t key);
 void midi_seqtrak_tempo(int tempo);
 
+void config_wav_trigger_pro();
 void play_chord(bool on, bool up, uint8_t green, uint8_t red, uint8_t yellow, uint8_t blue, uint8_t orange);
 void gamepad_bluetooth_handle_data();
 void config_guitar(uint8_t mode);
@@ -133,6 +134,7 @@ extern bool knob_down;
 
 extern bool gamepad_guitar_connected;
 extern bool finished_processing;	
+extern bool enable_wav_trigger_pro;
 
 extern uint8_t green;
 extern uint8_t red;
@@ -857,8 +859,9 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				
 			if (sonicake_neouke_enabled) {
 				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
-				
-				config_guitar(4);									// WAV Trigger Ppro (default) 
+
+				enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
+				config_wav_trigger_pro();							
 				but6 = 1; pitch = 0; but2 = 1; yellow = 0;			// Select strum type yellow button	
 				
 				finished_processing = true;					
