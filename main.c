@@ -613,6 +613,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 		config_wav_trigger_pro();	
 		
 		but6 = 1; pitch = 0; but2 = 1; yellow = 0;	// Select strum type yellow button	
+		finished_processing = true;										
 		gamepad_bluetooth_handle_data();		
     }
 }
@@ -802,27 +803,32 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 	joystick_up = 0; joystick_down = 0;  logo_knob_up = 0;  logo_knob_down = 0;	
 
 	if (keycode == 42) {											// BACKSPACE - fill
-		joy_up = true; joystick_up = 0;					
+		joy_up = true; joystick_up = 0;		
+		finished_processing = true;			
 		gamepad_bluetooth_handle_data();
 	}
 
 	if (keycode == 40) { 											// ENTER start/stop			
-		mbut0 = 1; 										
+		mbut0 = 1;
+		finished_processing = true;		
 		gamepad_bluetooth_handle_data();				
 	}
 	
-	if (keycode == 44) { 											
-		but6 = 1; 										// SPACEBAR whammy bar
+	if (keycode == 44) { 											// SPACEBAR whammy bar			
+		but6 = 1;
+		finished_processing = true;			
 		gamepad_bluetooth_handle_data();				
 	}
 		
 	if ((keycode == 79 || keycode == 81) && style_started) { 		// -> key - next style			
-		dpad_down = 1; 			 					
+		dpad_down = 1; 	
+		finished_processing = true;			
 		gamepad_bluetooth_handle_data();				
 	}
 
 	if ((keycode == 80 || keycode == 82) && style_started) {		// <- key - prev style 						
 		dpad_down = 1; but4 = 1; 
+		finished_processing = true;			
 		gamepad_bluetooth_handle_data();				
 	}
 
@@ -1295,7 +1301,8 @@ void process_midi_byte(uint8_t b) {
 								if (note == 0x75) {but0 = 1;  but2 = 1;}
 								if (note == 0x76) {but2 = 1;  but3 = 1;}
 								if (note == 0x77) {but3 = 1;  but4 = 1;}								
-								
+
+								finished_processing = true;									
 								gamepad_bluetooth_handle_data();							
 							}
 							else
@@ -1313,6 +1320,7 @@ void process_midi_byte(uint8_t b) {
 									if (note == 0x62) {but1 = 1; but2 = 1;}	// toggle mute chords
 									if (note == 0x64) {but1 = 1; but4 = 1;}	// toggle mute worship pads
 									
+									finished_processing = true;	
 									gamepad_bluetooth_handle_data();
 								}									
 							}																
@@ -1394,6 +1402,7 @@ void process_midi_byte(uint8_t b) {
 				if (cc_cmd == 0x73 && cc_value == 0x7F && launchkey_daw_mode) {
 					but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 0; green = 0; red = 0; blue = 0; yellow = 0; orange = 0;					
 					mbut0 = 1; logo = 0;										// start/stop
+					finished_processing = true;						
 					gamepad_bluetooth_handle_data();
 
 					if (style_started) launchkey_set_led(0x90, 0, 36, 45);
@@ -1405,13 +1414,15 @@ void process_midi_byte(uint8_t b) {
 				if (cc_cmd == 0x75 && cc_value == 0x7F && launchkey_daw_mode) {
 					but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 0; green = 0; red = 0; blue = 0; yellow = 0; orange = 0;					
 					joy_up = true; joystick_up = 0;								// fill
+					finished_processing = true;						
 					gamepad_bluetooth_handle_data();				
 				}	
 				else
 
 				if (cc_cmd == 0x6A && cc_value == 0x7F && launchkey_daw_mode) {
 					but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 0; green = 0; red = 0; blue = 0; yellow = 0; orange = 0;					
-					dpad_down = 1; starpower = 0;			// next style					
+					dpad_down = 1; starpower = 0;			// next style	
+					finished_processing = true;						
 					gamepad_bluetooth_handle_data();				
 				}
 				else
@@ -1419,6 +1430,7 @@ void process_midi_byte(uint8_t b) {
 				if (cc_cmd == 0x6B && cc_value == 0x7F && launchkey_daw_mode) {
 					but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 1; green = 0; red = 0; blue = 0; yellow = 0; orange = 0;										
 					dpad_down = 1; starpower = 0;			// prev style
+					finished_processing = true;						
 					gamepad_bluetooth_handle_data();				
 				}
 				else
@@ -1451,12 +1463,13 @@ void process_midi_byte(uint8_t b) {
 				
 					if (held_note_count < 3) {						// start/stop
 						mbut0 = 1; logo = 0;
-						gamepad_bluetooth_handle_data();
 					
 					} else {										// fill
-						joy_up = true; joystick_up = 0;
-						gamepad_bluetooth_handle_data();									
+						joy_up = true; joystick_up = 0;									
 					}
+					
+					finished_processing = true;		
+					gamepad_bluetooth_handle_data();					
 				}
 				else
 
@@ -1465,12 +1478,14 @@ void process_midi_byte(uint8_t b) {
 					if (style_started) {
 						if (cc_value == 0x1) {									// next style
 							dpad_down = 1; starpower = 0;	
+							finished_processing = true;								
 							gamepad_bluetooth_handle_data();
 						}
 						else
 							
 						if (cc_value == 0x7F) {									// previous style
 							dpad_down = 1; starpower = 0; orange = 0; but4 = 1;
+							finished_processing = true;															
 							gamepad_bluetooth_handle_data();								
 						}
 					} else {
