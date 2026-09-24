@@ -805,9 +805,14 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		joy_up = true; joystick_up = 0;					// BACKSPACE - fill
 		gamepad_bluetooth_handle_data();
 	}
-	
+
 	if (keycode == 40) { 											
 		mbut0 = 1; 										// ENTER start/stop
+		gamepad_bluetooth_handle_data();				
+	}
+	
+	if (keycode == 44) { 											
+		but6 = 1; 										// SPACEBAR whammy bar
 		gamepad_bluetooth_handle_data();				
 	}
 		
@@ -1997,7 +2002,7 @@ void midi_send_note(uint8_t command, uint8_t note, uint8_t velocity) {
 	
 	msg[0] = command + channel;
 	msg[1] = note;
-	msg[2] = velocity;	
+	msg[2] = velocity * (midi_guitar_volume / 127);	
 		
 	midi_n_stream_write(0, 0, msg, 3);			
 }
