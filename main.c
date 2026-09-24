@@ -251,6 +251,7 @@ uint8_t previous_guitar_note = 0;
 
 bool midi_keyboard_connected = false;
 
+void config_guitar(uint8_t mode);
 void send_ble_midi(uint8_t* midi_data, int len);
 void midi_task(void);
 void midi_start_stop(bool start);
@@ -802,59 +803,6 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 	joy_up = false;   joy_down = false;  knob_up = false; knob_down = false; 	
 	joystick_up = 0; joystick_down = 0;  logo_knob_up = 0;  logo_knob_down = 0;	
 
-	if (keycode == 42) {											// BACKSPACE - fill
-		joy_up = true; joystick_up = 0;		
-		finished_processing = true;			
-		gamepad_bluetooth_handle_data();
-	}
-
-	if (keycode == 40) { 											// ENTER start/stop			
-		mbut0 = 1;
-		finished_processing = true;		
-		gamepad_bluetooth_handle_data();				
-	}
-	
-	if (keycode == 44) { 											// SPACEBAR whammy bar			
-		but6 = 1;
-		finished_processing = true;			
-		gamepad_bluetooth_handle_data();				
-	}
-		
-	if ((keycode == 79 || keycode == 81) && style_started) { 		// -> key - next style			
-		dpad_down = 1; 	
-		finished_processing = true;			
-		gamepad_bluetooth_handle_data();				
-	}
-
-	if ((keycode == 80 || keycode == 82) && style_started) {		// <- key - prev style 						
-		dpad_down = 1; but4 = 1; 
-		finished_processing = true;			
-		gamepad_bluetooth_handle_data();				
-	}
-
-	if ((keycode == 79 || keycode == 81) && !style_started) {		// ^ next style group
-		style_group = style_group + 1;
-		if (style_group > 20) style_group = 0;
-		trigger_sampler	 = true;		
-	}
-	
-	if ((keycode == 80 || keycode == 82) && !style_started) {		// v previous style group
-		style_group = style_group - 1;
-		if (style_group < 0) style_group = 20;	
-		trigger_sampler	 = true;
-	}
-		
-	if (trigger_sampler) 
-	{
-		if (enable_wav_trigger_pro) {
-			sampler_midi_note(0x9F, 36 + style_group, 127);	 // select and load preset
-		} 									
-		else
-
-		if (enable_nanobox_tangerine) {
-			midi_send_program_change(0xCF, style_group + 2); // select preset on channel 16 and skip both 1010 pianos	
-		}	
-	}	
 
 	if (keycode >= 4 && keycode <= 29) {							// chord keys
 		left = 1; 												
@@ -995,24 +943,55 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		keyboard_flash_led = !keyboard_flash_led;					
 	}
 
-	if (keycode >= 30 && keycode <= 39) {							// 1-7 (strum control)
+	if (keycode >= 30 && keycode <= 39) {							// 1-9,0 (strum control)
 		but6 = 1;
 												
-		if (keycode == 30) {but1 = 1;}					// green - strum up/down
-		if (keycode == 31) {but0 = 1;}					// red - strum up bass down									
-		if (keycode == 32) {but2 = 1;}					// yellow - arp 1
-		if (keycode == 33) {but3 = 1;}					// blue - arp 2
-		if (keycode == 34) {but4 = 1;}					// orange - arp 3
+		if (keycode == 30) {but1 = 1;}					// 1 - green - strum up/down
+		if (keycode == 31) {but0 = 1;}					// 2 - red - strum up bass down									
+		if (keycode == 32) {but2 = 1;}					// 3 - yellow - arp 1
+		if (keycode == 33) {but3 = 1;}					// 4 - blue - arp 2
+		if (keycode == 34) {but4 = 1;}					// 5 - orange - arp 3
 
-		if (keycode == 35) {but1 = 1; but0 = 1;}		// green/red - neck low
-		if (keycode == 36) {but0 = 1; but2 = 1;}		// red/yellow - neck midrange
-		if (keycode == 37) {but2 = 1; but3 = 1;}		// yellow/blue - nect high
+		if (keycode == 35) {but1 = 1; but0 = 1;}		// 6 - green/red - neck low
+		if (keycode == 36) {but0 = 1; but2 = 1;}		// 7 - red/yellow - neck midrange
+		if (keycode == 37) {but2 = 1; but3 = 1;}		// 8 - yellow/blue - nect high
 		
-		if (keycode == 38) {transpose = 0;}				// reset song key to C
-		if (keycode == 39) {but3 = 1; but4 = 1;}		// blue/orange/blue - melody off
+		if (keycode == 38) {transpose = 0;}				// 9 - reset song key to C
+		if (keycode == 39) {but3 = 1; but4 = 1;}		// 0 - blue/orange/blue - melody off
 		
 		finished_processing = true;	
 		gamepad_bluetooth_handle_data();		
+	}
+
+	if (keycode == 40) { 											// ENTER start/stop			
+		mbut0 = 1;
+		finished_processing = true;		
+		gamepad_bluetooth_handle_data();				
+	}
+
+	if (keycode == 42) {											// BACKSPACE - fill
+		joy_up = true; joystick_up = 0;		
+		finished_processing = true;			
+		gamepad_bluetooth_handle_data();
+	}
+	
+	if (keycode == 44) { 											// SPACEBAR whammy bar			
+		but6 = 1;
+		finished_processing = true;			
+		gamepad_bluetooth_handle_data();				
+	}
+
+	if (keycode >= 45 && keycode <= 46) 							// Main keyboard + and - (melody vol)
+	{
+		if (keycode == 45)	{
+			midi_guitar_volume = midi_guitar_volume - 10;
+			if (midi_guitar_volume < 10) midi_guitar_volume = 10;
+		}
+		
+		if (keycode == 46)	{
+			midi_guitar_volume = midi_guitar_volume + 10;
+			if (midi_guitar_volume > 127) midi_guitar_volume = 127;
+		}		
 	}
 	
 	if (keycode == 53) { 											// ` Tilde worship pads/backing track
@@ -1020,6 +999,24 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 
 		finished_processing = true;	
 		gamepad_bluetooth_handle_data();	
+	}
+
+	if (keycode >= 58 && keycode <= 69) 							// Funtion keys (play mode)
+	{	
+		if (keycode == 58) config_guitar(1);						// F01 - Ketron	
+		if (keycode == 59) config_guitar(2);						// F02-  Ample
+		if (keycode == 60) config_guitar(3);						// F03 - Dream MIDI Drums
+		if (keycode == 61) config_guitar(4);						// F04 - WAV Trigger Pro
+		if (keycode == 62) config_guitar(5);						// F05 - MODX
+		
+		if (keycode == 63) config_guitar(14);						// F06 - 1010Music Nanobox Tangerine		
+		if (keycode == 64) config_guitar(10);						// F07 - Akai MPX Looper			
+		if (keycode == 65) config_guitar(11);						// F08 - Akai MPC Sample
+		if (keycode == 66) config_guitar(12);						// F09 - Roland SP-404Mk2
+			
+		if (keycode == 67) config_guitar(19);						// F10 - Yamaha SeqTrak
+		if (keycode == 68) config_guitar(13);						// F11 - Behringer Synth (JT-Micro, UB-1 Micro)	
+		if (keycode == 69) config_guitar(6);						// F12 - Acoustic/Electric Guitar
 	}
 	
 	if (keycode >= 70 && keycode <= 72) { 							// prt-screen, scroll-lock & pause (mute control)
@@ -1065,20 +1062,31 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 			if (sample_chord_velocity > 127) sample_chord_velocity = 127;
 		}		
 	}
-
-	if (keycode >= 45 && keycode <= 46) 							// Main keyboard + and - (melody vol)
-	{
-		if (keycode == 45)	{
-			midi_guitar_volume = midi_guitar_volume - 10;
-			if (midi_guitar_volume < 10) midi_guitar_volume = 10;
-		}
 		
-		if (keycode == 46)	{
-			midi_guitar_volume = midi_guitar_volume + 10;
-			if (midi_guitar_volume > 127) midi_guitar_volume = 127;
-		}		
+	if ((keycode == 79 || keycode == 81) && style_started) { 		// -> key - next style			
+		dpad_down = 1; 	
+		finished_processing = true;			
+		gamepad_bluetooth_handle_data();				
 	}
 
+	if ((keycode == 80 || keycode == 82) && style_started) {		// <- key - prev style 						
+		dpad_down = 1; but4 = 1; 
+		finished_processing = true;			
+		gamepad_bluetooth_handle_data();				
+	}
+
+	if ((keycode == 79 || keycode == 81) && !style_started) {		// ^ next style group
+		style_group = style_group + 1;
+		if (style_group > 20) style_group = 0;
+		trigger_sampler	 = true;		
+	}
+	
+	if ((keycode == 80 || keycode == 82) && !style_started) {		// v previous style group
+		style_group = style_group - 1;
+		if (style_group < 0) style_group = 20;	
+		trigger_sampler	 = true;
+	}
+		
 	if (keycode >= 86 && keycode <= 87) 							// Numpad + and - (key change)
 	{
 		if (keycode == 86) transpose--;
@@ -1088,6 +1096,18 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		if (transpose < 0) transpose = 11;
 		
 		if (enable_seqtrak) midi_seqtrak_key(transpose);
+	}
+
+	if (trigger_sampler) 
+	{
+		if (enable_wav_trigger_pro) {
+			sampler_midi_note(0x9F, 36 + style_group, 127);	 // select and load preset
+		} 									
+		else
+
+		if (enable_nanobox_tangerine) {
+			midi_send_program_change(0xCF, style_group + 2); // select preset on channel 16 and skip both 1010 pianos	
+		}	
 	}
 }
 
