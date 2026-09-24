@@ -860,6 +860,8 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				
 				config_guitar(4);									// WAV Trigger Ppro (default) 
 				but6 = 1; pitch = 0; but2 = 1; yellow = 0;			// Select strum type yellow button	
+				
+				finished_processing = true;					
 				gamepad_bluetooth_handle_data();
 				
 				query_state = 2;
@@ -890,7 +892,8 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 	}		
 	else
 					
-    if (type_of_packet == GATT_EVENT_NOTIFICATION) {		
+    if (type_of_packet == GATT_EVENT_NOTIFICATION) {
+		// TODO
 		//if (gamepad_guitar_connected) return;
 
 		memcpy(event_data, value, value_length);
