@@ -367,15 +367,6 @@ int main() {
 	multicore_launch_core1(core1_main);	
 	flash_safe_execute_core_init();	
 
-	tud_init(BOARD_TUD_RHPORT);			
-	bluetooth_init();
-
-    //struct repeating_timer timer;	
-    //add_repeating_timer_ms(500, repeating_timer_callback, NULL, &timer);
-	
-	async_timer_init();
-	looper_schedule_step_timer();
-    note_scheduler_init();
 	
 	// setup UART0 - M5Stack MIDI
 	uart_init(UART_ID, BAUD_RATE);
@@ -393,6 +384,16 @@ int main() {
     gpio_pull_up(I2C_SDA_PIN);
     gpio_pull_up(I2C_SCL_PIN);	
 	sleep_ms(500);	
+
+	tud_init(BOARD_TUD_RHPORT);			
+	bluetooth_init();
+
+    //struct repeating_timer timer;	
+    //add_repeating_timer_ms(500, repeating_timer_callback, NULL, &timer);
+	
+	async_timer_init();
+	looper_schedule_step_timer();
+    note_scheduler_init();	
 	
 	wav_trigger_pro_connected = is_wav_trigger_connected();	
 	
@@ -610,12 +611,14 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
         // Start requesting data events from the device
         tuh_hid_receive_report(dev_addr, instance);
 		
+		/*
 		enable_wav_trigger_pro = true;				// assume WAV Trigger Pro is available
 		config_wav_trigger_pro();	
 		
 		but6 = 1; pitch = 0; but2 = 1; yellow = 0;	// Select strum type yellow button	
 		finished_processing = true;										
-		gamepad_bluetooth_handle_data();		
+		gamepad_bluetooth_handle_data();	
+		*/		
     }
 }
 
