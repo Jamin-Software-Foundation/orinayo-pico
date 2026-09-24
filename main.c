@@ -801,13 +801,13 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 	joy_up = false;   joy_down = false;  knob_up = false; knob_down = false; 	
 	joystick_up = 0; joystick_down = 0;  logo_knob_up = 0;  logo_knob_down = 0;	
 
-	if (keycode == 42) {
-		joy_up = true; joystick_up = 0;					// BACKSPACE - fill
+	if (keycode == 42) {											// BACKSPACE - fill
+		joy_up = true; joystick_up = 0;					
 		gamepad_bluetooth_handle_data();
 	}
 
-	if (keycode == 40) { 											
-		mbut0 = 1; 										// ENTER start/stop
+	if (keycode == 40) { 											// ENTER start/stop			
+		mbut0 = 1; 										
 		gamepad_bluetooth_handle_data();				
 	}
 	
@@ -816,23 +816,23 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		gamepad_bluetooth_handle_data();				
 	}
 		
-	if (keycode == 79) { 						// -> key - next style			
+	if ((keycode == 79 || keycode == 81) && style_started) { 		// -> key - next style			
 		dpad_down = 1; 			 					
 		gamepad_bluetooth_handle_data();				
 	}
 
-	if (keycode == 80) {						// <- key - prev style 						
+	if ((keycode == 80 || keycode == 82) && style_started) {		// <- key - prev style 						
 		dpad_down = 1; but4 = 1; 
 		gamepad_bluetooth_handle_data();				
 	}
 
-	if (keycode == 81 && !style_started) {		// ^ next style group
+	if ((keycode == 79 || keycode == 81) && !style_started) {		// ^ next style group
 		style_group = style_group + 1;
 		if (style_group > 20) style_group = 0;
 		trigger_sampler	 = true;		
 	}
 	
-	if (keycode == 82 && !style_started) {		// v previous style group
+	if ((keycode == 80 || keycode == 82) && !style_started) {		// v previous style group
 		style_group = style_group - 1;
 		if (style_group < 0) style_group = 20;	
 		trigger_sampler	 = true;
@@ -850,7 +850,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		}	
 	}	
 
-	if (keycode >= 4 && keycode <= 29) {		// chord keys
+	if (keycode >= 4 && keycode <= 29) {							// chord keys
 		left = 1; 												
 		finished_processing = true;			
 		gamepad_bluetooth_handle_data();				// end previous strum
@@ -989,7 +989,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		keyboard_flash_led = !keyboard_flash_led;					
 	}
 
-	if (keycode >= 30 && keycode <= 39) {		// 1-7 (strum control)
+	if (keycode >= 30 && keycode <= 39) {							// 1-7 (strum control)
 		but6 = 1;
 												
 		if (keycode == 30) {but1 = 1;}					// green - strum up/down
@@ -1009,14 +1009,14 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		gamepad_bluetooth_handle_data();		
 	}
 	
-	if (keycode == 53) { 						// ` Tilde worship pads/backing track
+	if (keycode == 53) { 											// ` Tilde worship pads/backing track
 		but6 = 1; but1 = 1; but4 = 1;
 
 		finished_processing = true;	
 		gamepad_bluetooth_handle_data();	
 	}
 	
-	if (keycode >= 70 && keycode <= 72) { 		// prt-screen, scroll-lock & pause (mute control)
+	if (keycode >= 70 && keycode <= 72) { 							// prt-screen, scroll-lock & pause (mute control)
 		but6 = 1;
 												
 		if (keycode == 70) {but1 = 1; but3 = 1;}	// toggle mute drums
@@ -1027,7 +1027,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		gamepad_bluetooth_handle_data();		
 	}
 	
-	if (keycode >= 73 && keycode <= 78) 		// ins, home, pgup, del end pgdwn (vol control)
+	if (keycode >= 73 && keycode <= 78) 							// ins, home, pgup, del end pgdwn (vol control)
 	{	
 		if (keycode == 73)	{
 			sample_drum_velocity = sample_drum_velocity - 10;
@@ -1060,7 +1060,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		}		
 	}
 
-	if (keycode >= 45 && keycode <= 46) 		// Main keyboard + and - (melody vol)
+	if (keycode >= 45 && keycode <= 46) 							// Main keyboard + and - (melody vol)
 	{
 		if (keycode == 45)	{
 			midi_guitar_volume = midi_guitar_volume - 10;
@@ -1073,7 +1073,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		}		
 	}
 
-	if (keycode >= 86 && keycode <= 87) 		// Numpad + and - (key change)
+	if (keycode >= 86 && keycode <= 87) 							// Numpad + and - (key change)
 	{
 		if (keycode == 86) transpose--;
 		if (keycode == 87) transpose++;
