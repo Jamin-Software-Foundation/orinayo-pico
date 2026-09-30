@@ -830,8 +830,17 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 				
 			if (happy_soulmate_enabled) { //0000faa1-0000-1000-8000-00805f9b34fb
-				uint8_t characteristics_id[16] = {0x00, 0x00, 0xfa, 0xa1, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb};	
-				gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, characteristics_id);														
+				//uint8_t characteristics_id[16] = {0x00, 0x00, 0xfa, 0xa1, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb};	
+				//gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, characteristics_id);														
+				
+				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+
+				enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
+				config_wav_trigger_pro();							
+				but6 = 1; pitch = 0; but2 = 1; yellow = 0;			// Select strum type yellow button	
+				
+				finished_processing = true;					
+				gamepad_bluetooth_handle_data();				
 			}
 		}
 		else		
@@ -1229,8 +1238,8 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			
 		if (happy_soulmate_enabled) 
 		{			
-			if (value_length == 3) 
-			{
+			//if (value_length == 3) 
+			//{
 				if (event_data[1] == 4) 								// Volume 0 (start/stop)
 				{
 					if (event_data[0] == 240 && event_data[2] == 0) {
@@ -1471,7 +1480,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				
 				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, flash_led);	
 				flash_led = !flash_led;					
-			}							
+			//}							
 		}
 		else
 			
