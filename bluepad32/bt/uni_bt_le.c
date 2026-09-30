@@ -1229,8 +1229,8 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			
 		if (happy_soulmate_enabled) 
 		{			
-			if (value_length == 3) 
-			{
+			//if (value_length == 3) 
+			//{
 				if (event_data[1] == 4) 								// Volume 0 (start/stop)
 				{
 					if (event_data[0] == 240 && event_data[2] == 0) {
@@ -1471,7 +1471,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				
 				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, flash_led);	
 				flash_led = !flash_led;					
-			}							
+			//}							
 		}
 		else
 			
