@@ -1227,8 +1227,251 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		}
 		else
 			
-		if (happy_soulmate_enabled) {
-			
+		if (happy_soulmate_enabled) 
+		{			
+			if (value_length == 3) 
+			{
+				if (event_data[1] == 4) 								// Volume 0 (start/stop)
+				{
+					if (event_data[0] == 240 && event_data[2] == 0) {
+						mbut0 = 1; logo = 0;							// start/stop	
+						finished_processing = true;			
+						gamepad_bluetooth_handle_data();						
+					}
+				}
+				else
+					
+				if (event_data[1] == 6) 								// Transpose (keyChange)
+				{
+					if (event_data[0] == 240) {
+						transpose = event_data[2];
+					}
+				}
+				else							
+				
+				if (event_data[1] == 10) {								// Fretboard
+					green = 0; red = 0; yellow = 0; blue = 0; orange = 0;					
+					
+					if (event_data[2] == 7)
+					{
+						if (event_data[0] == 245) {		
+							but2 = 1; yellow = 0;						// 1sus
+							but4 = 1; orange = 0;									
+						}	
+						else
+							
+						if (event_data[0] == 244) {
+							but3 = 1; blue = 0;							// 2
+							but0 = 1; red = 0;								
+						}
+						else
+
+						if (event_data[0] == 243) {									
+							but1 = 1; green = 0;						// 3
+							but2 = 1; yellow = 0;								
+							but3 = 1; blue = 0;									
+						}
+						else
+							
+						if (event_data[0] == 242) {
+							but4 = 1; orange = 0;						// 4m
+							but0 = 1; red = 0;									
+						}	
+						else
+							
+						if (event_data[0] == 241) {
+							but1 = 1; green = 0;						// 5sus							
+							but2 = 1; yellow = 0;								
+						}
+						else
+							
+						if (event_data[0] == 240) {									
+							but0 = 1; red = 0;							// 6
+							but2 = 1; yellow = 0;
+							but3 = 1; blue = 0;							
+						}									
+					}
+					else
+						
+					if (event_data[2] == 9)
+					{
+						if (event_data[0] == 245) {
+							but2 = 1; yellow = 0;						// 1								
+						}	
+						else
+							
+						if (event_data[0] == 244) {
+							but3 = 1; blue = 0;							// 2m							
+						}
+						else
+
+						if (event_data[0] == 243) {									
+							but1 = 1; green = 0;						// 3m
+							but3 = 1; blue = 0;							
+						}
+						else
+							
+						if (event_data[0] == 242) {
+							but4 = 1; orange = 0;						// 4									
+						}	
+						else
+							
+						if (event_data[0] == 241) {
+							but1 = 1; green = 0;						// 5								
+						}
+						else
+							
+						if (event_data[0] == 240) {									
+							but0 = 1; red = 0;							// 6m						
+						}									
+					}
+					else
+						
+					if (event_data[2] == 11)
+					{
+						if (event_data[0] == 245) {
+							but2 = 1; yellow = 0;						// 1/3
+							but3 = 1; blue = 0;								
+						}	
+						else
+							
+						if (event_data[0] == 244) {
+							but0 = 1; red = 0;							// 4/1
+							but2 = 1; yellow = 0;										
+							but3 = 1; blue = 0;				
+							but4 = 1; orange = 0;													
+						}
+						else
+
+						if (event_data[0] == 243) {									
+							but1 = 1; green = 0;						// 5/1
+							but2 = 1; yellow = 0;											
+							but3 = 1; blue = 0;				
+							but4 = 1; orange = 0;								
+						}
+						else
+							
+						if (event_data[0] == 242) {
+							but4 = 1; orange = 0;						// 4/6
+							but3 = 1; blue = 0;										
+						}	
+						else
+							
+						if (event_data[0] == 241) {
+							but1 = 1; green = 0;						// 5/7
+							but0 = 1; red = 0;								
+						}
+						else
+							
+						if (event_data[0] == 240) {									
+							but2 = 1; yellow = 0;						// 7			
+							but0 = 1; red = 0;	
+							but1 = 1; green = 0;	
+							but3 = 1; blue = 0;								
+						}									
+					}	
+					else
+						
+					if (event_data[2] == 13)
+					{
+						if (event_data[0] == 245) {
+							but2 = 1; yellow = 0;						// 7b		
+							but0 = 1; red = 0;							
+						}	
+						else
+							
+						if (event_data[0] == 244) {
+							but3 = 1; blue = 0;							// 2m														
+						}
+						else
+
+						if (event_data[0] == 243) {									
+							but0 = 1; red = 0;							// 3b									
+							but3 = 1; blue = 0;			
+							but4 = 1; orange = 0;							
+						}
+						else
+							
+						if (event_data[0] == 242) {
+							but2 = 1; yellow = 0;						// 4/5										
+							but3 = 1; blue = 0;		
+							but4 = 1; orange = 0;									
+						}	
+						else
+							
+						if (event_data[0] == 241) {
+							but1 = 1; green = 0;						// 5m
+							but4 = 1; orange = 0;								
+						}
+						else
+							
+						if (event_data[0] == 240) {									
+							but2 = 1; yellow = 0;						// 6b			
+							but1 = 1; green = 0;								
+							but0 = 1; red = 0;						
+						}									
+					}								
+				}
+				else
+				
+				if (event_data[1] == 12) 								// Paddle control
+				{
+					if (event_data[2] == 1) 
+					{
+						if (event_data[0] == 252) 
+						{
+							if (green || red || yellow || blue || orange) {
+								dpad_right = 1; right = 0;								// UP										
+								
+							} else {
+								dpad_down = 1; starpower = 0; 							// next style	
+							}											
+						}
+						else
+						
+						if (event_data[0] == 253) 
+						{
+							if (green || red || yellow || blue || orange) {
+								dpad_left = 1;	left = 0;								// DOWN
+								
+							} else {
+								dpad_down = 1; starpower = 0; orange = 0; but4 = 1;		// prev style		
+							}										
+						}
+						else
+						
+						if (event_data[0] > 239  && event_data[0] < 251) {
+							but6 = 1; pitch = 0;				
+							
+							if (event_data[0] == 240) 	   {but1 = 1; green = 0;}	// full chord up/down
+							else if (event_data[0] == 242) {but0 = 1; red = 0;}		// chord up/root note down	
+							else if (event_data[0] == 244) {but2 = 1; yellow = 0;}	// root note up/down
+							else if (event_data[0] == 246) {but3 = 1; blue = 0;}	// 3rd note up/root note down
+							else if (event_data[0] == 248) {but4 = 1; orange = 0;}	// 5th note up/root note down							
+							else if (event_data[0] == 250) {}						// off
+						}
+						
+						finished_processing = true;			
+						gamepad_bluetooth_handle_data();						
+				
+					}
+					else
+						
+					if (event_data[2] == 0) 											// NEUTRAL
+					{
+						if (event_data[0] == 252 || event_data[0] == 253) 
+						{
+							left = 1; 			
+							green = 0; red = 0; yellow = 0; blue = 0; orange = 0;							
+							finished_processing = true;			
+							gamepad_bluetooth_handle_data();							
+						}
+					}								
+				}
+				
+				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, flash_led);	
+				flash_led = !flash_led;					
+			}							
 		}
 		else
 			
