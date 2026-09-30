@@ -77,6 +77,7 @@
 
 bool liberlive_enabled = false;
 bool sonicake_neouke_enabled = false;
+bool happy_soulmate_enabled = false;
 bool flash_led = true;
 
 static bool is_scanning;
@@ -826,6 +827,12 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				uint8_t characteristics_id[16] = {0x77, 0x72, 0xE5, 0xDB, 0x38, 0x68, 0x41, 0x12, 0xA1, 0xA9, 0xF2, 0x66, 0x9D, 0x10, 0x6B, 0xF3};	
 				gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, characteristics_id);										
 			}
+			else
+				
+			if (happy_soulmate_enabled) { //0000faa0-0000-1000-8000-00805f9b34fb
+				uint8_t characteristics_id[16] = {0x00, 0x00, 0xfa, 0xa0, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb};	
+				gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, characteristics_id);														
+			}
 		}
 		else		
 		
@@ -857,7 +864,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			}
 			else
 				
-			if (sonicake_neouke_enabled) {
+			if (sonicake_neouke_enabled || happy_soulmate_enabled) {
 				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
 
 				enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
@@ -1220,6 +1227,11 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		}
 		else
 			
+		if (happy_soulmate_enabled) {
+			
+		}
+		else
+			
 		if (sonicake_neouke_enabled) {
 			left = 1; 										// end previous strum		
 			green = 0; red = 0; yellow = 0; blue = 0; orange = 0;
@@ -1434,6 +1446,14 @@ void uni_bt_le_on_hci_event_le_meta(const uint8_t* packet, uint16_t size) {
 				gatt_client_discover_primary_services_by_uuid128(handle_gatt_client_event, connection_handle, service_name);
 				gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, NULL);				
 			}
+			else
+				
+			if (happy_soulmate_enabled) {	// 0000faa1-0000-1000-8000-00805f9b34fb
+				uint8_t service_name[16] = {0x00, 0x00, 0xfa, 0xa1, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB} ;			
+				gatt_client_discover_primary_services_by_uuid128(handle_gatt_client_event, connection_handle, service_name);
+				gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, NULL);
+				
+			}			
 	
 			else {	
 			/*
@@ -1528,6 +1548,16 @@ void uni_bt_le_on_gap_event_advertising_report(const uint8_t* packet, uint16_t s
 			return;	
 		}
 	}
+	else
+
+    if (name[0] == 'h' && name[1] == 'a' && name[2] == 'p' && name[3] == 'p' && name[4] == 'y' && name[5] == ' ') {
+		
+		if (!happy_soulmate_enabled) {				
+			happy_soulmate_enabled = true;
+			hog_connect(addr, addr_type);		
+			return;	
+		}
+	}
 	
     if (uni_hid_device_get_instance_for_address(addr)) {
         // Ignore, address already found
@@ -1595,6 +1625,7 @@ void uni_bt_le_on_hci_disconnection_complete(uint16_t channel, const uint8_t* pa
 
 	liberlive_enabled = false;
 	sonicake_neouke_enabled = false;
+	happy_soulmate_enabled = false;
 	
     resume_scanning_hint();
 }
