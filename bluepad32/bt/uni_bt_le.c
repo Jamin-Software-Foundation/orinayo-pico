@@ -810,6 +810,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		query_state = 1;
 		gatt_client_write_client_characteristic_configuration(handle_gatt_client_event, connection_handle,  &server_characteristic, GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION);
 		gatt_event_characteristic_query_result_get_characteristic(packet, &server_characteristic);	
+		gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, &server_characteristic);			
 	}
 	else
 					
@@ -1677,7 +1678,7 @@ void uni_bt_le_on_hci_event_le_meta(const uint8_t* packet, uint16_t size) {
 			if (liberlive_enabled) {	// "000000ff-0000-1000-8000-00805f9b34fb"
 				uint8_t service_name[16] = {0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB} ;			
 				gatt_client_discover_primary_services_by_uuid128(handle_gatt_client_event, connection_handle, service_name);
-				gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, NULL);
+				//gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, NULL);
 				
 				ll_cannot_fire = true;
 				ll_have_fired = false;
@@ -1688,14 +1689,13 @@ void uni_bt_le_on_hci_event_le_meta(const uint8_t* packet, uint16_t size) {
 			if (sonicake_neouke_enabled) { // 03b80e5a-ede8-4b33-a751-6ce34ec4c700		
 				uint8_t service_name[16] = {0x03, 0xB8, 0x0E, 0x5A, 0xED, 0xE8, 0x4B, 0x33, 0xA7, 0x51, 0x6C, 0xE3, 0x4E, 0xC4, 0xC7, 0x00} ;			
 				gatt_client_discover_primary_services_by_uuid128(handle_gatt_client_event, connection_handle, service_name);
-				gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, NULL);				
+				//gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, NULL);				
 			}
 			else
 				
 			if (happy_soulmate_enabled) {	// 0000faa0-0000-1000-8000-00805f9b34fb
 				uint8_t service_name[16] = {0x00, 0x00, 0xfa, 0xa0, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB} ;			
-				gatt_client_discover_primary_services_by_uuid128(handle_gatt_client_event, connection_handle, service_name);
-				gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, NULL);					
+				gatt_client_discover_primary_services_by_uuid128(handle_gatt_client_event, connection_handle, service_name);				
 			}			
 	
 			else {	
