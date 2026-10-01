@@ -808,7 +808,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		
     if (type_of_packet == GATT_EVENT_CHARACTERISTIC_QUERY_RESULT) {	
 		query_state = 1;
-		gatt_client_write_client_characteristic_configuration(handle_gatt_client_event, connection_handle,  &server_characteristic, GATT_CLIENT_CHARACTERISTIC_NOTIFICATION_NOTIFY);
+		gatt_client_write_client_characteristic_configuration(handle_gatt_client_event, connection_handle,  &server_characteristic, GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION);
 		gatt_event_characteristic_query_result_get_characteristic(packet, &server_characteristic);	
 	}
 	else
