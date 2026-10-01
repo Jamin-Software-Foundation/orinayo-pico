@@ -808,6 +808,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		
     if (type_of_packet == GATT_EVENT_CHARACTERISTIC_QUERY_RESULT) {	
 		query_state = 1;
+		gatt_client_write_client_characteristic_configuration(handle_gatt_client_event, connection_handle,  &server_characteristic, GATT_CLIENT_CHARACTERISTIC_NOTIFICATION_NOTIFY);
 		gatt_event_characteristic_query_result_get_characteristic(packet, &server_characteristic);	
 	}
 	else
@@ -829,19 +830,9 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			}
 			else
 				
-			if (happy_soulmate_enabled) { //0000faa1-0000-1000-8000-00805f9b34fb
-				gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, NULL);			
-				//uint8_t characteristics_id[16] = {0x00, 0x00, 0xfa, 0xa1, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb};	
-				//gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, characteristics_id);	
-
-				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
-
-				enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
-				config_wav_trigger_pro();							
-				but6 = 1; pitch = 0; but2 = 1; yellow = 0;			// Select strum type yellow button	
-				
-				finished_processing = true;					
-				gamepad_bluetooth_handle_data();				
+			if (happy_soulmate_enabled) { //0000faa1-0000-1000-8000-00805f9b34fb		
+				uint8_t characteristics_id[16] = {0x00, 0x00, 0xfa, 0xa1, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb};	
+				gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, characteristics_id);					
 			}
 		}
 		else		
@@ -1704,7 +1695,7 @@ void uni_bt_le_on_hci_event_le_meta(const uint8_t* packet, uint16_t size) {
 			if (happy_soulmate_enabled) {	// 0000faa0-0000-1000-8000-00805f9b34fb
 				uint8_t service_name[16] = {0x00, 0x00, 0xfa, 0xa0, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB} ;			
 				gatt_client_discover_primary_services_by_uuid128(handle_gatt_client_event, connection_handle, service_name);
-				
+				gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, NULL);					
 			}			
 	
 			else {	
