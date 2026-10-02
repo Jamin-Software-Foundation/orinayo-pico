@@ -166,6 +166,7 @@ extern int style_group;
 extern bool enable_seqtrak;
 extern bool enable_modx;
 extern bool style_started;
+extern bool hid_keyboard_connected;
 
 // Temporal space for SDP in BLE
 static uint8_t hid_descriptor_storage[HID_MAX_DESCRIPTOR_LEN * CONFIG_BLUEPAD32_MAX_DEVICES];
@@ -1484,12 +1485,21 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				
 			// detect key press
 
-			if (event_data[3] == 18) {									
-				mbut0 = 1; logo = 0;						// start/stop				
+			if (event_data[3] == 18) 
+			{	
+				if (!hid_keyboard_connected) {
+					mbut0 = 1; logo = 0;						// start/stop	if no HID keyboard			
+				} else {
+					dpad_right = 1; right = 0;					// UP							
+					but2 = 1; yellow = 0;						// 6b			
+					but1 = 1; green = 0;								
+					but0 = 1; red = 0;								
+					previous_pad = event_data[3];					
+				}
 			}
 			else
 				
-			if (event_data[3] == 20) {
+			if (event_data[3] == 19) {
 				dpad_right = 1; right = 0;					// UP								
 				but2 = 1; yellow = 0;						// 7b								
 				but0 = 1; red = 0;								
@@ -1497,26 +1507,24 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			}
 			else
 				
-			if (event_data[3] == 19) {
-				dpad_right = 1; right = 0;					// UP								
-				but1 = 1; green = 0;						// 7							
-				but0 = 1; red = 0;										
-				but2 = 1; yellow = 0;				
-				but3 = 1; blue = 0;								
-				previous_pad = event_data[3];
-			}
-			else
-
-			if (event_data[3] == 127) {						// TODO
-				dpad_right = 1; right = 0;					// UP							
-				but2 = 1; yellow = 0;						// 5b			
-				but1 = 1; green = 0;								
-				but0 = 1; red = 0;								
+			if (event_data[3] == 20) {
+				dpad_right = 1; right = 0;					// UP				
+				but1 = 1; green = 0;						// 5m
+				but4 = 1; orange = 0;															
 				previous_pad = event_data[3];
 			}
 			else
 				
-			if (event_data[3] == 15 || event_data[3] == 16) {
+			if (event_data[3] == 15) {						
+				dpad_right = 1; right = 0;					// UP				
+				but4 = 1; orange = 0;						// 3b
+				but3 = 1; blue = 0;		
+				but0 = 1; red = 0;							
+				previous_pad = event_data[3];
+			}			
+			else
+				
+			if (event_data[3] == 16) {
 				dpad_right = 1; right = 0;					// UP								
 				but0 = 1; red = 0;							// 6m							
 				previous_pad = event_data[3];
@@ -1584,15 +1592,6 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				previous_pad = event_data[3];
 			}
 			else
-				
-			if (event_data[3] == 127) {						// TODO
-				dpad_right = 1; right = 0;					// UP				
-				but4 = 1; orange = 0;						// 3b
-				but3 = 1; blue = 0;		
-				but0 = 1; red = 0;							
-				previous_pad = event_data[3];
-			}
-			else
 
 			if (event_data[3] == 11) {
 				dpad_left = 1;	left = 0;					// DOWN						
@@ -1643,10 +1642,11 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			else
 				
 			if (event_data[3] == 127) {						// TODO
-				dpad_right = 1; right = 0;					// UP				
-				but1 = 1; green = 0;						// 5m
-				but4 = 1; orange = 0;															
-				previous_pad = event_data[3];
+				dpad_right = 1; right = 0;					// UP								
+				but1 = 1; green = 0;						// 7							
+				but0 = 1; red = 0;										
+				but2 = 1; yellow = 0;				
+				but3 = 1; blue = 0;					
 			}	
 			
 			finished_processing = true;

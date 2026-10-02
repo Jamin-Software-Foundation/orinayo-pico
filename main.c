@@ -215,6 +215,8 @@ static uint32_t old_p2 = 0;
 static uint32_t old_p3 = 0;
 static uint32_t old_p4 = 0;
 
+bool transpose_mode_active = false;
+bool hid_keyboard_connected = false;
 bool wav_trigger_pro_connected = false;
 bool launchkey_connected = false;
 bool launchkey_daw_mode = false;
@@ -607,6 +609,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
     // Check if the mounted device is a keyboard
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {
+		hid_keyboard_connected = true;
         //printf("USB Keyboard mounted successfully!\n");
         // Start requesting data events from the device
         tuh_hid_receive_report(dev_addr, instance);
@@ -651,6 +654,7 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
 
 void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
     //printf("USB Keyboard unmounted.\n");
+	hid_keyboard_connected = false;
 }
 
 uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer, uint16_t reqlen) {
@@ -811,6 +815,8 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		left = 1; 												
 		finished_processing = true;			
 		gamepad_bluetooth_handle_data();				// end previous strum
+
+		if (!style_started) transpose_mode_active = true;
 		
 		if (right_shift || left_shift) {				// root note
 			dpad_left = 1;	left = 0;					// DOWN				
@@ -967,9 +973,14 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 	}
 
 	if (keycode == 40) { 											// ENTER start/stop			
-		mbut0 = 1;
-		finished_processing = true;		
-		gamepad_bluetooth_handle_data();				
+
+		if (transpose_mode_active) {
+			transpose_mode_active = false;
+		} else {			
+			mbut0 = 1;
+			finished_processing = true;		
+			gamepad_bluetooth_handle_data();	
+		}			
 	}
 
 	if (keycode == 42) {											// BACKSPACE - fill
@@ -1079,15 +1090,31 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 	}
 
 	if ((keycode == 79 || keycode == 81) && !style_started) {		// ^ next style group
-		style_group = style_group + 1;
-		if (style_group > 20) style_group = 0;
-		trigger_sampler	 = true;		
+
+		if (transpose_mode_active) {
+			transpose++;
+			if (transpose > 11) transpose = 0;
+			if (enable_seqtrak) midi_seqtrak_key(transpose);			
+			
+		} else {
+			style_group = style_group + 1;
+			if (style_group > 20) style_group = 0;
+			trigger_sampler	 = true;	
+		}			
 	}
 	
 	if ((keycode == 80 || keycode == 82) && !style_started) {		// v previous style group
-		style_group = style_group - 1;
-		if (style_group < 0) style_group = 20;	
-		trigger_sampler	 = true;
+
+		if (transpose_mode_active) {
+			transpose--;
+			if (transpose < 0) transpose = 11;
+			if (enable_seqtrak) midi_seqtrak_key(transpose);
+			
+		} else {
+			style_group = style_group - 1;
+			if (style_group < 0) style_group = 20;	
+			trigger_sampler	 = true;
+		}
 	}
 		
 	if (keycode >= 86 && keycode <= 87) 							// Numpad + and - (key change)
