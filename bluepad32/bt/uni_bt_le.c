@@ -167,6 +167,7 @@ extern bool enable_seqtrak;
 extern bool enable_modx;
 extern bool style_started;
 extern bool hid_keyboard_connected;
+extern bool transpose_mode_active;
 
 // Temporal space for SDP in BLE
 static uint8_t hid_descriptor_storage[HID_MAX_DESCRIPTOR_LEN * CONFIG_BLUEPAD32_MAX_DEVICES];
@@ -1482,6 +1483,8 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			green = 0; red = 0; yellow = 0; blue = 0; orange = 0;
 			finished_processing = true;			
 			gamepad_bluetooth_handle_data();
+			
+			if (!style_started) transpose_mode_active = true;			
 				
 			// detect key press
 

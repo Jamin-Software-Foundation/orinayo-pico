@@ -815,8 +815,6 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		left = 1; 												
 		finished_processing = true;			
 		gamepad_bluetooth_handle_data();				// end previous strum
-
-		if (!style_started) transpose_mode_active = true;
 		
 		if (right_shift || left_shift) {				// root note
 			dpad_left = 1;	left = 0;					// DOWN				
