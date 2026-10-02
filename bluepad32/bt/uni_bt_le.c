@@ -796,20 +796,17 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
     uint8_t type_of_packet;	
     type_of_packet = hci_event_packet_get_type(packet);
 	
-	 if (type_of_packet != GATT_EVENT_NOTIFICATION) {
+	if (type_of_packet != GATT_EVENT_NOTIFICATION) {
 		//midi_ketron_arr(type_of_packet, false);	
 	 }
 	
     if (type_of_packet == GATT_EVENT_SERVICE_QUERY_RESULT) {
-		query_state = 0;
-		gatt_event_service_query_result_get_service(packet, &server_service);		
+		query_state = 0;		
 	}
 	else
 		
     if (type_of_packet == GATT_EVENT_CHARACTERISTIC_QUERY_RESULT) {	
 		query_state = 1;
-		gatt_client_write_client_characteristic_configuration(handle_gatt_client_event, connection_handle,  &server_characteristic, GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION);
-		gatt_event_characteristic_query_result_get_characteristic(packet, &server_characteristic);				
 	}
 	else
 					
@@ -818,6 +815,8 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		
 		if (query_state == 0) 
 		{
+			gatt_event_service_query_result_get_service(packet, &server_service);			
+			
 			if (liberlive_enabled) {
 				uint8_t characteristics_id[16] = {0x00, 0x00, 0xff, 0x03, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb};				
 				gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, characteristics_id);						
@@ -839,7 +838,10 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		
 		if (query_state == 1) 	{
 			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false); 
-				
+			
+			gatt_event_characteristic_query_result_get_characteristic(packet, &server_characteristic);				
+			gatt_client_write_client_characteristic_configuration(handle_gatt_client_event, connection_handle,  &server_characteristic, GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION);
+							
 			if (liberlive_enabled) {			
 				// Write Chord Key Mapping			
 				static uint8_t chord_mappings[26] = {177, 30, 31, 21, 0, 128, 147, 117, 5, 85, 81, 113, 160, 145, 112, 0, 80, 33, 65, 176, 144, 112, 0, 48, 32, 64};
@@ -865,7 +867,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			}
 			else
 				
-			if (sonicake_neouke_enabled) {
+			if (sonicake_neouke_enabled || happy_soulmate_enabled) {
 				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
 
 				enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
@@ -874,8 +876,6 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				
 				finished_processing = true;					
 				gamepad_bluetooth_handle_data();
-				
-				query_state = 2;
 			}
 		}
 		else
