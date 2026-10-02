@@ -629,7 +629,7 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
         hid_keyboard_report_t* kbd_report = (hid_keyboard_report_t*) report;
         uint8_t modifier = kbd_report->modifier;
 
-        for (int i = 0; i < 1; i++) {						// only the first key pressed
+        for (int i = 0; i < len; i++) {						// only the first key pressed
             uint8_t keycode = kbd_report->keycode[i];
             
             // Pass both the modifiers context and the keycode to your handler
