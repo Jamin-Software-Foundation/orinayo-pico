@@ -166,6 +166,8 @@ extern int style_group;
 extern bool enable_seqtrak;
 extern bool enable_modx;
 extern bool style_started;
+extern bool style_end_requested;
+extern bool style_end_started;
 extern bool hid_keyboard_connected;
 extern bool transpose_mode_active;
 
