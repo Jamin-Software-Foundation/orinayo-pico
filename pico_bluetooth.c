@@ -2576,8 +2576,14 @@ void play_chord(bool on, bool up) {
 			if (style_end_requested) {
 				sampler_midi_note(0x94, 45, enable_drum_track ? sample_drum_velocity : 1);		// .\01\SAMPLE\1-09-085.wav
 				mpc_stop_loops();
-				style_end_requested = false;				
+				style_end_requested = false;
+				style_end_started = true;
 			}
+			else
+				
+			if (style_end_started) {
+				style_end_started = false;	
+			}			
 		}
 	}
 	else
@@ -2619,8 +2625,14 @@ void play_chord(bool on, bool up) {
 			if (style_end_requested) {
 				wav_trigger_pro_stop_loops();						
 				sampler_midi_note(0x94, END1, enable_drum_track ? sample_drum_velocity : 1); // not a loop		
-				style_end_requested = false;				
-			}		
+				style_end_requested = false;
+				style_end_started = true;				
+			}	
+			else
+				
+			if (style_end_started) {
+				style_end_started = false;	
+			}			
 		}
 	}
 	else

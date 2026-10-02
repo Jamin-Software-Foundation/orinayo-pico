@@ -1483,9 +1483,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			green = 0; red = 0; yellow = 0; blue = 0; orange = 0;
 			finished_processing = true;			
 			gamepad_bluetooth_handle_data();
-			
-			if (!style_started) transpose_mode_active = true;			
-				
+							
 			// detect key press
 
 			if (event_data[3] == 18) 
@@ -1656,7 +1654,11 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			gamepad_bluetooth_handle_data();						
 
 			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, flash_led);	
-			flash_led = !flash_led;			
+			flash_led = !flash_led;		
+
+			if (!style_started && !style_end_requested && !style_end_started) {
+				transpose_mode_active = true;			
+			}			
 		}
     }
 }
