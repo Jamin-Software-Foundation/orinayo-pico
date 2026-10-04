@@ -646,10 +646,16 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
         if (kbd_report->keycode[0] == 0) {
             handle_keyboard_events(modifier, 0);
         }
-
-        // Continue listening for subsequent keyboard events
-        tuh_hid_receive_report(dev_addr, instance);
     }
+	else
+		
+    if (itf_protocol == HID_ITF_PROTOCOL_NONE) {
+        // This is where generic HID gamepads and custom controllers end up!
+        process_gamepad_report(report, len);
+    }
+	
+	// Continue listening for subsequent keyboard events
+	tuh_hid_receive_report(dev_addr, instance);	
 }
 
 void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
@@ -665,6 +671,22 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize) {
     (void) instance; (void) report_id; (void) report_type; (void) buffer; (void) bufsize;
 }
+
+//--------------------------------------------------------------------+
+//
+// Gamepad Controller 
+//
+//--------------------------------------------------------------------+
+
+void process_gamepad_report(uint8_t const* report, uint16_t len) {
+    for (uint16_t i = 0; i < len; i++) {
+        //printf("%02X ", report[i]);
+		uint8_t msg[3] = {0x90, 0, report[i] % 128};
+		tud_midi_n_stream_write(0, 0, msg, 3);
+    }
+    //printf("\n");
+}
+
 
 //--------------------------------------------------------------------+
 //
@@ -2608,7 +2630,7 @@ bool wav_trigger_pro_set_output_gain(int16_t gain_db) {
 
 //--------------------------------------------------------------------+
 //
-// WAV Trigger Pro
+// Novation Launch Key
 //
 //--------------------------------------------------------------------+
 
