@@ -608,20 +608,15 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
     uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
 
     // Check if the mounted device is a keyboard
-    if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {
-		hid_keyboard_connected = true;
-        //printf("USB Keyboard mounted successfully!\n");
+    if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || HID_ITF_PROTOCOL_NONE) 
+	{
+		if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {
+			//printf("USB Keyboard mounted successfully!\n");			
+			hid_keyboard_connected = true;
+		}
+		
         // Start requesting data events from the device
-        tuh_hid_receive_report(dev_addr, instance);
-		
-		/*
-		enable_wav_trigger_pro = true;				// assume WAV Trigger Pro is available
-		config_wav_trigger_pro();	
-		
-		but6 = 1; pitch = 0; but2 = 1; yellow = 0;	// Select strum type yellow button	
-		finished_processing = true;										
-		gamepad_bluetooth_handle_data();	
-		*/		
+        tuh_hid_receive_report(dev_addr, instance);	
     }
 }
 
