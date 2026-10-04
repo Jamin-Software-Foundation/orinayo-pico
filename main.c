@@ -561,8 +561,8 @@ void tuh_mount_cb(uint8_t daddr) {
 
     // Request the Product String (the device name)
     // 0x0409 is the Language ID for English (US)
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);	
-    tuh_descriptor_get_product_string(daddr, 0x0409, temp_buf, sizeof(temp_buf), name_received_cb, 0);
+	//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);	
+    //tuh_descriptor_get_product_string(daddr, 0x0409, temp_buf, sizeof(temp_buf), name_received_cb, 0);
 }
 
 void tuh_umount_cb(uint8_t daddr) {
@@ -571,7 +571,7 @@ void tuh_umount_cb(uint8_t daddr) {
 		launchkey_connected = false;
 		launchkey_daw_mode = false;
 	}
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);	
+	//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
 }
 
 void tuh_midi_mount_cb(uint8_t idx, const tuh_midi_mount_cb_t* mount_cb_data) {
@@ -621,6 +621,12 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
     }
 }
 
+void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
+    //printf("USB Keyboard unmounted.\n");
+	hid_keyboard_connected = false;
+	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
+}
+
 void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len) {
     uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
 
@@ -652,11 +658,6 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
 	
 	// Continue listening for subsequent keyboard events
 	tuh_hid_receive_report(dev_addr, instance);	
-}
-
-void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
-    //printf("USB Keyboard unmounted.\n");
-	hid_keyboard_connected = false;
 }
 
 uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t* buffer, uint16_t reqlen) {
