@@ -601,11 +601,12 @@ void tuh_midi_umount_cb(uint8_t idx) {
 		launchkey_daw_mode    = false;
 		irig_pro_connected	  = false;
 	}
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
+	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
 }
 
 void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len) {
     uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
+	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);		
 
     // Check if the mounted device is a keyboard
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || HID_ITF_PROTOCOL_NONE) 
@@ -674,6 +675,9 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 //--------------------------------------------------------------------+
 
 void process_gamepad_report(uint8_t const* report, uint16_t len) {
+	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, keyboard_flash_led);	
+	keyboard_flash_led = !keyboard_flash_led;	
+		
     for (uint16_t i = 0; i < len; i++) {
         //printf("%02X ", report[i]);
 		uint8_t msg[3] = {0x90, 0, report[i] % 128};
