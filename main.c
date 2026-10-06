@@ -561,8 +561,8 @@ void tuh_mount_cb(uint8_t daddr) {
 
     // Request the Product String (the device name)
     // 0x0409 is the Language ID for English (US)
-	//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);	
-    //tuh_descriptor_get_product_string(daddr, 0x0409, temp_buf, sizeof(temp_buf), name_received_cb, 0);
+	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);	
+    tuh_descriptor_get_product_string(daddr, 0x0409, temp_buf, sizeof(temp_buf), name_received_cb, 0);
 }
 
 void tuh_umount_cb(uint8_t daddr) {
@@ -571,7 +571,7 @@ void tuh_umount_cb(uint8_t daddr) {
 		launchkey_connected = false;
 		launchkey_daw_mode = false;
 	}
-	//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
+	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
 }
 
 void tuh_midi_mount_cb(uint8_t idx, const tuh_midi_mount_cb_t* mount_cb_data) {
@@ -986,7 +986,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		if (keycode == 37) {but2 = 1; but3 = 1;}		// 8 - yellow/blue - nect high
 		
 		if (keycode == 38) {transpose = 0;}				// 9 - reset song key to C
-		if (keycode == 39) {but3 = 1; but4 = 1;}		// 0 - blue/orange/blue - melody off
+		if (keycode == 39) {but3 = 1; but4 = 1;}		// 0 - blue/orange - melody off
 		
 		finished_processing = true;	
 		gamepad_bluetooth_handle_data();		
