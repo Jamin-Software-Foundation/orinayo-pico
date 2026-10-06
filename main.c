@@ -732,7 +732,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		if (blue_fret) 		msg[2] = 4;
 		if (orange_fret) 	msg[2] = 5;
 
-		if (strum_up) msg[2] = 6;
+		//if (strum_up) msg[2] = 6;
 		if (strum_down) msg[2] = 7;		
 		
 		if (msg[2] > 0) tud_midi_n_stream_write(0, 0, msg, 3);		
