@@ -677,6 +677,8 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 //--------------------------------------------------------------------+
 
 void process_gamepad_report(uint8_t const* report, uint16_t len) {
+	if (len > 27) return;
+	
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, keyboard_flash_led);	
 	keyboard_flash_led = !keyboard_flash_led;		
 	
