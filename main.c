@@ -678,14 +678,90 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 
 void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, keyboard_flash_led);	
-	keyboard_flash_led = !keyboard_flash_led;	
+	keyboard_flash_led = !keyboard_flash_led;		
+	
+	if (report[0] > 0) 												// buttons
+	{	
+		if (report[0] == 2) {
+			but1 = 1; green = 0;			
+		}
+		else
+
+		if (report[0] == 4) {
+			but0 = 1; red = 0;			
+		}
+		else
+
+		if (report[0] == 1) {
+			but2 = 1; yellow = 0;			
+		}
+		else
+
+		if (report[0] == 8) {
+			but3 = 1; blue = 0;			
+		}
+		else
+
+		if (report[0] == 16) {
+			but4 = 1; orange = 0;		
+		}	
 		
-    for (uint16_t i = 0; i < len; i++) {
-        printf("%02X ", report[i]);
-		uint8_t msg[3] = {0x90, i % 16, report[i] % 128};
-		tud_midi_n_stream_write(0, 0, msg, 3);
-    }
-    printf("\n");
+		finished_processing = true;
+		gamepad_bluetooth_handle_data();				
+	}
+	else
+		
+	if (report[1] > 0 && report[2] == 8) 							// control
+	{
+		if (report[1] == 16) {	
+			mbut0 = 1; logo = 0;	
+		}
+		else
+
+		if (report[0] == 1) {
+			dpad_down = 1; starpower = 0; 	
+		}
+		else
+
+		if (report[0] == 2) {
+			but6 = 1; pitch = 0;			
+		}
+		
+		finished_processing = true;		
+		gamepad_bluetooth_handle_data();		
+	}
+	else
+		
+	if (report[2] == 0 && report[9] == 126) 						// strum up
+	{
+		dpad_right = 1; right = 0;	
+		finished_processing = true;
+		gamepad_bluetooth_handle_data();		
+	}	
+	else
+		
+	if (report[2] == 4 && report[10] == 127) 						// strum down
+	{
+		dpad_left = 1;	left = 0;
+		finished_processing = true;
+		gamepad_bluetooth_handle_data();		
+	}	
+	else
+		
+	if (report[2] == 8 && report[10] == 0 && report[9] == 0) 		// strum neutral
+	{
+		dpad_left = 0;	left = 1;
+		finished_processing = true;
+		gamepad_bluetooth_handle_data();		
+	}	
+	else
+		
+	if (report[2] == 2 && report[10] == 0 && report[9] == 0) 		// transpose
+	{
+		dpad_up = 1; up = 1;
+		finished_processing = true;
+		gamepad_bluetooth_handle_data();		
+	}	
 }
 
 
