@@ -682,34 +682,30 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	
 	if (report[0] > 0) 												// buttons
 	{	
-		green = 0; red = 0; blue = 0; yellow = 0; orange = 0; 
+		green = 1; red = 1; blue = 1; yellow = 1; orange = 1; 
 		but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 0;		
 		
 		if (report[0] & 2) {
-			but1 = 1; green = 1;			
+			but1 = 1; green = 0;			
 		}
-		else
 
 		if (report[0] & 4) {
 			but0 = 1; red = 1;			
 		}
-		else
+
 
 		if (report[0] & 1) {
 			but2 = 1; yellow = 1;			
 		}
-		else
 
 		if (report[0] & 8) {
 			but3 = 1; blue = 1;			
 		}
-		else
 
 		if (report[0] & 16) {
 			but4 = 1; orange = 1;		
 		}					
 	}
-	else
 		
 	if (report[1] > 0 && report[2] == 8) 							// control	
 	{	
@@ -732,7 +728,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	}
 	else
 		
-	if (report[2] == 0 && report[9] == 126) 						// strum up
+	if (report[2] == 0 && report[9] > 0) 						// strum up
 	{
 		dpad_right = 1; right = 0;	
 		finished_processing = true;
@@ -740,7 +736,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	}	
 	else
 		
-	if (report[2] == 4 && report[10] == 127) 						// strum down
+	if (report[2] == 4 && report[10] > 0) 						// strum down
 	{
 		dpad_left = 1;	left = 0;
 		finished_processing = true;
