@@ -682,37 +682,37 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	
 	if (report[0] > 0) 												// buttons
 	{	
-		if (report[0] == 2) {
-			but1 = 1; green = 0;			
-		}
-		else
-
-		if (report[0] == 4) {
-			but0 = 1; red = 0;			
-		}
-		else
-
-		if (report[0] == 1) {
-			but2 = 1; yellow = 0;			
-		}
-		else
-
-		if (report[0] == 8) {
-			but3 = 1; blue = 0;			
-		}
-		else
-
-		if (report[0] == 16) {
-			but4 = 1; orange = 0;		
-		}	
+		green = 0; red = 0; blue = 0; yellow = 0; orange = 0; 
+		but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 0;		
 		
-		finished_processing = true;
-		gamepad_bluetooth_handle_data();				
+		if (report[0] & 2) {
+			but1 = 1; green = 1;			
+		}
+		else
+
+		if (report[0] & 4) {
+			but0 = 1; red = 1;			
+		}
+		else
+
+		if (report[0] & 1) {
+			but2 = 1; yellow = 1;			
+		}
+		else
+
+		if (report[0] & 8) {
+			but3 = 1; blue = 1;			
+		}
+		else
+
+		if (report[0] & 16) {
+			but4 = 1; orange = 1;		
+		}					
 	}
 	else
 		
-	if (report[1] > 0 && report[2] == 8) 							// control
-	{
+	if (report[1] > 0 && report[2] == 8) 							// control	
+	{	
 		if (report[1] == 16) {	
 			mbut0 = 1; logo = 0;	
 		}
