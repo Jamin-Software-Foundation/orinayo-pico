@@ -713,29 +713,8 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	keyboard_flash_led = !keyboard_flash_led;	
 	
 	if (len > 0) {
-        bool green_fret  = (report[4] & 0x02); // Button 1
-        bool red_fret    = (report[4] & 0x04); // Button 2
-        bool yellow_fret = (report[4] & 0x08); // Button 3
-        bool blue_fret   = (report[4] & 0x10); // Button 4
-        bool orange_fret = (report[4] & 0x20); // Button 5
-		
-		uint8_t dpad_state = report[4] & 0x0F;		
-		
-        bool strum_up   = (dpad_state == 0); // HAT value 0
-        bool strum_down = (dpad_state == 4); // HAT value 4
-		
-		uint8_t msg[3] = {0x90, 0, 0};		
-
-		if (green_fret) 	msg[2] = 1;
-		if (red_fret) 		msg[2] = 2;
-		if (yellow_fret) 	msg[2] = 3;
-		if (blue_fret) 		msg[2] = 4;
-		if (orange_fret) 	msg[2] = 5;
-
-		//if (strum_up) msg[2] = 6;
-		if (strum_down) msg[2] = 7;		
-		
-		if (msg[2] > 0) tud_midi_n_stream_write(0, 0, msg, 3);		
+		uint8_t msg[3] = {0x90, report[4], report[5]};					
+		tud_midi_n_stream_write(0, 0, msg, 3);		
 	}
 }
 
