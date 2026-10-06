@@ -398,6 +398,7 @@ int main() {
     note_scheduler_init();	
 	
 	wav_trigger_pro_connected = is_wav_trigger_connected();	
+	printf("Debug Log: Orinayo Pico Ready!\n");
 	
 	
     while (true) {
@@ -609,10 +610,10 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);		
 
     // Check if the mounted device is a keyboard
-    if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || HID_ITF_PROTOCOL_NONE) 
-	{
-		if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {
-			//printf("USB Keyboard mounted successfully!\n");			
+    if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || HID_ITF_PROTOCOL_NONE) {
+		printf("USB device mounted successfully!\n");	
+			
+		if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {		
 			hid_keyboard_connected = true;
 		}
 		
@@ -622,7 +623,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 }
 
 void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
-    //printf("USB Keyboard unmounted.\n");
+    printf("USB device unmounted.\n");
 	hid_keyboard_connected = false;
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
 }
@@ -680,11 +681,11 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	keyboard_flash_led = !keyboard_flash_led;	
 		
     for (uint16_t i = 0; i < len; i++) {
-        //printf("%02X ", report[i]);
+        printf("%02X ", report[i]);
 		uint8_t msg[3] = {0x90, 0, report[i] % 128};
 		tud_midi_n_stream_write(0, 0, msg, 3);
     }
-    //printf("\n");
+    printf("\n");
 }
 
 
