@@ -48,12 +48,6 @@ add_subdirectory(${PICO_BLE_MIDI_PATH})
 add_subdirectory(${PICO_PIO_USB_PATH})
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/bluepad32)
 
-add_compile_definitions(
-	PICO_STDIO_USB_HEADER_INCLUDES="stdbool.h" 
-    PICO_DEFAULT_PIO_USB_DP_PIN=17
-	CFG_TUH_RPI_PIO_USB=1
-)
-
 add_library(tinyusb_pico_pio_usb INTERFACE)
 target_sources(tinyusb_device_base INTERFACE ${TOP}/src/portable/raspberrypi/pio_usb/dcd_pio_usb.c)
 target_sources(tinyusb_host_base INTERFACE ${TOP}/src/portable/raspberrypi/pio_usb/hcd_pio_usb.c)
@@ -83,7 +77,15 @@ pico_add_extra_outputs(${PROJECT_NAME})
 
 # Link to libraries
 target_link_libraries(${PROJECT_NAME} pico_stdlib hardware_i2c hardware_clocks pico_multicore pico_cyw43_arch_none pico_cyw43_arch_threadsafe_background tinyusb_device tinyusb_host tinyusb_board pico_btstack_classic pico_pio_usb  tinyusb_pico_pio_usb pico_btstack_ble pico_btstack_cyw43 orinayobt)
-
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    # Forces the build system to recognise standard booleans inside the broken SDK header
+    PICO_STDIO_USB_HEADER_INCLUDES="stdbool.h" 
+    
+    # Ensure PIO-USB tells TinyUSB it handles the Host side
+    CFG_TUH_RPI_PIO_USB=1
+    PIO_USB_USE_TINYUSB=1
+    PICO_DEFAULT_PIO_USB_DP_PIN=17	
+)
 # PicoTool binary information
 pico_set_program_name(${PROJECT_NAME} ${PROJECT_NAME})
 pico_set_program_version(${PROJECT_NAME} ${PROJECT_VERSION})
