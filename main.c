@@ -26,6 +26,38 @@
 #include "pico/stdlib.h"
 #include "hardware/watchdog.h"
 #include "hardware/i2c.h"
+#include <stdint.h>
+
+// Struct mapping for typical PS3 Guitar Hero peripherals
+typedef struct __attribute__((packed)) {
+    uint8_t x_axis;       // Left Stick X (Unused on guitar)
+    uint8_t y_axis;       // Left Stick Y (Unused on guitar)
+    uint8_t whammy_bar;   // Right Stick X (Usually mapping for whammy)
+    uint8_t neck_slider;  // Right Stick Y (If equipped with touch slider)
+    
+    // Byte 4: Contains D-pad HAT switch and upper shapes
+    // HAT Switch values: 0=Up, 1=Up-Right, 2=Right... 8=Released
+    uint8_t hat_switch : 4; 
+    uint8_t triangle   : 1; // Yellow Fret
+    uint8_t circle     : 1; // Red Fret
+    uint8_t cross      : 1; // Green Fret
+    uint8_t square     : 1; // Blue Fret
+
+    // Byte 5: Back triggers, options, and special mappings
+    uint8_t l1         : 1; // Orange Fret
+    uint8_t r1         : 1; 
+    uint8_t l2         : 1; 
+    uint8_t r2         : 1; 
+    uint8_t select     : 1; // Star Power / Select button
+    uint8_t start      : 1; // Start button
+    uint8_t l3         : 1; 
+    uint8_t r3         : 1; 
+
+    // Byte 6: Home button and extra utilities
+    uint8_t ps_button  : 1;
+    uint8_t reserved   : 7;
+} ps3_guitar_report_t;
+
 
 // Pico W devices use a GPIO on the WIFI chip for the LED,
 // so when building for Pico W, CYW43_WL_GPIO_LED_PIN will be defined
@@ -679,10 +711,45 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, keyboard_flash_led);	
 	keyboard_flash_led = !keyboard_flash_led;	
+	
+	if (len >= sizeof(ps3_guitar_report_t)) {
+		ps3_guitar_report_t* guitar = (ps3_guitar_report_t*) report;
+		
+        bool green_pressed  = guitar->cross;
+        bool red_pressed    = guitar->circle;
+        bool yellow_pressed = guitar->triangle;
+        bool blue_pressed   = guitar->square;
+        bool orange_pressed = guitar->l1;
+
+        // Process strum bar (D-pad state values)
+        bool strum_up   = (guitar->hat_switch == 0);
+        bool strum_down = (guitar->hat_switch == 4);
+
+        // Process Whammy Bar position (0x00 to 0xFF range)
+        uint8_t whammy_val = guitar->whammy_bar;	
+		
+		uint8_t msg[3] = {0x90, 0, 0};		
+
+		if (green_pressed) 	msg[2] = 1;
+		if (red_pressed) 	msg[2] = 2;
+		if (yellow_pressed) msg[2] = 3;
+		if (blue_pressed) 	msg[2] = 4;
+		if (orange_pressed) msg[2] = 5;
+
+		if (strum_up) 	msg[2] = 6;
+		if (strum_down) msg[2] = 7;
+		
+		if (whammy_val > 0 && msg[2] == 0) {
+			msg[1] = whammy_val % 0x80;
+			msg[2] = 6;
+		}
+		
+		tud_midi_n_stream_write(0, 0, msg, 3);		
+	}
 		
     for (uint16_t i = 0; i < len; i++) {
         printf("%02X ", report[i]);
-		uint8_t msg[3] = {0x90, 0, report[i] % 128};
+
 		tud_midi_n_stream_write(0, 0, msg, 3);
     }
     printf("\n");
