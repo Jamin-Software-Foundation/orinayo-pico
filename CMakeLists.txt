@@ -49,6 +49,7 @@ add_subdirectory(${PICO_PIO_USB_PATH})
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/bluepad32)
 
 add_compile_definitions(
+	PICO_STDIO_USB_HEADER_INCLUDES="stdbool.h" 
     PICO_DEFAULT_PIO_USB_DP_PIN=17
 	CFG_TUH_RPI_PIO_USB=1
 )
