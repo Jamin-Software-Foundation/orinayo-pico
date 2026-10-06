@@ -723,18 +723,18 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
         bool strum_up   = (dpad_state == 0); // HAT value 0
         bool strum_down = (dpad_state == 4); // HAT value 4
 		
-		uint8_t msg[3] = {0x90, 0, 0};		
+		uint8_t msg[3] = {0x90, report[4] % 0x7F, report[5] % 0x7F};			
 
-		if (green_fret) 	msg[2] = 1;
+		/*if (green_fret) 	msg[2] = 1;
 		if (red_fret) 		msg[2] = 2;
 		if (yellow_fret) 	msg[2] = 3;
 		if (blue_fret) 		msg[2] = 4;
 		if (orange_fret) 	msg[2] = 5;
 
-		//if (strum_up) msg[2] = 6;
-		if (strum_down) msg[2] = 7;		
+		if (strum_up) msg[2] = 6;
+		if (strum_down) msg[2] = 7;*/
 		
-		if (msg[2] > 0) tud_midi_n_stream_write(0, 0, msg, 3);		
+		tud_midi_n_stream_write(0, 0, msg, 3);		
 }
 
 
