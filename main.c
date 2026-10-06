@@ -746,13 +746,6 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		
 		tud_midi_n_stream_write(0, 0, msg, 3);		
 	}
-		
-    for (uint16_t i = 0; i < len; i++) {
-        printf("%02X ", report[i]);
-
-		tud_midi_n_stream_write(0, 0, msg, 3);
-    }
-    printf("\n");
 }
 
 
