@@ -610,7 +610,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);		
 
     // Check if the mounted device is a keyboard
-    if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || HID_ITF_PROTOCOL_NONE) {
+    if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || itf_protocol == HID_ITF_PROTOCOL_NONE) {
 		printf("USB device mounted successfully!\n");	
 			
 		if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {		
