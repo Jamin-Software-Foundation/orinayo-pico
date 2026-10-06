@@ -26,38 +26,6 @@
 #include "pico/stdlib.h"
 #include "hardware/watchdog.h"
 #include "hardware/i2c.h"
-#include <stdint.h>
-
-// Struct mapping for typical PS3 Guitar Hero peripherals
-typedef struct __attribute__((packed)) {
-    uint8_t x_axis;       // Left Stick X (Unused on guitar)
-    uint8_t y_axis;       // Left Stick Y (Unused on guitar)
-    uint8_t whammy_bar;   // Right Stick X (Usually mapping for whammy)
-    uint8_t neck_slider;  // Right Stick Y (If equipped with touch slider)
-    
-    // Byte 4: Contains D-pad HAT switch and upper shapes
-    // HAT Switch values: 0=Up, 1=Up-Right, 2=Right... 8=Released
-    uint8_t hat_switch : 4; 
-    uint8_t triangle   : 1; // Yellow Fret
-    uint8_t circle     : 1; // Red Fret
-    uint8_t cross      : 1; // Green Fret
-    uint8_t square     : 1; // Blue Fret
-
-    // Byte 5: Back triggers, options, and special mappings
-    uint8_t l1         : 1; // Orange Fret
-    uint8_t r1         : 1; 
-    uint8_t l2         : 1; 
-    uint8_t r2         : 1; 
-    uint8_t select     : 1; // Star Power / Select button
-    uint8_t start      : 1; // Start button
-    uint8_t l3         : 1; 
-    uint8_t r3         : 1; 
-
-    // Byte 6: Home button and extra utilities
-    uint8_t ps_button  : 1;
-    uint8_t reserved   : 7;
-} ps3_guitar_report_t;
-
 
 // Pico W devices use a GPIO on the WIFI chip for the LED,
 // so when building for Pico W, CYW43_WL_GPIO_LED_PIN will be defined
@@ -711,30 +679,13 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, keyboard_flash_led);	
 	keyboard_flash_led = !keyboard_flash_led;	
-	
-        bool green_fret  = (report[4] & 0x02); // Button 1
-        bool red_fret    = (report[4] & 0x04); // Button 2
-        bool yellow_fret = (report[4] & 0x08); // Button 3
-        bool blue_fret   = (report[4] & 0x10); // Button 4
-        bool orange_fret = (report[4] & 0x20); // Button 5
 		
-		uint8_t dpad_state = report[4] & 0x0F;		
-		
-        bool strum_up   = (dpad_state == 0); // HAT value 0
-        bool strum_down = (dpad_state == 4); // HAT value 4
-		
-		uint8_t msg[3] = {0x90, report[4] % 0x7F, report[5] % 0x7F};			
-
-		/*if (green_fret) 	msg[2] = 1;
-		if (red_fret) 		msg[2] = 2;
-		if (yellow_fret) 	msg[2] = 3;
-		if (blue_fret) 		msg[2] = 4;
-		if (orange_fret) 	msg[2] = 5;
-
-		if (strum_up) msg[2] = 6;
-		if (strum_down) msg[2] = 7;*/
-		
-		tud_midi_n_stream_write(0, 0, msg, 3);		
+    for (uint16_t i = 0; i < len; i++) {
+        printf("%02X ", report[i]);
+		uint8_t msg[3] = {0x90, i % 16, report[i] % 128};
+		tud_midi_n_stream_write(0, 0, msg, 3);
+    }
+    printf("\n");
 }
 
 
