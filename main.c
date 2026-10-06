@@ -726,11 +726,11 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		
 		uint8_t msg[3] = {0x90, 0, 0};		
 
-		if (green_pressed) 	msg[2] = 1;
-		if (red_pressed) 	msg[2] = 2;
-		if (yellow_pressed) msg[2] = 3;
-		if (blue_pressed) 	msg[2] = 4;
-		if (orange_pressed) msg[2] = 5;
+		if (green_fret) 	msg[2] = 1;
+		if (red_fret) 		msg[2] = 2;
+		if (yellow_fret) 	msg[2] = 3;
+		if (blue_fret) 		msg[2] = 4;
+		if (orange_fret) 	msg[2] = 5;
 
 		if (strum_up) msg[2] = 6;
 		if (strum_down) msg[2] = 7;		
