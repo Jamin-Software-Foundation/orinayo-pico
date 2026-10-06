@@ -1,0 +1,34 @@
+name: Pico Build Action
+on: [push]
+          
+# Must match the project() name in CMakeLists.txt
+env:
+    APP_NAME: Orinayo
+    
+# Build binary and send to releases
+jobs:
+    build-deploy:
+        runs-on: ubuntu-latest
+        name: Build and deploy
+        steps:
+        
+          - name: Check out this repository
+            uses: actions/checkout@v3
+            
+          - name: Build Docker image
+            run: docker build -t pico-builder-image .
+            
+          - name: Create Docker container
+            run: docker create --name pico-builder-container pico-builder-image
+            
+          - name: Copy out .uf2 file
+            run: docker cp pico-builder-container:/project/src/build/${APP_NAME}.uf2 ./${APP_NAME}.uf2
+            
+          - name: Put environment variable into the env context
+            run: echo "app_name=$APP_NAME" >> $GITHUB_ENV
+            
+          - name: Upload Build Artifacts
+            uses: actions/upload-artifact@v4
+            with:
+                name: workspace_artifacts
+                path: ${{ env.app_name }}.uf2

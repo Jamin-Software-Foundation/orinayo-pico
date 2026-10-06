@@ -1,16 +1,5 @@
 name: Build orinayo-pico UF2
-
-on:
-  push:
-    branches: [ "main", "master" ]
-    paths:
-      - "./**"
-      - ".github/workflows/build.yml"
-  pull_request:
-    paths:
-      - "./**"
-      - ".github/workflows/build.yml"
-  workflow_dispatch:
+on: [push]
 
 jobs:
   build:
