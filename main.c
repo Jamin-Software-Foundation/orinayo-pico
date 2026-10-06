@@ -712,21 +712,17 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, keyboard_flash_led);	
 	keyboard_flash_led = !keyboard_flash_led;	
 	
-	if (len >= sizeof(ps3_guitar_report_t)) {
-		ps3_guitar_report_t* guitar = (ps3_guitar_report_t*) report;
+	if (len > 0) {
+        bool green_fret  = (report[4] & 0x02); // Button 1
+        bool red_fret    = (report[4] & 0x04); // Button 2
+        bool yellow_fret = (report[4] & 0x08); // Button 3
+        bool blue_fret   = (report[4] & 0x10); // Button 4
+        bool orange_fret = (report[4] & 0x20); // Button 5
 		
-        bool green_pressed  = guitar->cross;
-        bool red_pressed    = guitar->circle;
-        bool yellow_pressed = guitar->triangle;
-        bool blue_pressed   = guitar->square;
-        bool orange_pressed = guitar->l1;
-
-        // Process strum bar (D-pad state values)
-        bool strum_up   = (guitar->hat_switch == 0);
-        bool strum_down = (guitar->hat_switch == 4);
-
-        // Process Whammy Bar position (0x00 to 0xFF range)
-        uint8_t whammy_val = guitar->whammy_bar;	
+		uint8_t dpad_state = report[4] & 0x0F;		
+		
+        bool strum_up   = (dpad_state == 0); // HAT value 0
+        bool strum_down = (dpad_state == 4); // HAT value 4
 		
 		uint8_t msg[3] = {0x90, 0, 0};		
 
@@ -736,10 +732,8 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		if (blue_pressed) 	msg[2] = 4;
 		if (orange_pressed) msg[2] = 5;
 
-		if (guitar->hat_switch > 0) {
-			msg[1] = 1;
-			msg[2] = guitar->hat_switch ;
-		}
+		if (strum_up) msg[2] = 6;
+		if (strum_down) msg[2] = 7;		
 		
 		if (msg[2] > 0) tud_midi_n_stream_write(0, 0, msg, 3);		
 	}
