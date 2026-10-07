@@ -727,14 +727,14 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		}
 		else
 
-		if (report[0] == 1) {
+		if (report[1] == 1) {
 			dpad_down = 1; starpower = 0; 	
 			finished_processing = true;
 			gamepad_bluetooth_handle_data();			
 		}
 		else
 
-		if (report[0] == 2) {
+		if (report[1] == 2) {
 			but6 = 1; pitch = 0;
 			finished_processing = true;
 			gamepad_bluetooth_handle_data();			
