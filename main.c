@@ -749,7 +749,12 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	{
 		//dpad_right = 1; right = 0;	
 		//finished_processing = true;
-		//gamepad_bluetooth_handle_data();		
+		//gamepad_bluetooth_handle_data();	
+
+		for (uint16_t i = 0; i < len; i++) {
+			uint8_t msg[3] = {0x90 + (i % 16), i, report[i] % 128};
+			tud_midi_n_stream_write(0, 0, msg, 3);
+		}		
 	}	
 	else
 		
