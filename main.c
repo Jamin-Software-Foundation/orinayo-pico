@@ -717,18 +717,17 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 
 	if (report[0] & 16) {
 		but4 = 1; orange = 0;		
-	}
-		
+	}		
 	
 	if (previous_controls != report[1]) {
 		previous_controls = report[1];
 		
 		if (report[1] > 0 && (report[2] & 8)) 													// control	
 		{		
-			for (uint16_t i = 0; i < len; i++) {
+			/*for (uint16_t i = 0; i < len; i++) {
 				uint8_t msg[3] = {0x90 + (i % 16), i, report[i] % 128};
 				tud_midi_n_stream_write(0, 0, msg, 3);
-			}
+			}*/
 			
 			if (report[1] == 16) {	
 				mbut0 = 1; logo = 0;	
@@ -787,7 +786,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 			
 		if (report[2] == 2 && report[10] == 0 && report[9] == 0) 								// transpose
 		{
-			dpad_up = 1; up = 1;
+			dpad_up = 1; up = 0;
 			gamepad_bluetooth_handle_data();	
 		}	
 	}
