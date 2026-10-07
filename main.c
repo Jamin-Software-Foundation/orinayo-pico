@@ -718,19 +718,19 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		
 	if (report[1] > 0 && (report[2] & 8)) 													// control	
 	{	
-		if (report[1] == 16) {	
+		if (report[1] == 16 && !mbut0) {	
 			mbut0 = 1; logo = 0;	
 			gamepad_bluetooth_handle_data();	
 		}
 		else
 
-		if (report[1] == 1) {
+		if (report[1] == 1 && !dpad_down) {
 			dpad_down = 1; starpower = 0; 	
 			gamepad_bluetooth_handle_data();	
 		}
 		else
 
-		if (report[1] == 2) {
+		if (report[1] == 2 && !but6) {
 			but6 = 1; pitch = 0;
 			gamepad_bluetooth_handle_data();				
 		}	
