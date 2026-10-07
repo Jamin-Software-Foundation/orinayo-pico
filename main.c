@@ -747,9 +747,9 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		
 	if (report[2] == 0 && report[9] > 0) 						// strum up
 	{
-		dpad_right = 1; right = 0;	
-		finished_processing = true;
-		gamepad_bluetooth_handle_data();		
+		//dpad_right = 1; right = 0;	
+		//finished_processing = true;
+		//gamepad_bluetooth_handle_data();		
 	}	
 	else
 		
