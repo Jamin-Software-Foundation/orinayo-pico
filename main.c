@@ -702,20 +702,22 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		}
 
 		if (report[0] & 4) {
-			but0 = 1; red = 1;		
+			but0 = 1; red = 0;		
 		}
 
 		if (report[0] & 1) {
-			but2 = 1; yellow = 1;			
+			but2 = 1; yellow = 0;			
 		}
 
 		if (report[0] & 8) {
-			but3 = 1; blue = 1;		
+			but3 = 1; blue = 0;		
 		}
 
 		if (report[0] & 16) {
-			but4 = 1; orange = 1;		
-		}	
+			but4 = 1; orange = 0;		
+		}
+		
+		gamepad_bluetooth_handle_data();		
 	}		
 	
 	if (report[0] == 0 && (green || red || yellow || blue || orange) && !dpad_left && !dpad_right) {
@@ -723,7 +725,9 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		if (red) 	but0 = 0;	
 		if (yellow) but2 = 0;	
 		if (blue) 	but3 = 0;	
-		if (orange) but4 = 0;				
+		if (orange) but4 = 0;	
+		
+		gamepad_bluetooth_handle_data();		
 	}
 		
 	if (report[1] > 0 && report[2] & 8) 							// control	
