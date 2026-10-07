@@ -745,7 +745,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	}
 	else
 		
-	if (report[2] == 0 && report[9] == 126 && !dpad_right) 						// strum up
+	if (report[2] == 0 && report[9] > 0 && !dpad_right) 						// strum up
 	{
 		dpad_right = 1; right = 0;	
 		finished_processing = true;
@@ -766,7 +766,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	}	
 	else
 		
-	if (report[2] == 8 && report[10] == 0 && report[9] == 0) 		// strum neutral
+	if (report[2] == 8 && report[10] == 0 && report[9] == 0) 					// strum neutral
 	{
 		dpad_left = 0;	left = 1; dpad_right = 0; right = 1;	
 		finished_processing = true;
@@ -774,7 +774,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	}	
 	else
 		
-	if (report[2] == 2 && report[10] == 0 && report[9] == 0) 		// transpose
+	if (report[2] == 2 && report[10] == 0 && report[9] == 0) 					// transpose
 	{
 		dpad_up = 1; up = 1;
 		finished_processing = true;
