@@ -693,12 +693,8 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, keyboard_flash_led);	
 	keyboard_flash_led = !keyboard_flash_led;		
 	
-	if (report[0] == 0) {
-		for (uint16_t i = 0; i < len; i++) {
-			uint8_t msg[3] = {0x90 + (i % 16), i, report[i] % 128};
-			tud_midi_n_stream_write(0, 0, msg, 3);
-		}
-		
+	if (report[0] == 0) 
+	{		
 		if (green) 	but1 = 0;				
 		if (red) 	but0 = 0;	
 		if (yellow) but2 = 0;	
@@ -749,7 +745,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	}
 	else
 		
-	if (report[2] == 0 && report[9] > 0 && !dpad_right) 						// strum up
+	if (report[2] == 0 && report[9] > 0) 						// strum up
 	{
 		dpad_right = 1; right = 0;	
 		gamepad_bluetooth_handle_data();		
@@ -761,7 +757,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	}	
 	else
 		
-	if (report[2] == 4 && report[10] > 0 && !dpad_left) 						// strum down
+	if (report[2] == 4 && report[10] > 0) 						// strum down
 	{
 		dpad_left = 1;	left = 0;
 		gamepad_bluetooth_handle_data();		
@@ -770,7 +766,14 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		
 	if (report[2] == 8 && report[10] == 0 && report[9] == 0) 					// strum neutral
 	{
-		dpad_left = 0;	left = 1; dpad_right = 0; right = 1;	
+		if (dpad_left) {
+			dpad_left = 0;	left = 1; 
+		}
+		else
+			
+		if (dpad_right) {
+			dpad_right = 0; right = 1;		
+		}
 		gamepad_bluetooth_handle_data();			
 	}	
 	else
