@@ -693,15 +693,8 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, keyboard_flash_led);	
 	keyboard_flash_led = !keyboard_flash_led;		
 	
-	if (report[0] == 0) 
-	{		
-		if (green) 	but1 = 0;				
-		if (red) 	but0 = 0;	
-		if (yellow) but2 = 0;	
-		if (blue) 	but3 = 0;	
-		if (orange) but4 = 0;		
-	}
-	else {
+	if (report[0] > 0)   {		
+		but1 = 0; but0 = 0; but2 = 0; but3 = 0; but4 = 0;
 		
 		if (report[0] & 2) {
 			but1 = 1; green = 0;			
@@ -721,8 +714,10 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 
 		if (report[0] & 16) {
 			but4 = 1; orange = 0;		
-		}		
+		}
+		gamepad_bluetooth_handle_data();
 	}
+	else
 		
 	if (report[1] > 0 && (report[2] & 8)) 							// control	
 	{	
