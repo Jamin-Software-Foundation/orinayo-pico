@@ -722,8 +722,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		if (red) 	but0 = 0;	
 		if (yellow) but2 = 0;	
 		if (blue) 	but3 = 0;	
-		if (orange) but4 = 0;	
-		
+		if (orange) but4 = 0;			
 		gamepad_bluetooth_handle_data();
 	}
 		
