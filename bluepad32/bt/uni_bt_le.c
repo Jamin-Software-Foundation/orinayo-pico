@@ -909,7 +909,8 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 					
     if (type_of_packet == GATT_EVENT_NOTIFICATION) {
 		// TODO
-		//if (gamepad_guitar_connected) return;
+		if (gamepad_guitar_connected) return;			// classic bluetooth guitar active. ignore BLE
+		if (hid_gamepad_connected) return;				// usb guitar active. also ignore BLE
 
 		memcpy(event_data, value, value_length);
 
