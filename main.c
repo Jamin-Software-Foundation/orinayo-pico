@@ -716,7 +716,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	} 
 	else 
 	
-	if {(green || red || yellow || blue || orange) && !dpad_left && !dpad_right) {
+	if ((green || red || yellow || blue || orange) && !dpad_left && !dpad_right) {
 		if (green) 	but1 = 0;				
 		if (red) 	but0 = 0;	
 		if (yellow) but2 = 0;	
