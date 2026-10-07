@@ -170,6 +170,8 @@ extern bool style_end_requested;
 extern bool style_end_started;
 extern bool hid_keyboard_connected;
 extern bool transpose_mode_active;
+extern bool hid_gamepad_connected;
+
 
 // Temporal space for SDP in BLE
 static uint8_t hid_descriptor_storage[HID_MAX_DESCRIPTOR_LEN * CONFIG_BLUEPAD32_MAX_DEVICES];
