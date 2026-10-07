@@ -737,7 +737,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	}
 	else
 		
-	if (report[2] == 0 && report[9] > 0) 						// strum up
+	if (report[2] == 0 && report[9] > 0) 													// strum up
 	{
 		dpad_right = 1; right = 0;	
 		gamepad_bluetooth_handle_data();		
@@ -749,14 +749,14 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	}	
 	else
 		
-	if (report[2] == 4 && report[10] > 0) 						// strum down
+	if (report[2] == 4 && report[10] > 0 && !dpad_left) 									// strum down
 	{
 		dpad_left = 1;	left = 0;
 		gamepad_bluetooth_handle_data();		
 	}	
 	else
 		
-	if (report[2] == 8 && report[10] == 0 && report[9] == 0) 					// strum neutral
+	if (report[2] == 8 && report[10] == 0 && report[9] == 0 && (dpad_left || dpad_right))	// strum neutral
 	{
 		if (dpad_left) {
 			dpad_left = 0;	left = 1; 
@@ -770,7 +770,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	}	
 	else
 		
-	if (report[2] == 2 && report[10] == 0 && report[9] == 0) 					// transpose
+	if (report[2] == 2 && report[10] == 0 && report[9] == 0 && !dpad_up) 					// transpose
 	{
 		dpad_up = 1; up = 1;
 		gamepad_bluetooth_handle_data();	
