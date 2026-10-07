@@ -693,9 +693,6 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	
 	if (report[0] > 0) 												// buttons
 	{	
-		green = 1; red = 1; blue = 1; yellow = 1; orange = 1; 
-		but1 = 0; but0 = 0; but2 = 0; but3 = 0;  but4 = 0;		
-		
 		if (report[0] & 2) {
 			but1 = 1; green = 0;			
 		}
@@ -703,7 +700,6 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		if (report[0] & 4) {
 			but0 = 1; red = 1;			
 		}
-
 
 		if (report[0] & 1) {
 			but2 = 1; yellow = 1;			
@@ -716,9 +712,16 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		if (report[0] & 16) {
 			but4 = 1; orange = 1;		
 		}					
+	
+	} else {
+		if (green) 	but1 = 0;				
+		if (red) 	but0 = 0;	
+		if (yellow) but2 = 0;	
+		if (blue) 	but3 = 0;	
+		if (orange) but4 = 0;					
 	}
 		
-	if (report[1] > 0 && report[2] == 8) 							// control	
+	if (report[1] > 0 && report[2] & 8) 							// control	
 	{	
 		if (report[1] == 16) {	
 			mbut0 = 1; logo = 0;	
