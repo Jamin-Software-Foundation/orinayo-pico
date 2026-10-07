@@ -714,7 +714,8 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 			but4 = 1; orange = 1;		
 		}	
 		
-		gamepad_bluetooth_handle_data();		
+		gamepad_bluetooth_handle_data();	
+		return;
 	}		
 	
 	if (report[0] == 0 && (green || red || yellow || blue || orange) && !dpad_left && !dpad_right) {
@@ -724,25 +725,29 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		if (blue) 	but3 = 0;	
 		if (orange) but4 = 0;			
 		gamepad_bluetooth_handle_data();
+		return;		
 	}
 		
 	if (report[1] > 0 && report[2] & 8) 							// control	
 	{	
 		if (report[1] == 16) {	
 			mbut0 = 1; logo = 0;	
-			gamepad_bluetooth_handle_data();			
+			gamepad_bluetooth_handle_data();	
+			return;
 		}
 		else
 
 		if (report[1] == 1) {
 			dpad_down = 1; starpower = 0; 	
-			gamepad_bluetooth_handle_data();			
+			gamepad_bluetooth_handle_data();	
+			return;
 		}
 		else
 
 		if (report[1] == 2) {
 			but6 = 1; pitch = 0;
-			gamepad_bluetooth_handle_data();			
+			gamepad_bluetooth_handle_data();		
+			return;			
 		}	
 	}
 	else
@@ -751,6 +756,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	{
 		dpad_right = 1; right = 0;	
 		gamepad_bluetooth_handle_data();	
+		return;		
 
 		/*for (uint16_t i = 0; i < len; i++) {
 			uint8_t msg[3] = {0x90 + (i % 16), i, report[i] % 128};
@@ -762,7 +768,8 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	if (report[2] == 4 && report[10] > 0 && !dpad_left) 						// strum down
 	{
 		dpad_left = 1;	left = 0;
-		gamepad_bluetooth_handle_data();		
+		gamepad_bluetooth_handle_data();	
+		return;		
 	}	
 	else
 		
@@ -770,13 +777,15 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	{
 		dpad_left = 0;	left = 1; dpad_right = 0; right = 1;	
 		gamepad_bluetooth_handle_data();		
+		return;		
 	}	
 	else
 		
 	if (report[2] == 2 && report[10] == 0 && report[9] == 0) 					// transpose
 	{
 		dpad_up = 1; up = 1;
-		gamepad_bluetooth_handle_data();		
+		gamepad_bluetooth_handle_data();	
+		return;		
 	}	
 }
 
