@@ -216,6 +216,7 @@ static uint32_t old_p3 = 0;
 static uint32_t old_p4 = 0;
 
 bool transpose_mode_active = false;
+bool hid_gamepad_connected = false;
 bool hid_keyboard_connected = false;
 bool wav_trigger_pro_connected = false;
 bool launchkey_connected = false;
@@ -618,7 +619,8 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 		}
 		else
 
-		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {			
+		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {	
+			hid_gamepad_connected = true;		
 			enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
 			config_wav_trigger_pro();							
 			but6 = 1; pitch = 0; but2 = 1; yellow = 0;			// Select strum type yellow button				
@@ -634,6 +636,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
     printf("USB device unmounted.\n");
 	hid_keyboard_connected = false;
+	hid_gamepad_connected = false;
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
 }
 
@@ -713,9 +716,6 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		if (report[0] & 16) {
 			but4 = 1; orange = 1;		
 		}	
-		
-		gamepad_bluetooth_handle_data();	
-		return;
 	}		
 	
 	if (report[0] == 0 && (green || red || yellow || blue || orange) && !dpad_left && !dpad_right) {
@@ -723,9 +723,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		if (red) 	but0 = 0;	
 		if (yellow) but2 = 0;	
 		if (blue) 	but3 = 0;	
-		if (orange) but4 = 0;			
-		gamepad_bluetooth_handle_data();
-		return;		
+		if (orange) but4 = 0;				
 	}
 		
 	if (report[1] > 0 && report[2] & 8) 							// control	

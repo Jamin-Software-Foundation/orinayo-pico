@@ -37,6 +37,7 @@
 #define END1 46
 
 extern looper_status_t looper_status;
+extern bool hid_keyboard_connected;
 
 bool strum_neutral = true;
 bool style_started = false;
@@ -439,7 +440,8 @@ static const uni_property_t* pico_bluetooth_get_property(uni_property_idx_t idx)
 static void pico_bluetooth_on_controller_data(uni_hid_device_t* d, uni_controller_t* ctl) { 
 	(void) d;
 	// TODO
-	//if (!gamepad_guitar_connected) return;
+	if (!gamepad_guitar_connected) return;
+	if (hid_keyboard_connected) return;
 	
 	int8_t axis_x = ctl->gamepad.axis_x / 4;	// nomalise -512 to +512 to -128 to +128
 	int8_t axis_y = ctl->gamepad.axis_y / 4;
