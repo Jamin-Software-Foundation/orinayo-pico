@@ -17,6 +17,7 @@ https://github.com/user-attachments/assets/bf5d0bad-dd6a-400b-bc92-5dadf5c17ba5
 - **Tap tempo** — Set BPM by tapping the controller
 - **Pattern persistence** — Looper patterns saved to flash and restored on power-up
 - **Multiple operational modes** — Arranger, Ample Guitar VST, MIDI Drums, Yamaha SeqTrak, Yamaha MODX
+- **Multi-sample/Loop player** - Trigger instrument samples and audio style loops for drums, bass and harmony tracks
 
 ---
 
@@ -38,6 +39,12 @@ https://github.com/user-attachments/assets/bf5d0bad-dd6a-400b-bc92-5dadf5c17ba5
 | USB Host MIDI | USB cable to Midi compliant devices |
 | UART MIDI | UART0 GPIO Pins 0 (TX) and 1 (RX) to SAM2695 from M5Stack|
 
+### USB HID Input
+| Interface | Connection |
+|-----------|------------|
+| Logitech Guitar Hero | USB dongle) |
+| PC Keyboard | USB cable/dongle |
+| USB Footswitch | USB Cable/dongle|
 ---
 
 ## Operational Modes
