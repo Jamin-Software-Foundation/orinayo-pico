@@ -791,35 +791,37 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	
 	if (previous_strip != report[6]) {
 		previous_strip = report[6];
+		
+		uint8_t active_strip = report[6] % 128;
 		bool trigger_sampler = false;
 		
-		if (report[6] == 33 && style_started) {													// fill
+		if (active_strip == 33 && style_started) {												// fill
 			joy_up = true; joystick_up = 0;				
 			gamepad_bluetooth_handle_data();
 			return;
 		}
 		else
 			
-		if (report[6] == 81 && style_started) {													// break
+		if (active_strip == 81 && style_started) {												// break
 			joy_down = true; joystick_down = 0;				
 			gamepad_bluetooth_handle_data();
 			return;
 		}
 		else
 			
-		if (report[6] == 21) {																	// unused
+		if (active_strip == 21) {																// unused
 			return;
 		}
 		else
 			
-		if (report[6] == 63 && !style_started) {												// prev style group
+		if (active_strip == 63 && !style_started) {												// prev style group
 			style_group = style_group - 1;
 			if (style_group < 0) style_group = 20;	
 			trigger_sampler	 = true;
 		}		
 		else		
 			
-		if (report[6] == 125 && !style_started) {												// next style group
+		if (active_strip == 125 && !style_started) {											// next style group
 			style_group = style_group + 1;
 			if (style_group > 20) style_group = 0;
 			trigger_sampler	 = true;	
