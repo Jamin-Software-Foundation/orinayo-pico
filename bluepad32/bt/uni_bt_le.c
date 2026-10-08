@@ -807,12 +807,14 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 	 }
 	
     if (type_of_packet == GATT_EVENT_SERVICE_QUERY_RESULT) {
-		query_state = 0;		
+		query_state = 0;
+		gatt_event_service_query_result_get_service(packet, &server_service);
 	}
 	else
 		
     if (type_of_packet == GATT_EVENT_CHARACTERISTIC_QUERY_RESULT) {	
 		query_state = 1;
+		gatt_event_characteristic_query_result_get_characteristic(packet, &server_characteristic);
 	}
 	else
 					
@@ -821,8 +823,6 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		
 		if (query_state == 0) 
 		{
-			gatt_event_service_query_result_get_service(packet, &server_service);			
-			
 			if (liberlive_enabled) {
 				uint8_t characteristics_id[16] = {0x00, 0x00, 0xff, 0x03, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb};				
 				gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, characteristics_id);						
@@ -849,8 +849,10 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		if (query_state == 1) 	{
 			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false); 
 			
-			gatt_event_characteristic_query_result_get_characteristic(packet, &server_characteristic);				
-			gatt_client_write_client_characteristic_configuration(handle_gatt_client_event, connection_handle,  &server_characteristic, GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION);
+			uint8_t cccd_status = gatt_client_write_client_characteristic_configuration(handle_gatt_client_event, connection_handle,  &server_characteristic, GATT_CLIENT_CHARACTERISTICS_CONFIGURATION_NOTIFICATION);
+			if (cccd_status != ERROR_CODE_SUCCESS) logi("CCCD write request failed, status=%#x\n", cccd_status);
+			
+			if (!liberlive_enabled) query_state = 2;	// ignore the completion event of the CCCD write
 							
 			if (liberlive_enabled) {			
 				// Write Chord Key Mapping			
@@ -879,6 +881,11 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		else
 			
 		if (query_state == 2) 	{
+
+			if (!liberlive_enabled) {
+				uint8_t att_status = gatt_event_query_complete_get_att_status(packet);
+				if (att_status != ATT_ERROR_SUCCESS) logi("CCCD write failed, ATT status=%#x\n", att_status);
+			}
 
 			if (liberlive_enabled) {
 				//uint8_t set_chord[10] = {177, 30, 22, 5, 0, 0, 4, 12, 1, 1};	// chord paddle, group, item, key, difficulty
@@ -1695,6 +1702,8 @@ void uni_bt_le_on_hci_event_le_meta(const uint8_t* packet, uint16_t size) {
 			else
 				
 			if (happy_soulmate_enabled) {	// 0000faa0-0000-1000-8000-00805f9b34fb
+				gatt_client_set_required_security_level(LEVEL_2);	// soulmate requires encryption to enable notifications
+				sm_request_pairing(connection_handle);
 				uint8_t service_name[16] = {0x00, 0x00, 0xfa, 0xa0, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB} ;			
 				gatt_client_discover_primary_services_by_uuid128(handle_gatt_client_event, connection_handle, service_name);
 				gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, NULL);					
