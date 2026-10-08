@@ -829,16 +829,27 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			}
 			else
 				
-			if (sonicake_neouke_enabled) {					
-				uint8_t characteristics_id[16] = {0x77, 0x72, 0xE5, 0xDB, 0x38, 0x68, 0x41, 0x12, 0xA1, 0xA9, 0xF2, 0x66, 0x9D, 0x10, 0x6B, 0xF3};	
-				gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, characteristics_id);										
-			}
-			else
+			if (sonicake_neouke_enabled || happy_soulmate_enabled) {
+				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
 				
-			if (happy_soulmate_enabled) { //0000faa1-0000-1000-8000-00805f9b34fb		
-				uint8_t characteristics_id[16] = {0x00, 0x00, 0xfa, 0xa1, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb};	
-				gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, characteristics_id);					
-			}
+				if (sonicake_neouke_enabled) {					
+					uint8_t characteristics_id[16] = {0x77, 0x72, 0xE5, 0xDB, 0x38, 0x68, 0x41, 0x12, 0xA1, 0xA9, 0xF2, 0x66, 0x9D, 0x10, 0x6B, 0xF3};	
+					gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, characteristics_id);										
+				}
+				else
+					
+				if (happy_soulmate_enabled) { //0000faa1-0000-1000-8000-00805f9b34fb		
+					uint8_t characteristics_id[16] = {0x00, 0x00, 0xfa, 0xa1, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb};	
+					gatt_client_discover_characteristics_for_service_by_uuid128(handle_gatt_client_event, connection_handle, &server_service, characteristics_id);					
+				}				
+
+				enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
+				config_wav_trigger_pro();							
+				but6 = 1; pitch = 0; but2 = 1; yellow = 0;			// Select strum type yellow button	
+				
+				finished_processing = true;					
+				gamepad_bluetooth_handle_data();
+			}			
 		}
 		else		
 		
@@ -870,19 +881,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 				//gatt_client_write_value_of_characteristic(handle_gatt_client_event, connection_handle, server_characteristic.value_handle, 6, set_key);
 				
 				query_state = 2;
-			}
-			else
-				
-			if (sonicake_neouke_enabled || happy_soulmate_enabled) {
-				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
-
-				enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
-				config_wav_trigger_pro();							
-				but6 = 1; pitch = 0; but2 = 1; yellow = 0;			// Select strum type yellow button	
-				
-				finished_processing = true;					
-				gamepad_bluetooth_handle_data();
-			}
+			}			
 		}
 		else
 			
