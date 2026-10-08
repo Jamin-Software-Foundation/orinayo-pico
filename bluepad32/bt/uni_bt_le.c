@@ -801,7 +801,8 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 	uint8_t event_data[16];	
     uint8_t type_of_packet;	
     type_of_packet = hci_event_packet_get_type(packet);
-	
+
+
 	if (type_of_packet != GATT_EVENT_NOTIFICATION) {
 		//midi_ketron_arr(type_of_packet, false);	
 	 }
@@ -815,6 +816,16 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		query_state = 1;
 	}
 	else
+		
+	if (type_of_packet == ATT_EVENT_MTU_EXCHANGE_COMPLETE) 
+	{				
+		if (happy_soulmate_enabled) {		
+			uint8_t service_name[16] = {0x00, 0x00, 0xfa, 0xa0, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB} ;			
+			gatt_client_discover_primary_services_by_uuid128(handle_gatt_client_event, connection_handle, service_name);
+			gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, NULL);	
+		}				
+	}	
+	else	
 					
     if (type_of_packet == GATT_EVENT_QUERY_COMPLETE) {
 		// action query here
@@ -1696,7 +1707,11 @@ void uni_bt_le_on_hci_event_le_meta(const uint8_t* packet, uint16_t size) {
 				
 			if (happy_soulmate_enabled) {	// 0000faa0-0000-1000-8000-00805f9b34fb
 				// Inside your HCI_SUBEVENT_LE_CONNECTION_COMPLETE event:
-				gatt_client_send_mtu_negotiation(handle_gatt_client_event, connection_handle);				
+				gatt_client_send_mtu_negotiation(handle_gatt_client_event, connection_handle);	
+				
+				cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, flash_led);	
+				flash_led = !flash_led;	
+			
 			}			
 	
 			else {	
@@ -1719,21 +1734,7 @@ void uni_bt_le_on_hci_event_le_meta(const uint8_t* packet, uint16_t size) {
 
         case HCI_SUBEVENT_LE_ADVERTISING_REPORT:
             // Safely ignore it, we handle the GAP advertising report instead
-            break;
-			
-		case ATT_EVENT_MTU_EXCHANGE_COMPLETE: 
-			//uint16_t current_mtu = gatt_event_mtu_configured_get_mtu(packet);
-			//printf("MTU successfully updated to: %d bytes\n", current_mtu);
-			
-			// NOW it is safe to write to the CCCD descriptor to turn on notifications!
-			// The Pico's buffer is now large enough to hold the 58-byte packets.
-			
-			if (happy_soulmate_enabled) {		
-				uint8_t service_name[16] = {0x00, 0x00, 0xfa, 0xa0, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB} ;			
-				gatt_client_discover_primary_services_by_uuid128(handle_gatt_client_event, connection_handle, service_name);
-				gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, NULL);	
-			}				
-			break;		
+            break;	
 
         default:
             logd("Unsupported LE_META sub-event: %#x\n", subevent);
