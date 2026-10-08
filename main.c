@@ -621,12 +621,14 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 		else
 
 		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {	
-			hid_gamepad_connected = true;		
-			/*enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
-			config_wav_trigger_pro();							
+			hid_gamepad_connected = true;	
+			
+			enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
+			config_wav_trigger_pro();	
+			
 			but6 = 1; pitch = 0; but2 = 1; yellow = 0;			// Select strum type yellow button				
 			finished_processing = true;					
-			gamepad_bluetooth_handle_data();*/	
+			gamepad_bluetooth_handle_data();
 		}				
 		
         // Start requesting data events from the device
