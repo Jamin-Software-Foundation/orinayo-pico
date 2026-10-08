@@ -698,6 +698,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	
 	static uint8_t previous_controls = 0;
 	static uint8_t previous_strums = 0;
+	static uint8_t previous_strip = 0;	
 	
 	if (report[0] & 2) {
 		but1 = 1; green = 0;			
@@ -787,6 +788,57 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 			return;
 		}
 	}
+	
+	if (previous_strip != report[6]) {
+		previous_strip = report[6];
+		bool trigger_sampler = false;
+		
+		if (report[6] == 33 && style_started) {													// fill
+			joy_up = true; joystick_up = 0;				
+			gamepad_bluetooth_handle_data();
+			return;
+		}
+		else
+			
+		if (report[6] == 81 && style_started) {													// break
+			joy_down = true; joystick_down = 0;				
+			gamepad_bluetooth_handle_data();
+			return;
+		}
+		else
+			
+		if (report[6] == 21) {																	// unused
+			return;
+		}
+		else
+			
+		if (report[6] == 63 && !style_started) {												// prev style group
+			style_group = style_group - 1;
+			if (style_group < 0) style_group = 20;	
+			trigger_sampler	 = true;
+		}		
+		else		
+			
+		if (report[6] == 125 && !style_started) {												// next style group
+			style_group = style_group + 1;
+			if (style_group > 20) style_group = 0;
+			trigger_sampler	 = true;	
+		}	
+		
+
+		if (trigger_sampler) 
+		{
+			if (enable_wav_trigger_pro) {
+				sampler_midi_note(0x9F, 36 + style_group, 127);	 // select and load preset
+			} 									
+			else
+
+			if (enable_nanobox_tangerine) {
+				midi_send_program_change(0xCF, style_group + 2); // select preset on channel 16 and skip both 1010 pianos	
+			}	
+			return;				
+		}	
+	}		
 	
 	for (uint16_t i = 0; i < len; i++) {
 		uint8_t msg[3] = {0x90 + (i % 16), i, report[i] % 128};
@@ -1112,6 +1164,12 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 
 	if (keycode == 42) {											// BACKSPACE - fill
 		joy_up = true; joystick_up = 0;		
+		finished_processing = true;			
+		gamepad_bluetooth_handle_data();
+	}
+	
+	if (keycode == 43) {											// TAB- break
+		joy_down = true; joystick_down = 0;		
 		finished_processing = true;			
 		gamepad_bluetooth_handle_data();
 	}
