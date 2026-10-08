@@ -622,11 +622,11 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
 		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {	
 			hid_gamepad_connected = true;		
-			enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
+			/*enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
 			config_wav_trigger_pro();							
 			but6 = 1; pitch = 0; but2 = 1; yellow = 0;			// Select strum type yellow button				
 			finished_processing = true;					
-			gamepad_bluetooth_handle_data();	
+			gamepad_bluetooth_handle_data();*/	
 		}				
 		
         // Start requesting data events from the device
@@ -862,7 +862,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 				}	
 				else
 
-				if (but0) {																		// bass
+				if (but2) {																		// chord
 					sample_chord_velocity = sample_chord_velocity - 10;
 					if (sample_chord_velocity < 10) sample_chord_velocity = 10;				
 				}
@@ -892,7 +892,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 				}	
 				else
 					
-				if (but2) {																		// bass
+				if (but2) {																		// chord
 					sample_chord_velocity = sample_chord_velocity + 10;
 					if (sample_chord_velocity > 127) sample_chord_velocity = 127;				
 				}
@@ -904,7 +904,6 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 				trigger_sampler	 = true;	
 			}
 		}	
-		
 
 		if (trigger_sampler) 
 		{
@@ -920,10 +919,10 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		}	
 	}		
 	
-	for (uint16_t i = 0; i < len; i++) {
+	/*for (uint16_t i = 0; i < len; i++) {
 		uint8_t msg[3] = {0x90 + (i % 16), i, report[i] % 128};
 		tud_midi_n_stream_write(0, 0, msg, 3);
-	}	
+	}*/	
 }
 
 
