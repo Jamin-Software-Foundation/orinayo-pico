@@ -156,6 +156,7 @@ extern bool enable_mpc_sample;
 extern bool enable_mpx_looper;
 extern bool enable_nanobox_tangerine;
 extern bool enable_wav_trigger_pro;
+extern bool enable_mpx_drums;
 extern bool style_end_requested;
 extern bool style_end_started;
 extern bool preferences_changed;
@@ -809,22 +810,99 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		}
 		else
 			
-		if (active_strip == 21) {																// unused
+		if (active_strip == 21 && !style_started) {												// function menu
+		
+			if (!but1 && !but0 && !but2 && !but3 && !but4) 
+			{
+				if (enable_mpx_looper) {
+					enable_mpx_drums = !enable_mpx_drums;
+				}
+			} 			
+			else if (but1 && but0 && but2) config_guitar(18);		// Reset Preferences
+			else if (but0 && but2 && but3) config_guitar(16);		// Used
+			else if (but1 && but0 && but3) config_guitar(15);		// Used			
+			else if (but2 && but3 && but4) config_guitar(17);		// Save Preferences
+			
+			else if (but1 && but4) config_guitar(13);				// Behringer Synth (JT-Micro, UB-1 Micro)
+			else if (but1 && but2) config_guitar(10);				// Akai MPX Looper			
+			else if (but0 && but3) config_guitar(11);				// Akai MPC Sample
+			else if (but2 && but4) config_guitar(12);				// Roland SP-404Mk2
+			
+			else if (but1 && but3) config_guitar(19);				// Yamaha SeqTrak
+			else if (but0 && but4) config_guitar(14);				// 1010Music Nanobox Tangerine
+			
+			else if (but1 && but0) config_guitar(6);				// Acoustic/Electric
+			else if (but0 && but2) config_guitar(7);				// Guitar Midi FX1
+			else if (but2 && but3) config_guitar(8);				// Guitar Midi FX2
+			else if (but3 && but4) config_guitar(9);				// Guitar Midi Fx3
+			
+			else if (but1) config_guitar(1);						// Ketron	
+			else if (but0) config_guitar(2);						// Ample
+			else if (yellow) config_guitar(3);						// Dream MIDI Drums
+			else if (but3) config_guitar(4);						// WAV Trigger Pro
+			else if (but4) config_guitar(5);						// MODX	
+		
 			return;
 		}
 		else
 			
-		if (active_strip == 63 && !style_started) {												// prev style group
-			style_group = style_group - 1;
-			if (style_group < 0) style_group = 20;	
-			trigger_sampler	 = true;
+		if (active_strip == 63) 
+		{												
+			if (style_started) {																// VOL--
+			
+				if (but1) {																		// drums
+					sample_drum_velocity = sample_drum_velocity - 10;
+					if (sample_drum_velocity < 10) sample_drum_velocity = 10;				
+				}
+				else
+
+				if (but0) {																		// bass
+					sample_bass_velocity = sample_bass_velocity - 10;
+					if (sample_bass_velocity < 10) sample_bass_velocity = 10;				
+				}	
+				else
+
+				if (but0) {																		// bass
+					sample_chord_velocity = sample_chord_velocity - 10;
+					if (sample_chord_velocity < 10) sample_chord_velocity = 10;				
+				}
+				return;
+				
+			} else {																			// prev style group
+				style_group = style_group - 1;
+				if (style_group < 0) style_group = 20;	
+				trigger_sampler	 = true;
+			}
 		}		
 		else		
 			
-		if (active_strip == 125 && !style_started) {											// next style group
-			style_group = style_group + 1;
-			if (style_group > 20) style_group = 0;
-			trigger_sampler	 = true;	
+		if (active_strip == 125) 
+		{	
+			if (style_started) {																// VOL ++
+
+				if (but1) {																		// drums
+					sample_drum_velocity = sample_drum_velocity + 10;
+					if (sample_drum_velocity > 127) sample_drum_velocity = 127;
+				}	
+				else
+					
+				if (but0) {																		// bass
+					sample_bass_velocity = sample_bass_velocity + 10;
+					if (sample_bass_velocity > 127) sample_bass_velocity = 127;				
+				}	
+				else
+					
+				if (but2) {																		// bass
+					sample_chord_velocity = sample_chord_velocity + 10;
+					if (sample_chord_velocity > 127) sample_chord_velocity = 127;				
+				}
+				return;
+				
+			} else {																			// next style group
+				style_group = style_group + 1;
+				if (style_group > 20) style_group = 0;
+				trigger_sampler	 = true;	
+			}
 		}	
 		
 
