@@ -817,7 +817,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 	}
 	else
 		
-	if (type_of_packet == ATT_EVENT_MTU_EXCHANGE_COMPLETE) 
+	if (type_of_packet == 0xA3) // GATT_EVENT_MTU
 	{				
 		if (happy_soulmate_enabled) {		
 			uint8_t service_name[16] = {0x00, 0x00, 0xfa, 0xa0, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB} ;			
