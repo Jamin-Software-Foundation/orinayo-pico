@@ -724,26 +724,24 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		
 		if (report[1] > 0 && (report[2] & 8)) 													// control	
 		{		
-			/*for (uint16_t i = 0; i < len; i++) {
-				uint8_t msg[3] = {0x90 + (i % 16), i, report[i] % 128};
-				tud_midi_n_stream_write(0, 0, msg, 3);
-			}*/
-			
 			if (report[1] == 16) {	
 				mbut0 = 1; logo = 0;	
-				gamepad_bluetooth_handle_data();	
+				gamepad_bluetooth_handle_data();
+				return;	
 			}
 			else
 
 			if (report[1] == 1) {
 				dpad_down = 1; starpower = 0; 	
 				gamepad_bluetooth_handle_data();	
+				return;					
 			}
 			else
 
 			if (report[1] == 2) {
 				but6 = 1; pitch = 0;
-				gamepad_bluetooth_handle_data();				
+				gamepad_bluetooth_handle_data();
+				return;					
 			}
 		}
 	} 
@@ -754,19 +752,16 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		if (report[2] == 0 && report[9] > 0) 													// strum up
 		{
 			dpad_right = 1; right = 0;	
-			gamepad_bluetooth_handle_data();		
-
-			/*for (uint16_t i = 0; i < len; i++) {
-				uint8_t msg[3] = {0x90 + (i % 16), i, report[i] % 128};
-				tud_midi_n_stream_write(0, 0, msg, 3);
-			}*/		
+			gamepad_bluetooth_handle_data();
+			return;				
 		}	
 		else
 			
 		if (report[2] == 4 && report[10] > 0) 													// strum down
 		{
 			dpad_left = 1;	left = 0;
-			gamepad_bluetooth_handle_data();		
+			gamepad_bluetooth_handle_data();
+			return;	
 		}	
 		else
 			
@@ -780,7 +775,8 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 			if (dpad_right) {
 				dpad_right = 0; right = 1;		
 			}
-			gamepad_bluetooth_handle_data();			
+			gamepad_bluetooth_handle_data();
+			return;			
 		}	
 		else
 			
@@ -788,8 +784,14 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 		{
 			dpad_up = 1; up = 0;
 			gamepad_bluetooth_handle_data();	
-		}	
+			return;
+		}
 	}
+	
+	for (uint16_t i = 0; i < len; i++) {
+		uint8_t msg[3] = {0x90 + (i % 16), i, report[i] % 128};
+		tud_midi_n_stream_write(0, 0, msg, 3);
+	}	
 }
 
 
