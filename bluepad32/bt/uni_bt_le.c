@@ -1721,7 +1721,7 @@ void uni_bt_le_on_hci_event_le_meta(const uint8_t* packet, uint16_t size) {
             // Safely ignore it, we handle the GAP advertising report instead
             break;
 			
-		case GATT_EVENT_MTU_CONFIGURED: {
+		case ATT_EVENT_MTU_EXCHANGE_COMPLETE: {
 			//uint16_t current_mtu = gatt_event_mtu_configured_get_mtu(packet);
 			//printf("MTU successfully updated to: %d bytes\n", current_mtu);
 			
