@@ -798,7 +798,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 	bool chord_selected = false;
 	bool handling_required = false;
 	
-	uint8_t event_data[16];	
+	uint8_t event_data[128];	
     uint8_t type_of_packet;	
     type_of_packet = hci_event_packet_get_type(packet);
 
