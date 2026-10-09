@@ -65,7 +65,8 @@
 #include <pico/cyw43_arch.h>
 
 #include "sdkconfig.h"
-#include "btstack_event.h"  // Exposes GATT_EVENT_MTU_CHANGED
+#include "btstack_event.h"
+#include "ble/gatt_client.h"
 #include "bt/uni_bt_conn.h"
 #include "bt/uni_bt_defines.h"
 #include "parser/uni_hid_parser.h"
