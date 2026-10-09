@@ -65,7 +65,7 @@
 #include <pico/cyw43_arch.h>
 
 #include "sdkconfig.h"
-
+#include "btstack_event.h"  // Exposes GATT_EVENT_MTU_CHANGED
 #include "bt/uni_bt_conn.h"
 #include "bt/uni_bt_defines.h"
 #include "parser/uni_hid_parser.h"
@@ -817,7 +817,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 	}
 	else
 		
-	if (type_of_packet == 0xA3) // GATT_EVENT_MTU
+	if (type_of_packet == GATT_EVENT_MTU_CHANGED)
 	{				
 		if (happy_soulmate_enabled) {		
 			uint8_t service_name[16] = {0x00, 0x00, 0xfa, 0xa0, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB} ;			
