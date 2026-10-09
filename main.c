@@ -872,7 +872,7 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 				
 			} else {																			// prev style group
 				style_group = style_group - 1;
-				if (style_group < 0) style_group = 20;	
+				if (style_group < 0) style_group = 0;	
 				trigger_sampler	 = true;
 			}
 		}		
@@ -1378,7 +1378,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 			
 		} else {
 			style_group = style_group - 1;
-			if (style_group < 0) style_group = 20;	
+			if (style_group < 0) style_group = 0;	
 			trigger_sampler	 = true;
 		}
 	}
@@ -1761,7 +1761,7 @@ void process_midi_byte(uint8_t b) {
 						
 					if (cc_cmd == 0x34) {							// previous style group
 						style_group = style_group - 1;
-						if (style_group < 0) style_group = 20;								
+						if (style_group < 0) style_group = 0;								
 					}
 
 					if (enable_wav_trigger_pro) {
@@ -1814,7 +1814,7 @@ void process_midi_byte(uint8_t b) {
 							
 						if (cc_value == 0x7F) {							// previous style group
 							style_group = style_group - 1;
-							if (style_group < 0) style_group = 20;								
+							if (style_group < 0) style_group = 0;								
 						}
 
 						if (enable_wav_trigger_pro) {

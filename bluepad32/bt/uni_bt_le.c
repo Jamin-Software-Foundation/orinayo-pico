@@ -2039,6 +2039,6 @@ void next_style_group() {
 
 void prev_style_group() {
 	style_group--;
-	if (style_group < 0) style_group = 20;
+	if (style_group < 0) style_group = 0;
 	handle_group_change();	
 }
