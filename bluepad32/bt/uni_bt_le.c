@@ -56,6 +56,7 @@
 #include "bt/uni_bt_le.h"
 
 #include <bluetooth_data_types.h>
+#include "ble/gatt_client.h"
 #include <btstack.h>
 #include <btstack_config.h>
 #include <inttypes.h>
@@ -65,8 +66,6 @@
 #include <pico/cyw43_arch.h>
 
 #include "sdkconfig.h"
-#include "btstack_event.h"
-#include "ble/gatt_client.h"
 #include "bt/uni_bt_conn.h"
 #include "bt/uni_bt_defines.h"
 #include "parser/uni_hid_parser.h"
