@@ -806,6 +806,11 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		//midi_ketron_arr(type_of_packet, false);	
 	 }
 	
+    if (type_of_packet == GATT_EVENT_MTU) {
+		logi("ATT MTU = %u\n", gatt_event_mtu_get_MTU(packet));
+	}
+	else
+
     if (type_of_packet == GATT_EVENT_SERVICE_QUERY_RESULT) {
 		query_state = 0;
 		gatt_event_service_query_result_get_service(packet, &server_service);
@@ -913,6 +918,8 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 		if (gamepad_guitar_connected) return;			// classic bluetooth guitar active. ignore BLE
 		if (hid_gamepad_connected) return;				// usb guitar active. also ignore BLE
 
+		if (value_length > sizeof(event_data)) value_length = sizeof(event_data);	// notifications can be up to MTU-3 bytes (soulmate sends 58)
+		memset(event_data, 0, sizeof(event_data));
 		memcpy(event_data, value, value_length);
 
 		joy_up = false;  
@@ -1704,6 +1711,7 @@ void uni_bt_le_on_hci_event_le_meta(const uint8_t* packet, uint16_t size) {
 			if (happy_soulmate_enabled) {	// 0000faa0-0000-1000-8000-00805f9b34fb
 				gatt_client_set_required_security_level(LEVEL_2);	// soulmate requires encryption to enable notifications
 				sm_request_pairing(connection_handle);
+				gatt_client_send_mtu_negotiation(handle_gatt_client_event, connection_handle);	// like Chrome, allow notifications larger than 20 bytes
 				uint8_t service_name[16] = {0x00, 0x00, 0xfa, 0xa0, 0x00, 0x00, 0x10, 0x00, 0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB} ;			
 				gatt_client_discover_primary_services_by_uuid128(handle_gatt_client_event, connection_handle, service_name);
 				gatt_client_listen_for_characteristic_value_updates(&notification_listener, handle_gatt_client_event, connection_handle, NULL);					
