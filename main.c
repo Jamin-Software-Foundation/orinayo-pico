@@ -781,13 +781,39 @@ void process_gamepad_report(uint8_t const* report, uint16_t len) {
 			}
 			gamepad_bluetooth_handle_data();
 			return;			
-		}	
+		}
+		else
+			
+		if (report[2] == 6 && report[10] == 0 && report[9] == 0) 								// transpose reset
+		{
+			transpose = 0;								// C
+			if (enable_seqtrak) midi_seqtrak_key(transpose);			
+			return;
+		}		
 		else
 			
 		if (report[2] == 2 && report[10] == 0 && report[9] == 0) 								// transpose
 		{
-			dpad_up = 1; up = 0;
-			gamepad_bluetooth_handle_data();	
+			if (but1 || but0 || but2 || but3 || but4) 
+			{
+				if (but1 && but0) 	transpose = 1;		// C#
+				if (but0 && but2) 	transpose = 3;		// D#
+				if (but2 && but3) 	transpose = 6;		// F#
+				if (but3 && but4) 	transpose = 8;		// G#
+				if (but4 && but1) 	transpose = 10;		// A#
+				if (but4 && but2) 	transpose = 11;		// B
+				
+				if (but1) 			transpose = 2;		// D
+				if (but0) 			transpose = 4;		// E
+				if (but2)			transpose = 5;		// F
+				if (but3) 			transpose = 7;		// G				
+				if (but4) 			transpose = 9;		// A				
+			} else {
+				transpose++;
+				if (transpose > 11) transpose = 0;					
+			}
+			
+			if (enable_seqtrak) midi_seqtrak_key(transpose);			
 			return;
 		}
 	}
