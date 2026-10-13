@@ -53,6 +53,7 @@ bool enable_mpx_looper = false;
 bool enable_mpx_drums = false;
 bool enable_nanobox_tangerine = false;
 bool enable_wav_trigger_pro = false;
+bool enable_wav_trigger_song_mode = false;
 bool enable_synth = false;
 bool enable_arranger_mode = false;
 bool enable_modx = false;
@@ -1550,6 +1551,11 @@ void gamepad_bluetooth_handle_data() {
 				if (enable_mpx_looper) {
 					enable_mpx_drums = !enable_mpx_drums;
 				}
+				else
+				
+				if (enable_wav_trigger_pro)	{				
+					enable_wav_trigger_song_mode = !enable_wav_trigger_song_mode;
+				}
 			} 			
 			else if (green && red && yellow) config_guitar(18);		// Reset Preferences
 			else if (red && yellow && blue) config_guitar(16);		// Used
@@ -2891,7 +2897,7 @@ void sampler_trigger_loop() {
 	
 		} 			
 		
-		// Chords
+		// Chords - we start at 36 and revolve back to 1-35
 		
 		if (style_section % 2 == 0) {										// C-1
 			sampler_chord_note = (chord_tonic + 36) % 128;			
@@ -2926,41 +2932,44 @@ void sampler_trigger_loop() {
 		}		
 	}
 
-	if (sampler_old_bass_note != sampler_bass_note || enable_stacatto_mode) 
-	{ 
-		if (sampler_old_bass_note != 255)
-		{
-			if (enable_nanobox_tangerine) {
-				sampler_midi_note(0x95, sampler_old_bass_note, enable_bass_track ? sample_bass_velocity : 0);
+	if (!enable_wav_trigger_song_mode) 
+	{
+		if (sampler_old_bass_note != sampler_bass_note || enable_stacatto_mode) 
+		{ 
+			if (sampler_old_bass_note != 255)
+			{
+				if (enable_nanobox_tangerine) {
+					sampler_midi_note(0x95, sampler_old_bass_note, enable_bass_track ? sample_bass_velocity : 0);
+				}
+				else
+					
+				if (enable_wav_trigger_pro) {
+					sampler_midi_note(0x98, sampler_old_bass_note, 127);				
+				}
 			}
-			else
-				
-			if (enable_wav_trigger_pro) {
-				sampler_midi_note(0x98, sampler_old_bass_note, 127);				
-			}
+			
+			sampler_midi_note(0x95, sampler_bass_note, enable_bass_track ? sample_bass_velocity : 0);			
+			sampler_old_bass_note = sampler_bass_note;		
 		}
 		
-		sampler_midi_note(0x95, sampler_bass_note, enable_bass_track ? sample_bass_velocity : 0);			
-		sampler_old_bass_note = sampler_bass_note;		
+		if (sampler_old_chord_note != sampler_chord_note || enable_stacatto_mode)
+		{	
+			if (sampler_old_chord_note != 255)
+			{
+				if (enable_nanobox_tangerine) {			
+					sampler_midi_note(0x96, sampler_old_chord_note, enable_chord_track ? sample_chord_velocity : 0);	
+				}
+				else
+					
+				if (enable_wav_trigger_pro) {
+					sampler_midi_note(0x99, sampler_old_chord_note, 127);				
+				}
+			}
+			
+			sampler_midi_note(0x96, sampler_chord_note, enable_chord_track ? sample_chord_velocity : 0);		
+			sampler_old_chord_note = sampler_chord_note;	
+		}
 	}
-	
-	if (sampler_old_chord_note != sampler_chord_note || enable_stacatto_mode) 
-	{	
-		if (sampler_old_chord_note != 255)
-		{
-			if (enable_nanobox_tangerine) {			
-				sampler_midi_note(0x96, sampler_old_chord_note, enable_chord_track ? sample_chord_velocity : 0);	
-			}
-			else
-				
-			if (enable_wav_trigger_pro) {
-				sampler_midi_note(0x99, sampler_old_chord_note, 127);				
-			}
-		}
-		
-		sampler_midi_note(0x96, sampler_chord_note, enable_chord_track ? sample_chord_velocity : 0);		
-		sampler_old_chord_note = sampler_chord_note;	
-	}		
 			
 	if (style_change_requested) {
 		style_change_requested = false;
@@ -2988,7 +2997,56 @@ void sampler_trigger_loop() {
 						
 			sampler_midi_note(0x94, sampler_drum_note, enable_drum_track ? sample_drum_velocity : 1);
 			sampler_old_drum_note = sampler_drum_note;	
-		}			
+		}
+
+		if (enable_wav_trigger_song_mode) 
+		{
+			if (sampler_old_chord_note != 255)	{
+				sampler_midi_note(0x99, sampler_old_chord_note, 127);				
+			}	
+
+			if (style_section % 4 == 0) {										//
+				sampler_chord_note = (transpose + 36) % 128;			
+			}									
+			else
+			if (style_section % 4 == 1) {										// 
+				sampler_chord_note = (transpose + 48) % 128;						
+			}
+			else
+			if (style_section % 4 == 2) {										//
+				sampler_chord_note = (transpose + 60) % 128;			
+			}									
+			else
+			if (style_section % 4 == 3) {										// 
+				sampler_chord_note = (transpose + 72) % 128;						
+			}
+
+			sampler_midi_note(0x96, sampler_chord_note, enable_chord_track ? sample_chord_velocity : 0);		
+			sampler_old_chord_note = sampler_chord_note;
+
+			if (sampler_old_bass_note != 255) {
+				sampler_midi_note(0x98, sampler_old_bass_note, 127);				
+			}	
+
+			if (style_section % 4 == 0) {										//
+				sampler_bass_note = (transpose + 36) % 128;			
+			}									
+			else
+			if (style_section % 4 == 1) {										// 
+				sampler_bass_note = (transpose + 48) % 128;						
+			}
+			else
+			if (style_section % 4 == 2) {										//
+				sampler_bass_note = (transpose + 60) % 128;			
+			}									
+			else
+			if (style_section % 4 == 3) {										// 
+				sampler_bass_note = (transpose + 72) % 128;						
+			}	
+
+			sampler_midi_note(0x95, sampler_bass_note, enable_bass_track ? sample_bass_velocity : 0);			
+			sampler_old_bass_note = sampler_bass_note;				
+		}
 	}	
 }
 
