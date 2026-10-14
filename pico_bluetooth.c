@@ -53,7 +53,7 @@ bool enable_mpx_looper = false;
 bool enable_mpx_drums = false;
 bool enable_nanobox_tangerine = false;
 bool enable_wav_trigger_pro = false;
-bool enable_wav_trigger_song_mode = false;
+bool enable_sampler_song_mode = false;
 bool enable_synth = false;
 bool enable_arranger_mode = false;
 bool enable_modx = false;
@@ -1553,8 +1553,8 @@ void gamepad_bluetooth_handle_data() {
 				}
 				else
 				
-				if (enable_wav_trigger_pro)	{				
-					enable_wav_trigger_song_mode = !enable_wav_trigger_song_mode;
+				if (enable_wav_trigger_pro || enable_nanobox_tangerine)	{				
+					enable_sampler_song_mode = !enable_sampler_song_mode;
 				}
 			} 			
 			else if (green && red && yellow) config_guitar(18);		// Reset Preferences
@@ -2890,85 +2890,107 @@ void sampler_trigger_loop() {
 	uint8_t bass_tonic = (sampler_bass + transpose - 1) % 12;
 	uint8_t chord_tonic = (sampler_chord + transpose - 1) % 12;	
 	
-	if (sampler_type == 0) {												// Major 
-		sampler_bass_note = (bass_tonic + 36) % 128;
-
-		if (bass_tonic != chord_tonic) {									// Bass in root
-	
-		} 			
-		
-		// Chords - we start at 36 and revolve back to 1-35
-		
-		if (style_section % 2 == 0) {										// C-1
-			sampler_chord_note = (chord_tonic + 36) % 128;			
-		}									
-		else
-		if (style_section % 2 == 1) {										// C-2
-			sampler_chord_note = (chord_tonic + 72) % 128;						
-		}																
-	}
-	else		
-	if (sampler_type == 1) {												// Minor		
-		sampler_bass_note = (bass_tonic + 48) % 128;	
-		
-		if (style_section % 2 == 0) {
-			sampler_chord_note = (chord_tonic + 48) % 128;								
-		}
-		else
-		if (style_section % 2 == 1) {
-			sampler_chord_note = (chord_tonic + 84) % 128;								
-		}
-	}
-	else		
-	if (sampler_type == 2) {												// Sus4	
-		sampler_bass_note = (bass_tonic + 36) % 128;		
-
-		if (style_section % 2 == 0) {									
-			sampler_chord_note = (chord_tonic + 60) % 128;			
-		}									
-		else
-		if (style_section % 2 == 1) {									
-			sampler_chord_note = (chord_tonic + 96) % 128;						
-		}		
-	}
-
-	if (!enable_wav_trigger_song_mode) 
+	if (enable_sampler_song_mode) 												// play chord progression in any of 12 chromatic scales
 	{
-		if (sampler_old_bass_note != sampler_bass_note || enable_stacatto_mode) 
-		{ 
-			if (sampler_old_bass_note != 255)
-			{
-				if (enable_nanobox_tangerine) {
-					sampler_midi_note(0x95, sampler_old_bass_note, enable_bass_track ? sample_bass_velocity : 0);
-				}
-				else
-					
-				if (enable_wav_trigger_pro) {
-					sampler_midi_note(0x98, sampler_old_bass_note, 127);				
-				}
-			}
-			
-			sampler_midi_note(0x95, sampler_bass_note, enable_bass_track ? sample_bass_velocity : 0);			
-			sampler_old_bass_note = sampler_bass_note;		
+		if (style_section % 4 == 0) {										
+			sampler_chord_note = (chord_tonic + 36) % 128;	
+			sampler_bass_note = (bass_tonic + 36) % 128;			
+		}									
+		else
+		if (style_section % 4 == 1) {										
+			sampler_chord_note = (chord_tonic + 48) % 128;	
+			sampler_bass_note = (bass_tonic + 48) % 128;				
 		}
 		
-		if (sampler_old_chord_note != sampler_chord_note || enable_stacatto_mode)
-		{	
-			if (sampler_old_chord_note != 255)
-			{
-				if (enable_nanobox_tangerine) {			
-					sampler_midi_note(0x96, sampler_old_chord_note, enable_chord_track ? sample_chord_velocity : 0);	
-				}
-				else
-					
-				if (enable_wav_trigger_pro) {
-					sampler_midi_note(0x99, sampler_old_chord_note, 127);				
-				}
-			}
-			
-			sampler_midi_note(0x96, sampler_chord_note, enable_chord_track ? sample_chord_velocity : 0);		
-			sampler_old_chord_note = sampler_chord_note;	
+		if (style_section % 4 == 2) {										
+			sampler_chord_note = (chord_tonic + 60) % 128;		
+			sampler_bass_note = (bass_tonic + 60) % 128;				
+		}									
+		else
+		if (style_section % 4 == 3) {										
+			sampler_chord_note = (chord_tonic + 72) % 128;
+			sampler_bass_note = (bass_tonic + 72) % 128;			
 		}
+
+	} else 	{																	// play variation using formed chord and bass
+		
+		if (sampler_type == 0) {												// Major 
+			sampler_bass_note = (bass_tonic + 36) % 128;
+
+			if (bass_tonic != chord_tonic) {									// Bass in root
+		
+			} 			
+			
+			// Chords - we start at 36 and revolve back to 1-35
+			
+			if (style_section % 2 == 0) {										// C-1
+				sampler_chord_note = (chord_tonic + 36) % 128;			
+			}									
+			else
+			if (style_section % 2 == 1) {										// C-2
+				sampler_chord_note = (chord_tonic + 72) % 128;						
+			}																
+		}
+		else		
+		if (sampler_type == 1) {												// Minor		
+			sampler_bass_note = (bass_tonic + 48) % 128;	
+			
+			if (style_section % 2 == 0) {
+				sampler_chord_note = (chord_tonic + 48) % 128;								
+			}
+			else
+			if (style_section % 2 == 1) {
+				sampler_chord_note = (chord_tonic + 84) % 128;								
+			}
+		}
+		else		
+		if (sampler_type == 2) {												// Sus4	
+			sampler_bass_note = (bass_tonic + 36) % 128;		
+
+			if (style_section % 2 == 0) {									
+				sampler_chord_note = (chord_tonic + 60) % 128;			
+			}									
+			else
+			if (style_section % 2 == 1) {									
+				sampler_chord_note = (chord_tonic + 96) % 128;						
+			}		
+		}
+	}
+		
+	if (sampler_old_bass_note != sampler_bass_note || enable_stacatto_mode) 
+	{ 
+		if (sampler_old_bass_note != 255)
+		{
+			if (enable_nanobox_tangerine) {
+				sampler_midi_note(0x95, sampler_old_bass_note, enable_bass_track ? sample_bass_velocity : 0);
+			}
+			else
+				
+			if (enable_wav_trigger_pro) {
+				sampler_midi_note(0x98, sampler_old_bass_note, 127);				
+			}
+		}
+		
+		sampler_midi_note(0x95, sampler_bass_note, enable_bass_track ? sample_bass_velocity : 0);			
+		sampler_old_bass_note = sampler_bass_note;		
+	}
+	
+	if (sampler_old_chord_note != sampler_chord_note || enable_stacatto_mode)
+	{	
+		if (sampler_old_chord_note != 255)
+		{
+			if (enable_nanobox_tangerine) {			
+				sampler_midi_note(0x96, sampler_old_chord_note, enable_chord_track ? sample_chord_velocity : 0);	
+			}
+			else
+				
+			if (enable_wav_trigger_pro) {
+				sampler_midi_note(0x99, sampler_old_chord_note, 127);				
+			}
+		}
+		
+		sampler_midi_note(0x96, sampler_chord_note, enable_chord_track ? sample_chord_velocity : 0);		
+		sampler_old_chord_note = sampler_chord_note;	
 	}
 			
 	if (style_change_requested) {
@@ -2997,55 +3019,6 @@ void sampler_trigger_loop() {
 						
 			sampler_midi_note(0x94, sampler_drum_note, enable_drum_track ? sample_drum_velocity : 1);
 			sampler_old_drum_note = sampler_drum_note;	
-		}
-
-		if (enable_wav_trigger_song_mode) 
-		{
-			if (sampler_old_chord_note != 255)	{
-				sampler_midi_note(0x99, sampler_old_chord_note, 127);				
-			}	
-
-			if (style_section % 4 == 0) {										//
-				sampler_chord_note = (chord_tonic + 36) % 128;			
-			}									
-			else
-			if (style_section % 4 == 1) {										// 
-				sampler_chord_note = (chord_tonic + 48) % 128;						
-			}
-			else
-			if (style_section % 4 == 2) {										//
-				sampler_chord_note = (chord_tonic + 60) % 128;			
-			}									
-			else
-			if (style_section % 4 == 3) {										// 
-				sampler_chord_note = (chord_tonic + 72) % 128;						
-			}
-
-			sampler_midi_note(0x96, sampler_chord_note, enable_chord_track ? sample_chord_velocity : 0);		
-			sampler_old_chord_note = sampler_chord_note;
-
-			if (sampler_old_bass_note != 255) {
-				sampler_midi_note(0x98, sampler_old_bass_note, 127);				
-			}	
-
-			if (style_section % 4 == 0) {										//
-				sampler_bass_note = (bass_tonic + 36) % 128;			
-			}									
-			else
-			if (style_section % 4 == 1) {										// 
-				sampler_bass_note = (bass_tonic + 48) % 128;						
-			}
-			else
-			if (style_section % 4 == 2) {										//
-				sampler_bass_note = (bass_tonic + 60) % 128;			
-			}									
-			else
-			if (style_section % 4 == 3) {										// 
-				sampler_bass_note = (bass_tonic + 72) % 128;						
-			}	
-
-			sampler_midi_note(0x95, sampler_bass_note, enable_bass_track ? sample_bass_velocity : 0);			
-			sampler_old_bass_note = sampler_bass_note;				
 		}
 	}	
 }
