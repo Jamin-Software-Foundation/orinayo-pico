@@ -54,6 +54,7 @@ bool enable_mpx_drums = false;
 bool enable_nanobox_tangerine = false;
 bool enable_wav_trigger_pro = false;
 bool enable_sampler_song_mode = false;
+bool enable_sampler_melody_mode = false;
 bool enable_synth = false;
 bool enable_arranger_mode = false;
 bool enable_modx = false;
@@ -1365,6 +1366,16 @@ void gamepad_bluetooth_handle_data() {
 	if (mbut2 != menu) {									// menu - select registrations/style groups
 		if (enable_arranger_mode) midi_ketron_footsw(8, mbut2 ? true : false);						// user defined from footswitch	
 		menu = mbut2;
+		
+		if (mbut2)
+		{
+			if (!green && !red && !yellow && !blue && !orange) 
+			{
+				if (enable_wav_trigger_pro || enable_nanobox_tangerine)	{				
+					enable_sampler_melody_mode = !enable_sampler_melody_mode;
+				}
+			} 
+		}			
 
 		if (green && blue && orange) 
 		{
@@ -2149,7 +2160,7 @@ void config_guitar(uint8_t mode) {
 		
 	if (mode == 4) {										// WAV Trigger Pro
 		enable_wav_trigger_pro = !enable_wav_trigger_pro;
-		enable_style_play = !enable_wav_trigger_pro;
+		enable_style_play = !enable_wav_trigger_pro;		// WAV Trigger Pro does not use chord midi track  4
 
 		if (enable_wav_trigger_pro) {
 			config_wav_trigger_pro();		
@@ -2890,26 +2901,31 @@ void sampler_trigger_loop() {
 	uint8_t bass_tonic = (sampler_bass + transpose - 1) % 12;
 	uint8_t chord_tonic = (sampler_chord + transpose - 1) % 12;	
 	
-	if (enable_sampler_song_mode) 												// play chord progression in any of 12 chromatic scales
-	{
+	if (enable_sampler_song_mode) 	{
+		// shift chord progression to any of 12 chromatic scales using chord root note.
+		// if enable_sampler_melody_mode the lock to song key and play harmony notes from selected chord
+		
+		uint8_t root_chord_note = enable_sampler_melody_mode ? transpose : chord_tonic;
+		uint8_t root_bass_note = enable_sampler_melody_mode ? transpose : bass_tonic;
+		
 		if (style_section % 4 == 0) {										
-			sampler_chord_note = (chord_tonic + 36) % 128;	
-			sampler_bass_note = (bass_tonic + 36) % 128;			
+			sampler_chord_note = (root_chord_note + 36) % 128;	
+			sampler_bass_note = (root_bass_note + 36) % 128;			
 		}									
 		else
 		if (style_section % 4 == 1) {										
-			sampler_chord_note = (chord_tonic + 48) % 128;	
-			sampler_bass_note = (bass_tonic + 48) % 128;				
+			sampler_chord_note = (root_chord_note + 48) % 128;	
+			sampler_bass_note = (root_bass_note + 48) % 128;				
 		}
 		
 		if (style_section % 4 == 2) {										
-			sampler_chord_note = (chord_tonic + 60) % 128;		
-			sampler_bass_note = (bass_tonic + 60) % 128;				
+			sampler_chord_note = (root_chord_note + 60) % 128;		
+			sampler_bass_note = (root_bass_note + 60) % 128;				
 		}									
 		else
 		if (style_section % 4 == 3) {										
-			sampler_chord_note = (chord_tonic + 72) % 128;
-			sampler_bass_note = (bass_tonic + 72) % 128;			
+			sampler_chord_note = (root_chord_note + 72) % 128;
+			sampler_bass_note = (root_bass_note + 72) % 128;			
 		}
 
 	} else 	{																	// play variation using formed chord and bass
