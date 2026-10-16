@@ -254,6 +254,8 @@ uint8_t previous_chord_vol = 0;
 uint8_t previous_guitar_note = 0;
 
 bool midi_keyboard_connected = false;
+uint8_t keyboard_dev_addr;
+uint8_t keyboard_instance;
 
 void config_guitar(uint8_t mode);
 void send_ble_midi(uint8_t* midi_data, int len);
@@ -617,6 +619,8 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 			
 		if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {		
 			hid_keyboard_connected = true;
+			keyboard_dev_addr = dev_addr;
+			keyboard_instance = instance;
 		}
 		else
 
@@ -1265,7 +1269,14 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		} else {			
 			mbut0 = 1;
 			finished_processing = true;		
-			gamepad_bluetooth_handle_data();	
+			gamepad_bluetooth_handle_data();
+
+			if (style_started) {
+				set_keyboard_leds(keyboard_dev_addr, keyboard_instance, 0x07);
+				
+			} else {
+				set_keyboard_leds(keyboard_dev_addr, keyboard_instance, 0x00);
+			}
 		}			
 	}
 
@@ -1431,6 +1442,25 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 			midi_send_program_change(0xCF, style_group + 2); // select preset on channel 16 and skip both 1010 pianos	
 		}	
 	}
+}
+
+void set_keyboard_leds(uint8_t dev_addr, uint8_t instance, uint8_t led_mask) {
+    // led_mask: bit 0 = NumLock, bit 1 = CapsLock, bit 2 = ScrollLock    
+    // We allocate a buffer for the report data (1 byte)
+    // Note: Some compilers/platforms require this to be aligned or persistent during transfer
+	
+    static uint8_t report_data;
+    report_data = led_mask;
+
+    // Send the HID Set_Report request via Control Endpoint 0
+    tuh_hid_set_report(
+        dev_addr,      			// Device address on the USB bus
+        instance,      			// HID interface instance index
+        0,                      // Report ID (0 if the keyboard doesn't use report IDs)
+        HID_REPORT_TYPE_OUTPUT, // We are sending an Output report to the device
+        &report_data,           // Pointer to our data byte
+        1                       // Length of report data (1 byte)
+    );
 }
 
 //--------------------------------------------------------------------+
