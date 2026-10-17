@@ -321,6 +321,7 @@ static void wav_trigger_pro_forward_midi_message(const uint8_t *buffer, uint32_t
 uint8_t get_arp_template(void);
 void midi_n_stream_write(uint8_t itf, uint8_t cable_num, uint8_t *buffer, uint32_t bufsize);
 void handle_keyboard_events(uint8_t modifier, uint8_t keycode);
+void hid_set_keyboard_leds(uint8_t led_mask);
 
 enum {
 	// Balanced size: enough to batch multiple MIDI packets per callback while keeping stack usage small.
@@ -621,6 +622,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 			hid_keyboard_connected = true;
 			keyboard_dev_addr = dev_addr;
 			keyboard_instance = instance;
+			hid_set_keyboard_leds(15); 	// switch on all 4 leds
 		}
 		else
 
@@ -1270,13 +1272,6 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 			mbut0 = 1;
 			finished_processing = true;		
 			gamepad_bluetooth_handle_data();
-
-			if (style_started) {
-				set_keyboard_leds(keyboard_dev_addr, keyboard_instance, 0x07);
-				
-			} else {
-				set_keyboard_leds(keyboard_dev_addr, keyboard_instance, 0x00);
-			}
 		}			
 	}
 
@@ -1444,7 +1439,9 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 	}
 }
 
-void set_keyboard_leds(uint8_t dev_addr, uint8_t instance, uint8_t led_mask) {
+void hid_set_keyboard_leds(uint8_t led_mask) {
+	if (!hid_keyboard_connected) return;
+	
     // led_mask: bit 0 = NumLock, bit 1 = CapsLock, bit 2 = ScrollLock    
     // We allocate a buffer for the report data (1 byte)
     // Note: Some compilers/platforms require this to be aligned or persistent during transfer
@@ -1454,8 +1451,8 @@ void set_keyboard_leds(uint8_t dev_addr, uint8_t instance, uint8_t led_mask) {
 
     // Send the HID Set_Report request via Control Endpoint 0
     tuh_hid_set_report(
-        dev_addr,      			// Device address on the USB bus
-        instance,      			// HID interface instance index
+        keyboard_dev_addr,      			// Device address on the USB bus
+        keyboard_instance,      			// HID interface instance index
         0,                      // Report ID (0 if the keyboard doesn't use report IDs)
         HID_REPORT_TYPE_OUTPUT, // We are sending an Output report to the device
         &report_data,           // Pointer to our data byte
