@@ -234,6 +234,8 @@ void sampler_trigger_break();
 void ble_midi_client_scan_end();
 void set_tempo(uint8_t tempo);
 
+void hid_set_keyboard_leds(uint8_t led_mask);
+
 
 int chord_chart[12][3][6] = {
 	{{ 3,  3, 2, 0, 1, 0}, {-1,  3, 5, 5, 4, 3}, {-1, -1, 3, 0, 1, 3}},
@@ -890,8 +892,8 @@ void gamepad_bluetooth_handle_data() {
 			if (!green && !red && !yellow && !blue && !orange) {
 				enable_auto_strum = !enable_auto_strum;	
 				
-				if (enable_ample_guitar) 					enable_auto_strum = false;		// clash. ample guitar wins.
-				if (style_started && !enable_midi_drums) 	enable_auto_strum = false;		// only midi drums can sync with internal clock. not possible with loopers
+				if (enable_ample_guitar) 												enable_auto_strum = false;		// clash. ample guitar wins.
+				if (style_started && !enable_midi_drums && !enable_wav_trigger_pro) 	enable_auto_strum = false;		// only midi drums can sync with internal clock. not possible with loopers
 				
 				stop_chord();											// kill any sustained notes
 				
@@ -943,6 +945,8 @@ void gamepad_bluetooth_handle_data() {
 			if (blue) 	transpose = 7;		// G				
 			if (orange) transpose = 9;		// A
 		}
+		
+		hid_set_keyboard_leds(transpose);
 		finished_processing = true;		
 		return;			
 	}
@@ -977,7 +981,7 @@ void gamepad_bluetooth_handle_data() {
 				// do nothing
 			}
 		}		
-		
+		hid_set_keyboard_leds(transpose);		
 		finished_processing = true;		
 		return;
 	}		
@@ -1302,6 +1306,7 @@ void gamepad_bluetooth_handle_data() {
 			if (enable_arranger_mode) midi_send_control_change(0xB3, 14, 65); 			// Next Style			
 		}	
 
+
 		if (enable_sp404mk2 || enable_mpc_sample || enable_nanobox_tangerine || enable_mpx_looper || enable_wav_trigger_pro)	
 		{
 			if (dpad_down && style_started) {
@@ -1359,6 +1364,11 @@ void gamepad_bluetooth_handle_data() {
 			}			
 		}				
 
+		if (style_section % 4 == 0) hid_set_keyboard_leds(1);
+		if (style_section % 4 == 1) hid_set_keyboard_leds(2);
+		if (style_section % 4 == 2) hid_set_keyboard_leds(4);
+		if (style_section % 4 == 3) hid_set_keyboard_leds(8);		
+		
 		finished_processing = true;		
 		return;			
 	}
@@ -1953,6 +1963,7 @@ void handle_group_change() {
 		}							
 	}
 	
+	hid_set_keyboard_leds(style_group);
 }
 
 int compDown(const void *a, const void *b) {
