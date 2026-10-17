@@ -1424,6 +1424,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		if (transpose < 0) transpose = 11;
 		
 		if (enable_seqtrak) midi_seqtrak_key(transpose);
+		hid_set_keyboard_leds(transpose);
 	}
 
 	if (trigger_sampler) 
@@ -1436,6 +1437,8 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		if (enable_nanobox_tangerine) {
 			midi_send_program_change(0xCF, style_group + 2); // select preset on channel 16 and skip both 1010 pianos	
 		}	
+		
+		hid_set_keyboard_leds(style_group);		
 	}
 }
 

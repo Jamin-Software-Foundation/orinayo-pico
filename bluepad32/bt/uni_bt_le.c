@@ -97,6 +97,8 @@ void midi_modx_key(uint8_t key);
 void midi_seqtrak_arp();
 void midi_seqtrak_key(uint8_t key);
 void midi_seqtrak_tempo(int tempo);
+void hid_set_keyboard_leds(uint8_t led_mask);
+
 
 void config_wav_trigger_pro();
 void play_chord(bool on, bool up, uint8_t green, uint8_t red, uint8_t yellow, uint8_t blue, uint8_t orange);
@@ -995,6 +997,7 @@ void handle_gatt_client_event(uint8_t packet_type, uint16_t channel, uint8_t *pa
 			if (old_key != transpose && event_data[5] == 0) 
 			{
 				if (enable_seqtrak) midi_seqtrak_key(transpose);
+				hid_set_keyboard_leds(transpose);				
 			}		
 					
 			// detect strum style - - stop/config pressed
