@@ -216,6 +216,7 @@ static uint32_t old_p2 = 0;
 static uint32_t old_p3 = 0;
 static uint32_t old_p4 = 0;
 
+bool ikkegol_pedal_enabled = false;
 bool transpose_mode_active = false;
 bool hid_gamepad_connected = false;
 bool hid_keyboard_connected = false;
@@ -623,6 +624,13 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 			keyboard_dev_addr = dev_addr;
 			keyboard_instance = instance;
 			hid_set_keyboard_leds(15); 	// switch on all 4 leds
+
+			uint16_t vid, pid;
+			tuh_vid_pid_get(dev_addr, &vid, &pid);			
+
+			if (vid == 0x1A86 && pid == 0xE026) {			
+				ikkegol_pedal_enabled = true;
+			}
 		}
 		else
 
@@ -1266,7 +1274,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 
 	if (keycode == 40) { 											// ENTER start/stop			
 
-		if (transpose_mode_active) {
+		if (transpose_mode_active && ikkegol_pedal_enabled) {
 			transpose_mode_active = false;
 		} else {			
 			mbut0 = 1;
@@ -1389,7 +1397,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 
 	if ((keycode == 79 || keycode == 81) && !style_started) {		// ^ next style group
 
-		if (transpose_mode_active) {
+		if (transpose_mode_active && ikkegol_pedal_enabled) {
 			transpose++;
 			if (transpose > 11) transpose = 0;
 			if (enable_seqtrak) midi_seqtrak_key(transpose);			
@@ -1403,7 +1411,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 	
 	if ((keycode == 80 || keycode == 82) && !style_started) {		// v previous style group
 
-		if (transpose_mode_active) {
+		if (transpose_mode_active && ikkegol_pedal_enabled) {
 			transpose--;
 			if (transpose < 0) transpose = 11;
 			if (enable_seqtrak) midi_seqtrak_key(transpose);
