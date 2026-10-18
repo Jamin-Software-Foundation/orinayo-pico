@@ -1472,7 +1472,7 @@ void hid_set_keyboard_leds(uint8_t led_mask) {
     );
 }
 
-void send_presentation_controls(bool next_slide) {
+void send_presentation_controls(bool next_slide) {	
     if (!tud_hid_ready()) return;
 
     uint8_t keycode[6] = { 0 };

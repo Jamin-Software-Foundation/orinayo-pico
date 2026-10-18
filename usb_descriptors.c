@@ -139,7 +139,7 @@ char const* string_desc_arr [] =
   (const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
   "Inspired Futures Ltd",        // 1: Manufacturer
   "Orinayo Device",              // 2: Product
-  "123456",                      // 3: Serials, should use chip ID
+  "777777",                      // 3: Serials, should use chip ID
   "Orinayo CDC",                 // 4: The CDC Interface
   "Orinayo MIDI",                // 5: The MIDI Interface
   "Orinayo Keyboard",            // 6: New string assignment linking back to HID macro index
