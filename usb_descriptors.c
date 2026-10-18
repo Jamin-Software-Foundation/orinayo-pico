@@ -149,7 +149,7 @@ char const* string_desc_arr [] =
   (const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
   "Inspired Futures Ltd",        // 1: Manufacturer
   "Orinayo Device",              // 2: Product
-  "111111",                      // 3: CHANGED SERIAL -> Forces Windows to dump bad driver cache!
+  "222222",                      // 3: CHANGED SERIAL -> Forces Windows to dump bad driver cache!
   "Orinayo CDC",                 // 4: The CDC Interface
   "Orinayo MIDI",                // 5: The MIDI Interface
   "Orinayo Keyboard",            // 6: New string assignment linking back to HID macro index
@@ -195,10 +195,10 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 // HID Report Descriptor
 //--------------------------------------------------------------------+
 
-// Explicitly grouped keyboard array mapping layout to satisfy Windows IAD validation
+// Completely un-numbered, pure standard keyboard layout structure mapping
 uint8_t const desc_hid_report[] =
 {
-  TUD_HID_REPORT_DESC_KEYBOARD( HID_REPORT_ID(1) ) 
+  TUD_HID_REPORT_DESC_KEYBOARD() // Removed HID_REPORT_ID wrapper entirely
 };
 
 // Invoked when TinyUSB receives a GET HID REPORT DESCRIPTOR request

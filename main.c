@@ -1482,12 +1482,16 @@ void send_presentation_controls(bool next_slide) {
     } else {
         keycode[0] = HID_KEY_ARROW_LEFT;  // Built-in TinyUSB macro for Left Arrow
     }
+	
+    uint8_t key_report[6] = { keycode, 0, 0, 0, 0, 0 };
+    uint8_t empty_report[6] = { 0, 0, 0, 0, 0, 0 };	
 
-	tud_hid_keyboard_report(HID_ITF_PROTOCOL_KEYBOARD, 1, keycode);
-	board_delay(20); // Small debounce/hold delay
+	tud_hid_keyboard_report(0, 0, key_report);
+	sleep_ms(30); 
 	
 	// Send an empty report to simulate releasing the key
-	tud_hid_keyboard_report(HID_ITF_PROTOCOL_KEYBOARD, 1, NULL);
+	tud_hid_keyboard_report(0, 0, empty_report);
+	sleep_ms(30); 
 }
 
 //--------------------------------------------------------------------+
