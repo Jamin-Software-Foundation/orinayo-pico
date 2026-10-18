@@ -91,15 +91,19 @@ enum
   #define EPNUM_MIDI   0x02 // Swapped endpoint index to avoid a resource clash with HID
 #endif
 
+//--------------------------------------------------------------------+
+// Configuration Descriptor
+//--------------------------------------------------------------------+
+
 uint8_t const desc_fs_configuration[] =
 {
   // Config number, interface count, string index, total length, attribute, power in mA
   TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
 
-  // HID Descriptor: Interface number, string index, protocol, report descriptor len, EP In address, size, polling interval
-  TUD_HID_DESCRIPTOR(ITF_NUM_HID, 6, HID_ITF_PROTOCOL_KEYBOARD, sizeof(tud_hid_descriptor_report_cb), 0x80 | EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 10),
+  // HID Descriptor: Cleaned up argument sizing parameter explicitly
+  TUD_HID_DESCRIPTOR(ITF_NUM_HID, 6, HID_ITF_PROTOCOL_KEYBOARD, TUD_HID_DESC_LEN, 0x80 | EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 10),
 
-  // MIDI Descriptor: Interface number, string index, EP Out & EP In address, EP size
+  // MIDI Descriptor
   TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 5, EPNUM_MIDI, 0x80 | EPNUM_MIDI, 64)
 };
 
@@ -110,12 +114,13 @@ uint8_t const desc_hs_configuration[] =
   TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
 
   // HID Descriptor
-  TUD_HID_DESCRIPTOR(ITF_NUM_HID, 6, HID_ITF_PROTOCOL_KEYBOARD, sizeof(tud_hid_descriptor_report_cb), 0x80 | EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 10),
+  TUD_HID_DESCRIPTOR(ITF_NUM_HID, 6, HID_ITF_PROTOCOL_KEYBOARD, TUD_HID_DESC_LEN, 0x80 | EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 10),
 
   // MIDI Descriptor
   TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 5, EPNUM_MIDI, 0x80 | EPNUM_MIDI, 512)
 };
 #endif
+
 
 // Invoked when received GET CONFIGURATION DESCRIPTOR
 uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
@@ -139,7 +144,7 @@ char const* string_desc_arr [] =
   (const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
   "Inspired Futures Ltd",        // 1: Manufacturer
   "Orinayo Device",              // 2: Product
-  "777777",                      // 3: Serials, should use chip ID
+  "888888",                      // 3: Serials, should use chip ID
   "Orinayo CDC",                 // 4: The CDC Interface
   "Orinayo MIDI",                // 5: The MIDI Interface
   "Orinayo Keyboard",            // 6: New string assignment linking back to HID macro index
