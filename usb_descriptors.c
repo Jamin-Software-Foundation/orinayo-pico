@@ -43,9 +43,10 @@ tusb_desc_device_t const desc_device =
     .bLength            = sizeof(tusb_desc_device_t),
     .bDescriptorType    = TUSB_DESC_DEVICE,
     .bcdUSB             = 0x0200,
-    .bDeviceClass       = 0x00,
-    .bDeviceSubClass    = 0x00,
-    .bDeviceProtocol    = 0x00,
+    // Device class details configured as multi-interface composite using IAD
+    .bDeviceClass       = TUSB_CLASS_MISC,
+    .bDeviceSubClass    = MISC_SUBCLASS_COMMON,
+    .bDeviceProtocol    = MISC_PROTOCOL_IAD,
     .bMaxPacketSize0    = CFG_TUD_ENDPOINT0_SIZE,
 
     .idVendor           = 0xCafe,
@@ -73,19 +74,21 @@ uint8_t const * tud_descriptor_device_cb(void)
 
 enum
 {
-  ITF_NUM_MIDI = 0,
-  ITF_NUM_MIDI_STREAMING,
+  ITF_NUM_HID = 0,             // Interface 0: Human Interface Device (Keyboard)
+  ITF_NUM_MIDI,                // Interface 1: MIDI Audio Control
+  ITF_NUM_MIDI_STREAMING,      // Interface 2: MIDI Audio Streaming
   ITF_NUM_TOTAL
 };
 
-#define CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_MIDI_DESC_LEN)
+// Config length now incorporates both class layouts
+#define CONFIG_TOTAL_LEN  (TUD_CONFIG_DESC_LEN + TUD_HID_DESC_LEN + TUD_MIDI_DESC_LEN)
 
 #if CFG_TUSB_MCU == OPT_MCU_LPC175X_6X || CFG_TUSB_MCU == OPT_MCU_LPC177X_8X || CFG_TUSB_MCU == OPT_MCU_LPC40XX
-  // LPC 17xx and 40xx endpoint type (bulk/interrupt/iso) are fixed by its number
-  // 0 control, 1 In, 2 Bulk, 3 Iso, 4 In etc ...
+  #define EPNUM_HID    0x01
   #define EPNUM_MIDI   0x02
 #else
-  #define EPNUM_MIDI   0x01
+  #define EPNUM_HID    0x01
+  #define EPNUM_MIDI   0x02 // Swapped endpoint index to avoid a resource clash with HID
 #endif
 
 uint8_t const desc_fs_configuration[] =
@@ -93,8 +96,11 @@ uint8_t const desc_fs_configuration[] =
   // Config number, interface count, string index, total length, attribute, power in mA
   TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
 
-  // Interface number, string index, EP Out & EP In address, EP size
-  TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 0, EPNUM_MIDI, 0x80 | EPNUM_MIDI, 64)
+  // HID Descriptor: Interface number, string index, protocol, report descriptor len, EP In address, size, polling interval
+  TUD_HID_DESCRIPTOR(ITF_NUM_HID, 6, HID_ITF_PROTOCOL_KEYBOARD, sizeof(tud_hid_descriptor_report), 0x80 | EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 10),
+
+  // MIDI Descriptor: Interface number, string index, EP Out & EP In address, EP size
+  TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 5, EPNUM_MIDI, 0x80 | EPNUM_MIDI, 64)
 };
 
 #if TUD_OPT_HIGH_SPEED
@@ -103,20 +109,20 @@ uint8_t const desc_hs_configuration[] =
   // Config number, interface count, string index, total length, attribute, power in mA
   TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
 
-  // Interface number, string index, EP Out & EP In address, EP size
-  TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 0, EPNUM_MIDI, 0x80 | EPNUM_MIDI, 512)
+  // HID Descriptor
+  TUD_HID_DESCRIPTOR(ITF_NUM_HID, 6, HID_ITF_PROTOCOL_KEYBOARD, sizeof(tud_hid_descriptor_report), 0x80 | EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 10),
+
+  // MIDI Descriptor
+  TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 5, EPNUM_MIDI, 0x80 | EPNUM_MIDI, 512)
 };
 #endif
 
 // Invoked when received GET CONFIGURATION DESCRIPTOR
-// Application return pointer to descriptor
-// Descriptor contents must exist long enough for transfer to complete
 uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 {
   (void) index; // for multiple configurations
 
 #if TUD_OPT_HIGH_SPEED
-  // Although we are highspeed, host may be fullspeed.
   return (tud_speed_get() == TUSB_SPEED_HIGH) ?  desc_hs_configuration : desc_fs_configuration;
 #else
   return desc_fs_configuration;
@@ -131,17 +137,17 @@ uint8_t const * tud_descriptor_configuration_cb(uint8_t index)
 char const* string_desc_arr [] =
 {
   (const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
-  "Inspired Futures Ltd",                     // 1: Manufacturer
+  "Inspired Futures Ltd",        // 1: Manufacturer
   "Orinayo Device",              // 2: Product
   "123456",                      // 3: Serials, should use chip ID
   "Orinayo CDC",                 // 4: The CDC Interface
   "Orinayo MIDI",                // 5: The MIDI Interface
+  "Orinayo Keyboard",            // 6: New string assignment linking back to HID macro index
 };
 
 static uint16_t _desc_str[32];
 
 // Invoked when received GET STRING DESCRIPTOR request
-// Application return pointer to descriptor, whose contents must exist long enough for transfer to complete
 uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 {
   (void) langid;
@@ -154,9 +160,6 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
     chr_count = 1;
   }else
   {
-    // Note: the 0xEE index string is a Microsoft OS 1.0 Descriptors.
-    // https://docs.microsoft.com/en-us/windows-hardware/drivers/usbcon/microsoft-defined-usb-descriptors
-
     if ( !(index < sizeof(string_desc_arr)/sizeof(string_desc_arr[0])) ) return NULL;
 
     const char* str = string_desc_arr[index];

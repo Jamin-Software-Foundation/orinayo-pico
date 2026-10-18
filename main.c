@@ -323,6 +323,7 @@ uint8_t get_arp_template(void);
 void midi_n_stream_write(uint8_t itf, uint8_t cable_num, uint8_t *buffer, uint32_t bufsize);
 void handle_keyboard_events(uint8_t modifier, uint8_t keycode);
 void hid_set_keyboard_leds(uint8_t led_mask);
+void send_presentation_controls(bool next_slide);
 
 enum {
 	// Balanced size: enough to batch multiple MIDI packets per callback while keeping stack usage small.
@@ -1469,6 +1470,24 @@ void hid_set_keyboard_leds(uint8_t led_mask) {
         &report_data,           // Pointer to our data byte
         1                       // Length of report data (1 byte)
     );
+}
+
+void send_presentation_controls(bool next_slide) {
+    if (!tud_hid_ready()) return;
+
+    uint8_t keycode[6] = { 0 };
+
+    if (next_slide) {
+        keycode[0] = HID_KEY_ARROW_RIGHT; // Built-in TinyUSB macro for Right Arrow
+    } else {
+        keycode[0] = HID_KEY_ARROW_LEFT;  // Built-in TinyUSB macro for Left Arrow
+    }
+
+	tud_hid_keyboard_report(HID_PROTOCOL_KEYBOARD, 0, keycode);
+	board_delay(20); // Small debounce/hold delay
+	
+	// Send an empty report to simulate releasing the key
+	tud_hid_keyboard_report(HID_PROTOCOL_KEYBOARD, 0, NULL);
 }
 
 //--------------------------------------------------------------------+

@@ -235,6 +235,7 @@ void ble_midi_client_scan_end();
 void set_tempo(uint8_t tempo);
 
 void hid_set_keyboard_leds(uint8_t led_mask);
+void send_presentation_controls(bool next_slide);
 
 
 int chord_chart[12][3][6] = {
@@ -1294,7 +1295,8 @@ void gamepad_bluetooth_handle_data() {
 				next_or_previous = true;
 				style_section--;
 				if (style_section < 0) style_section = 7;
-				if (enable_arranger_mode) midi_send_control_change(0xB3, 14, 127); 		// Previous Style					
+				if (enable_arranger_mode) midi_send_control_change(0xB3, 14, 127); 		// Previous Style	
+				send_presentation_controls(false);				
 			}
 		}
 		else 
@@ -1303,7 +1305,8 @@ void gamepad_bluetooth_handle_data() {
 			next_or_previous = true;			
 			style_section++;
 			if (style_section > 7) style_section = 0;
-			if (enable_arranger_mode) midi_send_control_change(0xB3, 14, 65); 			// Next Style			
+			if (enable_arranger_mode) midi_send_control_change(0xB3, 14, 65); 			// Next Style	
+			send_presentation_controls(true);				
 		}	
 
 
