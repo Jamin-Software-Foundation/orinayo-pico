@@ -195,10 +195,10 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 // HID Report Descriptor
 //--------------------------------------------------------------------+
 
-// Standard Keyboard Report Descriptor mapping defined by the USB HID Spec
+// Explicitly grouped keyboard array mapping layout to satisfy Windows IAD validation
 uint8_t const desc_hid_report[] =
 {
-  TUD_HID_REPORT_DESC_KEYBOARD()
+  TUD_HID_REPORT_DESC_KEYBOARD( HID_REPORT_ID(1) ) 
 };
 
 // Invoked when TinyUSB receives a GET HID REPORT DESCRIPTOR request
