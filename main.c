@@ -1473,25 +1473,7 @@ void hid_set_keyboard_leds(uint8_t led_mask) {
 }
 
 void send_presentation_controls(bool next_slide) {	
-    if (!tud_hid_ready()) return;
-
-    uint8_t keycode[6] = { 0 };
-
-    if (next_slide) {
-        keycode[0] = HID_KEY_ARROW_RIGHT; // Built-in TinyUSB macro for Right Arrow
-    } else {
-        keycode[0] = HID_KEY_ARROW_LEFT;  // Built-in TinyUSB macro for Left Arrow
-    }
-	
-    uint8_t key_report[6] = { keycode, 0, 0, 0, 0, 0 };
-    uint8_t empty_report[6] = { 0, 0, 0, 0, 0, 0 };	
-
-	tud_hid_keyboard_report(0, 0, key_report);
-	sleep_ms(30); 
-	
-	// Send an empty report to simulate releasing the key
-	tud_hid_keyboard_report(0, 0, empty_report);
-	sleep_ms(30); 
+	bool dummy = next_slide;
 }
 
 //--------------------------------------------------------------------+
