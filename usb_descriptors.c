@@ -180,3 +180,22 @@ uint16_t const* tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 
   return _desc_str;
 }
+
+//--------------------------------------------------------------------+
+// HID Report Descriptor
+//--------------------------------------------------------------------+
+
+// Standard Keyboard Report Descriptor mapping defined by the USB HID Spec
+uint8_t const desc_hid_report[] =
+{
+  TUD_HID_REPORT_DESC_KEYBOARD()
+};
+
+// Invoked when TinyUSB receives a GET HID REPORT DESCRIPTOR request
+// This is the function the compiler was looking for!
+uint8_t const * tud_hid_descriptor_report_cb(uint8_t itf)
+{
+  (void) itf;
+  return desc_hid_report;
+}
+
