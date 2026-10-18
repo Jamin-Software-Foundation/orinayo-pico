@@ -105,8 +105,8 @@ uint8_t const desc_fs_configuration[] =
   // Config number, interface count, string index, total length, attribute, power in mA
   TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
 
-  // HID Descriptor: Changed 4th argument to sizeof(desc_hid_report) to fix Code 10!
-  TUD_HID_DESCRIPTOR(ITF_NUM_HID, 6, HID_ITF_PROTOCOL_KEYBOARD, sizeof(desc_hid_report), 0x80 | EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 10),
+  // HID Descriptor: Changed 4th argument to the explicit macro size calculation
+  TUD_HID_DESCRIPTOR(ITF_NUM_HID, 6, HID_ITF_PROTOCOL_KEYBOARD, sizeof(TUD_HID_REPORT_DESC_KEYBOARD()), 0x80 | EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 10),
 
   // MIDI Descriptor
   TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 5, EPNUM_MIDI, 0x80 | EPNUM_MIDI, 64)
@@ -119,7 +119,7 @@ uint8_t const desc_hs_configuration[] =
   TUD_CONFIG_DESCRIPTOR(1, ITF_NUM_TOTAL, 0, CONFIG_TOTAL_LEN, TUSB_DESC_CONFIG_ATT_REMOTE_WAKEUP, 100),
 
   // HID Descriptor: Changed 4th argument here as well
-  TUD_HID_DESCRIPTOR(ITF_NUM_HID, 6, HID_ITF_PROTOCOL_KEYBOARD, sizeof(desc_hid_report), 0x80 | EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 10),
+  TUD_HID_DESCRIPTOR(ITF_NUM_HID, 6, HID_ITF_PROTOCOL_KEYBOARD, sizeof(TUD_HID_REPORT_DESC_KEYBOARD()), 0x80 | EPNUM_HID, CFG_TUD_HID_EP_BUFSIZE, 10),
 
   // MIDI Descriptor
   TUD_MIDI_DESCRIPTOR(ITF_NUM_MIDI, 5, EPNUM_MIDI, 0x80 | EPNUM_MIDI, 512)
@@ -149,7 +149,7 @@ char const* string_desc_arr [] =
   (const char[]) { 0x09, 0x04 }, // 0: is supported language is English (0x0409)
   "Inspired Futures Ltd",        // 1: Manufacturer
   "Orinayo Device",              // 2: Product
-  "999999",                      // 3: CHANGED SERIAL -> Forces Windows to dump bad driver cache!
+  "000000",                      // 3: CHANGED SERIAL -> Forces Windows to dump bad driver cache!
   "Orinayo CDC",                 // 4: The CDC Interface
   "Orinayo MIDI",                // 5: The MIDI Interface
   "Orinayo Keyboard",            // 6: New string assignment linking back to HID macro index
