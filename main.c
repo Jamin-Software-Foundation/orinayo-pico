@@ -653,7 +653,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {	
 			hid_gamepad_connected = true;	
 			
-			if (itf_protocol == 0) {
+			if (vid == ATTACK_SHARK_VID && pid == ATTACK_SHARK_PID) {
 				k86_dev_addr = dev_addr;
 				k86_vendor_instance = instance;
 				k86_connected = true;
@@ -1560,7 +1560,7 @@ void update_k86_lcd(uint8_t dev_addr, uint8_t instance) {
     tuh_hid_set_report(
         dev_addr,
         instance,
-        0,                 		// Report ID 0 implies reliance on the payload buffer alignment array header
+        1,                 		// Report ID 0 implies reliance on the payload buffer alignment array header
         HID_REPORT_TYPE_OUTPUT, // Explicit enum identification mapping for TinyUSB
         report_buf,
         sizeof(report_buf)
