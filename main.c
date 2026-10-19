@@ -630,14 +630,17 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	uint16_t vid, pid;
 	tuh_vid_pid_get(dev_addr, &vid, &pid);	
 
+    // Filter strictly for the wired Attack Shark K86 configuration
     if (vid == K86_VID && pid == K86_PID_WIRED) {
         
         // Define the TinyUSB interface information storage structure
         tuh_itf_info_t itf_info;
         
-        // Query the core stack for the physical topology profile of this specific instance
-        if (tuh_hid_itf_get_info(dev_addr, instance, &itf_info)) {
-            uint8_t itf_num = itf_info.itf_num;
+        // Query the core host stack for general interface topology metadata
+        if (tuh_itf_get_info(dev_addr, instance, &itf_info)) {
+            
+            // FIX: Access bInterfaceNumber directly inside the standard tuh_itf_info_t struct
+            uint8_t itf_num = itf_info.bInterfaceNumber;
             
             printf("K86 HID Instance %d recognized. Bound to Physical Interface (MI): %d\n", instance, itf_num);
 
