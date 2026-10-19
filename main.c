@@ -253,9 +253,6 @@ static uint8_t daw_dev_addr         = 0;
 // Must be >= 2 to use cable 1 for Launchkey DAW / LED / SysEx messages.
 static uint8_t launchkey_tx_cable_count = 0;
 
-static bool k86_synced = false;
-static uint8_t usb_buffer[64];
-
 uint8_t chord1_pad_velocity = 48;
 uint8_t chord2_pad_velocity = 32;
 uint8_t previous_time = 0;
@@ -333,8 +330,6 @@ uint8_t get_arp_template(void);
 void midi_n_stream_write(uint8_t itf, uint8_t cable_num, uint8_t *buffer, uint32_t bufsize);
 void handle_keyboard_events(uint8_t modifier, uint8_t keycode);
 void hid_set_keyboard_leds(uint8_t led_mask);
-void build_k86_refresh_packet(uint8_t *buf);
-void build_k86_clock_packet(uint8_t *buf, uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
 
 enum {
 	// Balanced size: enough to batch multiple MIDI packets per callback while keeping stack usage small.
@@ -630,50 +625,6 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	uint16_t vid, pid;
 	tuh_vid_pid_get(dev_addr, &vid, &pid);	
 
-    // Filter strictly for the wired Attack Shark K86 configuration
-    if (vid == K86_VID && pid == K86_PID_WIRED) {
-        
-        // Define the TinyUSB interface information storage structure
-        tuh_itf_info_t itf_info;
-        
-        // Query the core host stack for general interface topology metadata
-        if (tuh_itf_get_info(dev_addr, instance, &itf_info)) {
-            
-            // FIX: Access bInterfaceNumber directly inside the standard tuh_itf_info_t struct
-            uint8_t itf_num = itf_info.bInterfaceNumber;
-            
-            printf("K86 HID Instance %d recognized. Bound to Physical Interface (MI): %d\n", instance, itf_num);
-
-            // TARGET LOCKED: Check if this instance represents the custom configuration line (MI_02)
-            if (itf_num == K86_VENDOR_INTF) {
-                if (!k86_synced) {
-                    printf("Target MI_02 custom vendor block matched. Initiating clock injection...\n");
-
-                    // 1. Build your custom calendar payload targets (2029/12/25 13:45:00)
-                    build_k86_clock_packet(usb_buffer, 2029, 12, 25, 13, 45, 0);
-
-                    // 2. Dispatch data payload directly across the opened Interrupt OUT pipe
-                    if (tuh_hid_send_report(dev_addr, instance, 0, usb_buffer, 64)) {
-                        printf("Step 1: Clock variable array successfully injected.\n");
-                        
-                        // 3. Wait a brief cycle to let hardware variables settle, then force redraw
-                        sleep_ms(25);
-                        build_k86_refresh_packet(usb_buffer);
-                        
-                        if (tuh_hid_send_report(dev_addr, instance, 0, usb_buffer, 64)) {
-                            printf("Step 2: LCD Repaint trigger broadcast completed.\n");
-                            k86_synced = true;
-                        }
-                    } else {
-                        printf("Error: Endpoint pipe transmission rejected.\n");
-                    }
-                }
-            }
-        } else {
-            printf("Warning: Could not fetch interface information metadata for instance %d\n", instance);
-        }
-    }
-
     // Check if the mounted device is a keyboard
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || itf_protocol == HID_ITF_PROTOCOL_NONE) {
 		printf("USB device mounted successfully!\n");	
@@ -718,43 +669,12 @@ void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
 		keyboard_dev_addr = dev_addr;
 		keyboard_instance = instance;
 	}
-
-	if (k86_synced) {	
-		k86_synced = false; 
-	}
 		
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
 }
 
 void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len) {
     uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
-	
-	/*
-    if (dev_addr == k86_dev_addr && instance == k86_vendor_instance) 
-	{
-        if (len >= 2) {
-            // Unpack 16-bit key consumer usage
-            uint16_t consumer_key = ((uint16_t)report[1] << 8) | report[0];
-
-            switch (consumer_key) {
-                case HID_USAGE_CONSUMER_VOLUME_INCREMENT:
-					cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
-                    break;
-
-                case HID_USAGE_CONSUMER_VOLUME_DECREMENT:
-					cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
-                    break;
-
-                case HID_USAGE_CONSUMER_MUTE:
-					cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
-                    break;
-
-                default:
-                    break;
-            }
-        }
-    }	
-	*/
 	
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {
         hid_keyboard_report_t* kbd_report = (hid_keyboard_report_t*) report;
@@ -1565,44 +1485,6 @@ void hid_set_keyboard_leds(uint8_t led_mask) {
         &report_data,           // Pointer to our data byte
         1                       // Length of report data (1 byte)
     );
-}
-
-void build_k86_clock_packet(uint8_t *buf, uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second) {
-    memset(buf, 0, 64);
-
-    buf[0] = 0x05; // Royuan Protocol Header Identifier
-    buf[1] = 0xA8; // Opcode (Bit-7 High forces firmware write mode)
-
-    // Registers 8 to 14 house the temporal data
-    buf[8]  = (uint8_t)(year >> 8);   
-    buf[9]  = (uint8_t)(year & 0xFF);  
-    buf[10] = month;                  
-    buf[11] = day;                    
-    buf[12] = hour;                   
-    buf[13] = minute;                 
-    buf[14] = second;                 
-
-    // Compute mandatory validation checksum
-    uint32_t total_sum = 0;
-    for (int i = 0; i < 63; i++) {
-        total_sum += buf[i];
-    }
-    buf[63] = (uint8_t)(0xFF - (total_sum & 0xFF));
-}
-
-void build_k86_refresh_packet(uint8_t *buf) {
-    memset(buf, 0, 64);
-    
-    buf[0] = 0x05; // Header
-    buf[1] = 0x22; // Master Screen Redraw Opcode
-    buf[2] = 0x01; // Instruction flag to repaint active canvas
-
-    // Compute Checksum
-    uint32_t total_sum = 0;
-    for (int i = 0; i < 63; i++) {
-        total_sum += buf[i];
-    }
-    buf[63] = (uint8_t)(0xFF - (total_sum & 0xFF));
 }
 
 //--------------------------------------------------------------------+
