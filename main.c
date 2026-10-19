@@ -1590,6 +1590,7 @@ void update_k86_lcd(uint8_t dev_addr, uint8_t instance) {
 
     // Fire the transaction over the tracking layer using the unified pointer
     tuh_control_xfer(&xfer);
+}
 
 //--------------------------------------------------------------------+
 //
