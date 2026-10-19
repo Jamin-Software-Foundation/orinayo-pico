@@ -62,14 +62,10 @@ void pico_set_led(bool led_on) {
 #endif
 }
 
-// Common VID/PID pairings for Attack Shark / Ajazz composite setups:
-// Wired Mode: 0x342D / 0xDCE4. If switched to Mac mode, it may enumerate as 0x05AC (Apple).
-#define ATTACK_SHARK_VID  0x3151
-#define ATTACK_SHARK_PID  0x4015 
-
-#define HID_USAGE_CONSUMER_VOLUME_INCREMENT 0x00E9
-#define HID_USAGE_CONSUMER_VOLUME_DECREMENT 0x00EA
-#define HID_USAGE_CONSUMER_MUTE             0x00E2
+// Define Attack Shark K86 Hardware Targets
+#define K86_VID          0x3151
+#define K86_PID_WIRED    0x4015
+#define K86_VENDOR_INTF  2       // Interface 2 is the configuration port
 
 // M5Stack Midi UART settings
 #define UART_ID uart0
@@ -257,9 +253,8 @@ static uint8_t daw_dev_addr         = 0;
 // Must be >= 2 to use cable 1 for Launchkey DAW / LED / SysEx messages.
 static uint8_t launchkey_tx_cable_count = 0;
 
-static uint8_t k86_dev_addr = 0;
-static uint8_t k86_vendor_instance = 255; // Store which instance controls the LCD
-static bool k86_connected = false;
+static bool k86_synced = false;
+static uint8_t usb_buffer[64];
 
 uint8_t chord1_pad_velocity = 48;
 uint8_t chord2_pad_velocity = 32;
@@ -338,7 +333,8 @@ uint8_t get_arp_template(void);
 void midi_n_stream_write(uint8_t itf, uint8_t cable_num, uint8_t *buffer, uint32_t bufsize);
 void handle_keyboard_events(uint8_t modifier, uint8_t keycode);
 void hid_set_keyboard_leds(uint8_t led_mask);
-void update_k86_lcd(uint8_t dev_addr, uint8_t instance);
+void build_k86_refresh_packet(uint8_t *buf);
+void build_k86_clock_packet(uint8_t *buf, uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
 
 enum {
 	// Balanced size: enough to batch multiple MIDI packets per callback while keeping stack usage small.
@@ -632,7 +628,39 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
 
 	uint16_t vid, pid;
-	tuh_vid_pid_get(dev_addr, &vid, &pid);		
+	tuh_vid_pid_get(dev_addr, &vid, &pid);	
+
+    if (vid == K86_VID && pid == K86_PID_WIRED) {
+        // Find the matching index corresponding to the configuration channel
+        uint8_t itf_num = tuh_hid_interface_protocol_get(dev_addr, instance);
+        
+        // Note: Depending on device descriptors, you can also assert via 'instance == K86_VENDOR_INTF'
+        printf("K86 Interface mounted! Instance Index: %d, Protocol ID: %d\n", instance, itf_num);
+
+        if (!k86_synced) {
+            printf("Initiating arbitrary custom clock push over raw USB pipe...\n");
+
+            // 1. Build your custom calendar payload targets (e.g. 2029/12/25 13:45:00)
+            build_k86_clock_packet(usb_buffer, 2029, 12, 25, 13, 45, 0);
+
+            // 2. Dispatch data payload directly across the opened Interrupt OUT pipe
+            // TinyUSB formats this as a raw endpoint transfer when report_id is set to 0
+            if (tuh_hid_send_report(dev_addr, instance, 0, usb_buffer, 64)) {
+                printf("Step 1: Clock variable array successfully injected.\n");
+                
+                // 3. Wait a brief cycle to let hardware variables settle, then force redraw
+                sleep_ms(20);
+                build_k86_refresh_packet(usb_buffer);
+                
+                if (tuh_hid_send_report(dev_addr, instance, 0, usb_buffer, 64)) {
+                    printf("Step 2: LCD Repaint trigger broadcast completed.\n");
+                    k86_synced = true;
+                }
+            } else {
+                printf("Error: Endpoint pipe transmission rejected.\n");
+            }
+        }
+    }	
 
     // Check if the mounted device is a keyboard
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || itf_protocol == HID_ITF_PROTOCOL_NONE) {
@@ -651,14 +679,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 		else
 
 		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {	
-			hid_gamepad_connected = true;	
-			
-			if (vid == ATTACK_SHARK_VID && pid == ATTACK_SHARK_PID) {
-				k86_dev_addr = dev_addr;
-				k86_vendor_instance = instance;
-				k86_connected = true;
-				update_k86_lcd(k86_dev_addr, k86_vendor_instance);				
-			}			
+			hid_gamepad_connected = true;			
 		}	
 
 		enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
@@ -686,10 +707,8 @@ void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
 		keyboard_instance = instance;
 	}
 
-	if (k86_connected) {	
-		k86_connected = false;
-		k86_vendor_instance = 255;
-		k86_dev_addr = 0;
+	if (k86_synced) {	
+		k86_synced = false; 
 	}
 		
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
@@ -698,6 +717,7 @@ void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
 void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len) {
     uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
 	
+	/*
     if (dev_addr == k86_dev_addr && instance == k86_vendor_instance) 
 	{
         if (len >= 2) {
@@ -722,7 +742,8 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
             }
         }
     }	
-
+	*/
+	
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {
         hid_keyboard_report_t* kbd_report = (hid_keyboard_report_t*) report;
         uint8_t modifier = kbd_report->modifier;
@@ -1176,9 +1197,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 	joystick_up = 0; joystick_down = 0;  logo_knob_up = 0;  logo_knob_down = 0;	
 
 
-	if (keycode >= 4 && keycode <= 29) {							// chord keys
-		update_k86_lcd(k86_dev_addr, k86_vendor_instance);		
-		
+	if (keycode >= 4 && keycode <= 29) {							// chord keys	
 		left = 1; 												
 		finished_processing = true;			
 		gamepad_bluetooth_handle_data();				// end previous strum
@@ -1536,60 +1555,42 @@ void hid_set_keyboard_leds(uint8_t led_mask) {
     );
 }
 
-static bool xfer_complete = true;
+void build_k86_clock_packet(uint8_t *buf, uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second) {
+    memset(buf, 0, 64);
 
-// TinyUSB Control Transfer Callback to release the pipeline lock
-bool lcd_xfer_cb(uint8_t dev_addr, tusb_control_request_t const * request, xfer_result_t result) {
-    xfer_complete = true;
-    return true; 
+    buf[0] = 0x05; // Royuan Protocol Header Identifier
+    buf[1] = 0xA8; // Opcode (Bit-7 High forces firmware write mode)
+
+    // Registers 8 to 14 house the temporal data
+    buf[8]  = (uint8_t)(year >> 8);   
+    buf[9]  = (uint8_t)(year & 0xFF);  
+    buf[10] = month;                  
+    buf[11] = day;                    
+    buf[12] = hour;                   
+    buf[13] = minute;                 
+    buf[14] = second;                 
+
+    // Compute mandatory validation checksum
+    uint32_t total_sum = 0;
+    for (int i = 0; i < 63; i++) {
+        total_sum += buf[i];
+    }
+    buf[63] = (uint8_t)(0xFF - (total_sum & 0xFF));
 }
 
-void update_k86_lcd(uint8_t dev_addr, uint8_t instance) {
-    if (!xfer_complete) return;	
-    // 64-byte alignment payload required by custom gaming peripheral configurations
-    static uint8_t report_buf[64]; 
-    memset(report_buf, 0, sizeof(report_buf));
+void build_k86_refresh_packet(uint8_t *buf) {
+    memset(buf, 0, 64);
+    
+    buf[0] = 0x05; // Header
+    buf[1] = 0x22; // Master Screen Redraw Opcode
+    buf[2] = 0x01; // Instruction flag to repaint active canvas
 
-    // Common proprietary initialization markers for Chinese mechanical layout screens (e.g., Keebmonkey/Shark configurations)
-    report_buf[0] = 0x05; // Feature Report Identifier / Packet Type
-    report_buf[1] = 0x5C; // Command Action Opcode: Synchronise Local Time metrics
-
-    report_buf[2] = 1;
-    report_buf[3] = 2;
-    report_buf[4] = 3;
-    report_buf[5] = 4;
-    report_buf[6] = 5;
-    report_buf[7] = 6;
-    report_buf[8] = 7; 
-    report_buf[9] = 8;
-    report_buf[10] = 9;
-    report_buf[11] = 10;
-    report_buf[12] = 11;
-    report_buf[13] = 12; 	
-
-    // Define the core parameters of the low-level USB setup packet structure
-    static tusb_control_request_t const request = {
-        .bmRequestType = 0x21,                     // Class-specific out transmission targeting interfaces
-        .bRequest      = 0x09,                     // HID Class Command Identifier: SET_REPORT
-        .wValue        = (0x03 << 8) | 0x05,       // High Byte: Feature (0x03) | Low Byte: Report ID (0x05)
-        .wIndex        = 1,			               // Target active configuration layout (Pass MI_01 instance)
-        .wLength       = sizeof(report_buf)        // The bounded tracking size constraint
-    };
-
-    // Assemble the parameters into the unified transfer structure required by Pico SDK 2.2.0
-    tuh_xfer_t xfer = {
-        .daddr       = dev_addr,
-        .ep_addr     = 0,                          // Control requests must utilize Endpoint 0
-        .setup       = &request,
-        .buffer      = report_buf,
-        .complete_cb = lcd_xfer_cb,
-        .user_data   = 0
-    };
-
-    xfer_complete = false;
-
-    // Fire the transaction over the tracking layer using the unified pointer
-    tuh_control_xfer(&xfer);
+    // Compute Checksum
+    uint32_t total_sum = 0;
+    for (int i = 0; i < 63; i++) {
+        total_sum += buf[i];
+    }
+    buf[63] = (uint8_t)(0xFF - (total_sum & 0xFF));
 }
 
 //--------------------------------------------------------------------+
