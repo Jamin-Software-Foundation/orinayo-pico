@@ -1177,6 +1177,8 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 
 
 	if (keycode >= 4 && keycode <= 29) {							// chord keys
+		update_k86_lcd(k86_dev_addr, k86_vendor_instance);	
+	
 		left = 1; 												
 		finished_processing = true;			
 		gamepad_bluetooth_handle_data();				// end previous strum
@@ -1560,8 +1562,8 @@ void update_k86_lcd(uint8_t dev_addr, uint8_t instance) {
     tuh_hid_set_report(
         dev_addr,
         instance,
-        1,                 		// Report ID 0 implies reliance on the payload buffer alignment array header
-        HID_REPORT_TYPE_OUTPUT, // Explicit enum identification mapping for TinyUSB
+        0x05,                 	// Report ID 0 implies reliance on the payload buffer alignment array header
+        HID_REPORT_TYPE_FEATURE, // Explicit enum identification mapping for TinyUSB
         report_buf,
         sizeof(report_buf)
     );
