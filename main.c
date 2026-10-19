@@ -630,23 +630,23 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	uint16_t vid, pid;
 	tuh_vid_pid_get(dev_addr, &vid, &pid);	
 
-
-    // Filter strictly for the wired Attack Shark K86 configuration
     if (vid == K86_VID && pid == K86_PID_WIRED) {
         
-        // FIX: Extract the interface descriptor struct directly from the instance
-        tusb_desc_interface_t const* itf_desc = tuh_hid_get_itf_desc(dev_addr, instance);
+        // Define the TinyUSB interface information storage structure
+        tuh_itf_info_t itf_info;
         
-        if (itf_desc != NULL) {
-            uint8_t itf_num = itf_desc->bInterfaceNumber;
-            printf("K86 Interface mounted! Instance Index: %d, Physical Interface ID (MI): %d\n", instance, itf_num);
+        // Query the core stack for the physical topology profile of this specific instance
+        if (tuh_hid_itf_get_info(dev_addr, instance, &itf_info)) {
+            uint8_t itf_num = itf_info.itf_num;
+            
+            printf("K86 HID Instance %d recognized. Bound to Physical Interface (MI): %d\n", instance, itf_num);
 
-            // Target the custom vendor interface block (MI_02)
+            // TARGET LOCKED: Check if this instance represents the custom configuration line (MI_02)
             if (itf_num == K86_VENDOR_INTF) {
                 if (!k86_synced) {
-                    printf("Target custom configuration layer found. Initiating clock sync...\n");
+                    printf("Target MI_02 custom vendor block matched. Initiating clock injection...\n");
 
-                    // 1. Build your custom calendar payload targets (e.g. 2029/12/25 13:45:00)
+                    // 1. Build your custom calendar payload targets (2029/12/25 13:45:00)
                     build_k86_clock_packet(usb_buffer, 2029, 12, 25, 13, 45, 0);
 
                     // 2. Dispatch data payload directly across the opened Interrupt OUT pipe
@@ -667,7 +667,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
                 }
             }
         } else {
-            printf("Warning: Could not fetch interface descriptor data for instance %d\n", instance);
+            printf("Warning: Could not fetch interface information metadata for instance %d\n", instance);
         }
     }
 
