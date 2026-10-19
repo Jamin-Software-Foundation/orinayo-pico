@@ -630,37 +630,44 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	uint16_t vid, pid;
 	tuh_vid_pid_get(dev_addr, &vid, &pid);	
 
+
     // Filter strictly for the wired Attack Shark K86 configuration
     if (vid == K86_VID && pid == K86_PID_WIRED) {
-        // FIX: Use tuh_hid_get_itf_num() instead of the non-existent function
-        uint8_t itf_num = tuh_hid_get_itf_num(dev_addr, instance);
         
-        printf("K86 Interface mounted! Instance Index: %d, Physical Interface ID (MI): %d\n", instance, itf_num);
+        // FIX: Extract the interface descriptor struct directly from the instance
+        tusb_desc_interface_t const* itf_desc = tuh_hid_get_itf_desc(dev_addr, instance);
+        
+        if (itf_desc != NULL) {
+            uint8_t itf_num = itf_desc->bInterfaceNumber;
+            printf("K86 Interface mounted! Instance Index: %d, Physical Interface ID (MI): %d\n", instance, itf_num);
 
-        // Target the custom vendor interface block (MI_02)
-        if (itf_num == K86_VENDOR_INTF) {
-            if (!k86_synced) {
-                printf("Target custom configuration layer found. Initiating clock sync...\n");
+            // Target the custom vendor interface block (MI_02)
+            if (itf_num == K86_VENDOR_INTF) {
+                if (!k86_synced) {
+                    printf("Target custom configuration layer found. Initiating clock sync...\n");
 
-                // 1. Build your custom calendar payload targets (e.g. 2029/12/25 13:45:00)
-                build_k86_clock_packet(usb_buffer, 2029, 12, 25, 13, 45, 0);
+                    // 1. Build your custom calendar payload targets (e.g. 2029/12/25 13:45:00)
+                    build_k86_clock_packet(usb_buffer, 2029, 12, 25, 13, 45, 0);
 
-                // 2. Dispatch data payload directly across the opened Interrupt OUT pipe
-                if (tuh_hid_send_report(dev_addr, instance, 0, usb_buffer, 64)) {
-                    printf("Step 1: Clock variable array successfully injected.\n");
-                    
-                    // 3. Wait a brief cycle to let hardware variables settle, then force redraw
-                    sleep_ms(25);
-                    build_k86_refresh_packet(usb_buffer);
-                    
+                    // 2. Dispatch data payload directly across the opened Interrupt OUT pipe
                     if (tuh_hid_send_report(dev_addr, instance, 0, usb_buffer, 64)) {
-                        printf("Step 2: LCD Repaint trigger broadcast completed.\n");
-                        k86_synced = true;
+                        printf("Step 1: Clock variable array successfully injected.\n");
+                        
+                        // 3. Wait a brief cycle to let hardware variables settle, then force redraw
+                        sleep_ms(25);
+                        build_k86_refresh_packet(usb_buffer);
+                        
+                        if (tuh_hid_send_report(dev_addr, instance, 0, usb_buffer, 64)) {
+                            printf("Step 2: LCD Repaint trigger broadcast completed.\n");
+                            k86_synced = true;
+                        }
+                    } else {
+                        printf("Error: Endpoint pipe transmission rejected.\n");
                     }
-                } else {
-                    printf("Error: Endpoint pipe transmission rejected.\n");
                 }
             }
+        } else {
+            printf("Warning: Could not fetch interface descriptor data for instance %d\n", instance);
         }
     }
 
