@@ -1536,7 +1536,16 @@ void hid_set_keyboard_leds(uint8_t led_mask) {
     );
 }
 
+static bool xfer_complete = true;
+
+// TinyUSB Control Transfer Callback to release the pipeline lock
+bool lcd_xfer_cb(uint8_t dev_addr, tusb_control_request_t const * request, xfer_result_t result) {
+    xfer_complete = true;
+    return true; 
+}
+
 void update_k86_lcd(uint8_t dev_addr, uint8_t instance) {
+    if (!xfer_complete) return;	
     // 64-byte alignment payload required by custom gaming peripheral configurations
     static uint8_t report_buf[64]; 
     memset(report_buf, 0, sizeof(report_buf));
@@ -1558,15 +1567,19 @@ void update_k86_lcd(uint8_t dev_addr, uint8_t instance) {
     report_buf[12] = 11;
     report_buf[13] = 12; 	
 
-    // Dispatches a dynamic SET_REPORT transaction to the targeted endpoint
-    tuh_hid_set_report(
-        dev_addr,
-        instance,
-        0,                 		// Report ID 0 implies reliance on the payload buffer alignment array header
-        HID_REPORT_TYPE_OUTPUT, // Explicit enum identification mapping for TinyUSB
-        report_buf,
-        sizeof(report_buf)
-    );
+    // --- LOW-LEVEL USB SETUP REQUEST PACKET ---
+    tusb_control_request_t const request = {
+        .bmRequestType = 0x21,                      // Type: Class-specific | Recipient: Interface
+        .bRequest      = 0x09,                      // Request ID: SET_REPORT (0x09)
+        .wValue        = (0x03 << 8) | 0x05,        // High Byte: Report Type Feature (0x03) | Low Byte: Report ID (0x05)
+        .wIndex        = instance,	                // Target Interface Index (Pass your MI_01 instance)
+        .wLength       = sizeof(report_buf)         // Data transfer boundary 
+    };
+
+    xfer_complete = false;
+
+    // Send the control request over Endpoint 0 directly to the device architecture
+    tuh_control_xfer(dev_addr, &request, report_buf, lcd_xfer_cb);
 }
 
 //--------------------------------------------------------------------+
