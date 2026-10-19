@@ -632,7 +632,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
     if (vid == K86_VID && pid == K86_PID_WIRED) {
         // Find the matching index corresponding to the configuration channel
-        uint8_t itf_num = tuh_hid_interface_protocol_get(dev_addr, instance);
+        uint8_t itf_num = tuh_hid_get_itf_num(dev_addr, instance);
         
         // Note: Depending on device descriptors, you can also assert via 'instance == K86_VENDOR_INTF'
         printf("K86 Interface mounted! Instance Index: %d, Protocol ID: %d\n", instance, itf_num);
