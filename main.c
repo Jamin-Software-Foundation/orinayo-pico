@@ -62,6 +62,10 @@ void pico_set_led(bool led_on) {
 #endif
 }
 
+// Common VID/PID pairings for Attack Shark / Ajazz composite setups:
+// Wired Mode: 0x342D / 0xDCE4. If switched to Mac mode, it may enumerate as 0x05AC (Apple).
+#define ATTACK_SHARK_VID  0x342D  
+#define ATTACK_SHARK_PID  0xDCE4  
 
 // M5Stack Midi UART settings
 #define UART_ID uart0
@@ -240,12 +244,19 @@ static int     midi_data_count = 0;
 // Set by tuh_midi_mount_cb; 0xFF means no MIDI device is currently mounted.
 static uint8_t midi_itf_idx          = 0xFF;
 static uint8_t daw_itf_idx          = 0xFF;
+
 // USB device address of the currently mounted MIDI device (from mount_cb_data->daddr).
 static uint8_t midi_dev_addr         = 0;
 static uint8_t daw_dev_addr         = 0;
+
 // Number of TX (OUT) virtual cables reported by the mounted device.
 // Must be >= 2 to use cable 1 for Launchkey DAW / LED / SysEx messages.
 static uint8_t launchkey_tx_cable_count = 0;
+
+static uint8_t k86_dev_addr = 0;
+static uint8_t k86_vendor_instance = 255; // Store which instance controls the LCD
+static bool k86_connected = false;
+
 uint8_t chord1_pad_velocity = 48;
 uint8_t chord2_pad_velocity = 32;
 uint8_t previous_time = 0;
@@ -323,6 +334,7 @@ uint8_t get_arp_template(void);
 void midi_n_stream_write(uint8_t itf, uint8_t cable_num, uint8_t *buffer, uint32_t bufsize);
 void handle_keyboard_events(uint8_t modifier, uint8_t keycode);
 void hid_set_keyboard_leds(uint8_t led_mask);
+void update_k86_lcd(uint8_t dev_addr, uint8_t instance, uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t battery);
 
 enum {
 	// Balanced size: enough to batch multiple MIDI packets per callback while keeping stack usage small.
@@ -613,7 +625,10 @@ void tuh_midi_umount_cb(uint8_t idx) {
 
 void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len) {
     uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);		
+	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
+
+	uint16_t vid, pid;
+	tuh_vid_pid_get(dev_addr, &vid, &pid);		
 
     // Check if the mounted device is a keyboard
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || itf_protocol == HID_ITF_PROTOCOL_NONE) {
@@ -623,10 +638,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 			hid_keyboard_connected = true;
 			keyboard_dev_addr = dev_addr;
 			keyboard_instance = instance;
-			hid_set_keyboard_leds(15); 	// switch on all 4 leds
-
-			uint16_t vid, pid;
-			tuh_vid_pid_get(dev_addr, &vid, &pid);			
+			hid_set_keyboard_leds(15); 	// switch on all 4 leds		
 
 			if (vid == 0x1A86 && pid == 0xE026) {			
 				ikkegol_pedal_enabled = true;
@@ -636,6 +648,22 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
 		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {	
 			hid_gamepad_connected = true;	
+			
+			if (itf_protocol == 0) {
+				k86_dev_addr = dev_addr;
+				k86_vendor_instance = instance;
+				k86_connected = true;
+				
+			   // Mock data structure to feed the LCD panel loop
+				uint16_t current_year = 2026;
+				uint8_t current_month = 10;
+				uint8_t current_day   = 19;
+				uint8_t current_hour  = 10;
+				uint8_t current_min   = 32;
+				uint8_t battery_pct   = 88;
+
+				update_k86_lcd(k86_dev_addr, k86_vendor_instance, current_year, current_month, current_day, current_hour, current_min, battery_pct);				
+			}			
 		}	
 
 		enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
@@ -651,9 +679,24 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 }
 
 void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
-    printf("USB device unmounted.\n");
-	hid_keyboard_connected = false;
-	hid_gamepad_connected = false;
+    printf("USB device unmounted.\n");			
+	
+	if (hid_gamepad_connected) {
+		hid_gamepad_connected = false;
+	}
+	
+	if (hid_keyboard_connected) {
+		hid_keyboard_connected = false;
+		keyboard_dev_addr = dev_addr;
+		keyboard_instance = instance;
+	}
+
+	if (k86_connected) {	
+		k86_connected = false;
+		k86_vendor_instance = 255;
+		k86_dev_addr = 0;
+	}
+		
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
 }
 
@@ -1468,6 +1511,35 @@ void hid_set_keyboard_leds(uint8_t led_mask) {
         HID_REPORT_TYPE_OUTPUT, // We are sending an Output report to the device
         &report_data,           // Pointer to our data byte
         1                       // Length of report data (1 byte)
+    );
+}
+
+void update_k86_lcd(uint8_t dev_addr, uint8_t instance, uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t battery) {
+    // 64-byte alignment payload required by custom gaming peripheral configurations
+    static uint8_t report_buf[64]; 
+    memset(report_buf, 0, sizeof(report_buf));
+
+    // Common proprietary initialization markers for Chinese mechanical layout screens (e.g., Keebmonkey/Shark configurations)
+    report_buf[0] = 0x05; // Feature Report Identifier / Packet Type
+    report_buf[1] = 0x5C; // Command Action Opcode: Synchronise Local Time metrics
+
+    // Time/Date variables split into respective payload index tracking
+    report_buf[2] = (uint8_t)(year >> 8);
+    report_buf[3] = (uint8_t)(year & 0xFF);
+    report_buf[4] = month;
+    report_buf[5] = day;
+    report_buf[6] = hour;
+    report_buf[7] = minute;
+    report_buf[8] = battery; 
+
+    // Dispatches a dynamic SET_REPORT transaction to the targeted endpoint
+    tuh_hid_set_report(
+        dev_addr,
+        instance,
+        0,                 // Report ID 0 implies reliance on the payload buffer alignment array header
+        HID_REPORT_TYPE_OUTPUT, // Explicit enum identification mapping for TinyUSB
+        report_buf,
+        sizeof(report_buf)
     );
 }
 
