@@ -1572,7 +1572,7 @@ void update_k86_lcd(uint8_t dev_addr, uint8_t instance) {
         .bmRequestType = 0x21,                      // Type: Class-specific | Recipient: Interface
         .bRequest      = 0x09,                      // Request ID: SET_REPORT (0x09)
         .wValue        = (0x03 << 8) | 0x05,        // High Byte: Report Type Feature (0x03) | Low Byte: Report ID (0x05)
-        .wIndex        = instance,	                // Target Interface Index (Pass your MI_01 instance)
+        .wIndex        = 1,	                // Target Interface Index (Pass your MI_01 instance)
         .wLength       = sizeof(report_buf)         // Data transfer boundary 
     };
 
