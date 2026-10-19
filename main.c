@@ -630,13 +630,8 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	uint16_t vid, pid;
 	tuh_vid_pid_get(dev_addr, &vid, &pid);	
 
-    if (vid == K86_VID && pid == K86_PID_WIRED) {
-        // Find the matching index corresponding to the configuration channel
-        uint8_t itf_num = tuh_hid_get_itf_num(dev_addr, instance);
-        
-        // Note: Depending on device descriptors, you can also assert via 'instance == K86_VENDOR_INTF'
-        printf("K86 Interface mounted! Instance Index: %d, Protocol ID: %d\n", instance, itf_num);
-
+    if (vid == K86_VID && pid == K86_PID_WIRED) 
+	{
         if (!k86_synced) {
             printf("Initiating arbitrary custom clock push over raw USB pipe...\n");
 
