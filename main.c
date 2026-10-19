@@ -630,32 +630,39 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	uint16_t vid, pid;
 	tuh_vid_pid_get(dev_addr, &vid, &pid);	
 
-    if (vid == K86_VID && pid == K86_PID_WIRED) 
-	{
-        if (!k86_synced) {
-            printf("Initiating arbitrary custom clock push over raw USB pipe...\n");
+    // Filter strictly for the wired Attack Shark K86 configuration
+    if (vid == K86_VID && pid == K86_PID_WIRED) {
+        // FIX: Use tuh_hid_get_itf_num() instead of the non-existent function
+        uint8_t itf_num = tuh_hid_get_itf_num(dev_addr, instance);
+        
+        printf("K86 Interface mounted! Instance Index: %d, Physical Interface ID (MI): %d\n", instance, itf_num);
 
-            // 1. Build your custom calendar payload targets (e.g. 2029/12/25 13:45:00)
-            build_k86_clock_packet(usb_buffer, 2029, 12, 25, 13, 45, 0);
+        // Target the custom vendor interface block (MI_02)
+        if (itf_num == K86_VENDOR_INTF) {
+            if (!k86_synced) {
+                printf("Target custom configuration layer found. Initiating clock sync...\n");
 
-            // 2. Dispatch data payload directly across the opened Interrupt OUT pipe
-            // TinyUSB formats this as a raw endpoint transfer when report_id is set to 0
-            if (tuh_hid_send_report(dev_addr, instance, 0, usb_buffer, 64)) {
-                printf("Step 1: Clock variable array successfully injected.\n");
-                
-                // 3. Wait a brief cycle to let hardware variables settle, then force redraw
-                sleep_ms(20);
-                build_k86_refresh_packet(usb_buffer);
-                
+                // 1. Build your custom calendar payload targets (e.g. 2029/12/25 13:45:00)
+                build_k86_clock_packet(usb_buffer, 2029, 12, 25, 13, 45, 0);
+
+                // 2. Dispatch data payload directly across the opened Interrupt OUT pipe
                 if (tuh_hid_send_report(dev_addr, instance, 0, usb_buffer, 64)) {
-                    printf("Step 2: LCD Repaint trigger broadcast completed.\n");
-                    k86_synced = true;
+                    printf("Step 1: Clock variable array successfully injected.\n");
+                    
+                    // 3. Wait a brief cycle to let hardware variables settle, then force redraw
+                    sleep_ms(25);
+                    build_k86_refresh_packet(usb_buffer);
+                    
+                    if (tuh_hid_send_report(dev_addr, instance, 0, usb_buffer, 64)) {
+                        printf("Step 2: LCD Repaint trigger broadcast completed.\n");
+                        k86_synced = true;
+                    }
+                } else {
+                    printf("Error: Endpoint pipe transmission rejected.\n");
                 }
-            } else {
-                printf("Error: Endpoint pipe transmission rejected.\n");
             }
         }
-    }	
+    }
 
     // Check if the mounted device is a keyboard
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || itf_protocol == HID_ITF_PROTOCOL_NONE) {
