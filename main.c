@@ -67,6 +67,10 @@ void pico_set_led(bool led_on) {
 #define ATTACK_SHARK_VID  0x342D  
 #define ATTACK_SHARK_PID  0xDCE4  
 
+#define HID_USAGE_CONSUMER_VOLUME_INCREMENT 0x00E9
+#define HID_USAGE_CONSUMER_VOLUME_DECREMENT 0x00EA
+#define HID_USAGE_CONSUMER_MUTE             0x00E2
+
 // M5Stack Midi UART settings
 #define UART_ID uart0
 #define BAUD_RATE 31250
@@ -334,7 +338,7 @@ uint8_t get_arp_template(void);
 void midi_n_stream_write(uint8_t itf, uint8_t cable_num, uint8_t *buffer, uint32_t bufsize);
 void handle_keyboard_events(uint8_t modifier, uint8_t keycode);
 void hid_set_keyboard_leds(uint8_t led_mask);
-void update_k86_lcd(uint8_t dev_addr, uint8_t instance, uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t battery);
+void update_k86_lcd(uint8_t dev_addr, uint8_t instance);
 
 enum {
 	// Balanced size: enough to batch multiple MIDI packets per callback while keeping stack usage small.
@@ -653,16 +657,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 				k86_dev_addr = dev_addr;
 				k86_vendor_instance = instance;
 				k86_connected = true;
-				
-			   // Mock data structure to feed the LCD panel loop
-				uint16_t current_year = 2026;
-				uint8_t current_month = 10;
-				uint8_t current_day   = 19;
-				uint8_t current_hour  = 10;
-				uint8_t current_min   = 32;
-				uint8_t battery_pct   = 88;
-
-				update_k86_lcd(k86_dev_addr, k86_vendor_instance, current_year, current_month, current_day, current_hour, current_min, battery_pct);				
+				update_k86_lcd(k86_dev_addr, k86_vendor_instance);				
 			}			
 		}	
 
@@ -702,6 +697,31 @@ void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
 
 void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len) {
     uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
+	
+    if (dev_addr == k86_dev_addr && instance == k86_vendor_instance) 
+	{
+        if (len >= 2) {
+            // Unpack 16-bit key consumer usage
+            uint16_t consumer_key = ((uint16_t)report[1] << 8) | report[0];
+
+            switch (consumer_key) {
+                case HID_USAGE_CONSUMER_VOLUME_INCREMENT:
+					cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+                    break;
+
+                case HID_USAGE_CONSUMER_VOLUME_DECREMENT:
+					cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
+                    break;
+
+                case HID_USAGE_CONSUMER_MUTE:
+					cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    }	
 
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {
         hid_keyboard_report_t* kbd_report = (hid_keyboard_report_t*) report;
@@ -1514,7 +1534,7 @@ void hid_set_keyboard_leds(uint8_t led_mask) {
     );
 }
 
-void update_k86_lcd(uint8_t dev_addr, uint8_t instance, uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t battery) {
+void update_k86_lcd(uint8_t dev_addr, uint8_t instance) {
     // 64-byte alignment payload required by custom gaming peripheral configurations
     static uint8_t report_buf[64]; 
     memset(report_buf, 0, sizeof(report_buf));
@@ -1523,20 +1543,24 @@ void update_k86_lcd(uint8_t dev_addr, uint8_t instance, uint16_t year, uint8_t m
     report_buf[0] = 0x05; // Feature Report Identifier / Packet Type
     report_buf[1] = 0x5C; // Command Action Opcode: Synchronise Local Time metrics
 
-    // Time/Date variables split into respective payload index tracking
-    report_buf[2] = (uint8_t)(year >> 8);
-    report_buf[3] = (uint8_t)(year & 0xFF);
-    report_buf[4] = month;
-    report_buf[5] = day;
-    report_buf[6] = hour;
-    report_buf[7] = minute;
-    report_buf[8] = battery; 
+    report_buf[2] = 1;
+    report_buf[3] = 2;
+    report_buf[4] = 3;
+    report_buf[5] = 4;
+    report_buf[6] = 5;
+    report_buf[7] = 6;
+    report_buf[8] = 7; 
+    report_buf[9] = 8;
+    report_buf[10] = 9;
+    report_buf[11] = 10;
+    report_buf[12] = 11;
+    report_buf[13] = 12; 	
 
     // Dispatches a dynamic SET_REPORT transaction to the targeted endpoint
     tuh_hid_set_report(
         dev_addr,
         instance,
-        0,                 // Report ID 0 implies reliance on the payload buffer alignment array header
+        0,                 		// Report ID 0 implies reliance on the payload buffer alignment array header
         HID_REPORT_TYPE_OUTPUT, // Explicit enum identification mapping for TinyUSB
         report_buf,
         sizeof(report_buf)
