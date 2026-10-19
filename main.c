@@ -64,8 +64,8 @@ void pico_set_led(bool led_on) {
 
 // Common VID/PID pairings for Attack Shark / Ajazz composite setups:
 // Wired Mode: 0x342D / 0xDCE4. If switched to Mac mode, it may enumerate as 0x05AC (Apple).
-#define ATTACK_SHARK_VID  0x342D  
-#define ATTACK_SHARK_PID  0xDCE4  
+#define ATTACK_SHARK_VID  0x3151
+#define ATTACK_SHARK_PID  0x4015 
 
 #define HID_USAGE_CONSUMER_VOLUME_INCREMENT 0x00E9
 #define HID_USAGE_CONSUMER_VOLUME_DECREMENT 0x00EA
