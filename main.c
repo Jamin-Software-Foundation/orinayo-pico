@@ -1567,20 +1567,29 @@ void update_k86_lcd(uint8_t dev_addr, uint8_t instance) {
     report_buf[12] = 11;
     report_buf[13] = 12; 	
 
-    // --- LOW-LEVEL USB SETUP REQUEST PACKET ---
-    tusb_control_request_t const request = {
-        .bmRequestType = 0x21,                      // Type: Class-specific | Recipient: Interface
-        .bRequest      = 0x09,                      // Request ID: SET_REPORT (0x09)
-        .wValue        = (0x03 << 8) | 0x05,        // High Byte: Report Type Feature (0x03) | Low Byte: Report ID (0x05)
-        .wIndex        = 1,	                // Target Interface Index (Pass your MI_01 instance)
-        .wLength       = sizeof(report_buf)         // Data transfer boundary 
+    // Define the core parameters of the low-level USB setup packet structure
+    static tusb_control_request_t const request = {
+        .bmRequestType = 0x21,                     // Class-specific out transmission targeting interfaces
+        .bRequest      = 0x09,                     // HID Class Command Identifier: SET_REPORT
+        .wValue        = (0x03 << 8) | 0x05,       // High Byte: Feature (0x03) | Low Byte: Report ID (0x05)
+        .wIndex        = 1,			               // Target active configuration layout (Pass MI_01 instance)
+        .wLength       = sizeof(report_buf)        // The bounded tracking size constraint
+    };
+
+    // Assemble the parameters into the unified transfer structure required by Pico SDK 2.2.0
+    tuh_xfer_t xfer = {
+        .daddr       = dev_addr,
+        .ep_addr     = 0,                          // Control requests must utilize Endpoint 0
+        .setup       = &request,
+        .buffer      = report_buf,
+        .complete_cb = lcd_xfer_cb,
+        .user_data   = 0
     };
 
     xfer_complete = false;
 
-    // Send the control request over Endpoint 0 directly to the device architecture
-    tuh_control_xfer(dev_addr, &request, report_buf, lcd_xfer_cb);
-}
+    // Fire the transaction over the tracking layer using the unified pointer
+    tuh_control_xfer(&xfer);
 
 //--------------------------------------------------------------------+
 //
