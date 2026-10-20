@@ -1,6 +1,7 @@
 name: Build Custom Keychron C3 Pro Firmware
 
-on: [push, workflow_dispatch]
+on: 
+  workflow_dispatch:
 
 jobs:
   build:
@@ -12,21 +13,26 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-size: '3.x'
+          python-version: '3.x'
 
-      - name: Install QMK Compiler
+      - name: Install QMK Compiler & Clone Repository
         run: |
           python3 -m pip install qmk
+          # Tells QMK to setup the repository directly inside the runner home directory (~/qmk_firmware)
           qmk setup Keychron/qmk_firmware -b playground --yes
 
       - name: Inject Custom RAW HID Modifications
         run: |
-          # 1. Force add the compilation overrides into the rule mapping configuration
-          echo "RAW_ENABLE = yes" >> qmk_firmware/keyboards/keychron/c3_pro/iso/rules.mk
-          echo "VIA_ENABLE = yes" >> qmk_firmware/keyboards/keychron/c3_pro/iso/rules.mk
+          cd ~/qmk_firmware
           
-          # 2. Append our lightweight packet routing parser directly to the core keymap file
-          cat << 'EOF' >> qmk_firmware/keyboards/keychron/c3_pro/iso/keymaps/default/keymap.c
+          # 1. Force add the compilation overrides into the rule mapping configuration
+          echo "RAW_ENABLE = yes" >> keyboards/keychron/c3_pro/iso/rules.mk
+          echo "VIA_ENABLE = yes" >> keyboards/keychron/c3_pro/iso/rules.mk
+          
+          # 2. Append your lightweight packet routing parser directly to the core keymap file
+          # This extracts the exact index and brightness values from your Pi Pico's array.
+          cat << 'EOF' >> keyboards/keychron/c3_pro/iso/keymaps/default/keymap.c
+
           #ifdef RAW_ENABLE
           #define VIA_CMD_LIGHTING  0x07
           #define VIA_SUB_SET_PIXEL 0x07
@@ -44,11 +50,11 @@ jobs:
 
       - name: Compile Keyboard Binary
         run: |
-          cd qmk_firmware
+          cd ~/qmk_firmware
           qmk compile -kb keychron/c3_pro/iso -km default
 
       - name: Upload Finished Firmware File
         uses: actions/upload-artifact@v4
         with:
           name: keychron_c3_pro_custom_firmware
-          path: qmk_firmware/.build/*.bin
+          path: /home/runner/qmk_firmware/.build/*.bin
