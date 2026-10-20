@@ -717,7 +717,9 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 		debug_blink(2);			
 		printf("USB device mounted successfully!\n");			
 			
-		if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {		
+		if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {	
+			debug_steady(3);
+			
 			hid_keyboard_connected = true;
 			keyboard_dev_addr = dev_addr;
 			keyboard_instance = instance;
@@ -726,20 +728,21 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 			if (vid == 0x1A86 && pid == 0xE026) {			
 				ikkegol_pedal_enabled = true;
 			}
+			else
+
+			if (vid == 0x3434 && pid == 0x0431) {				
+				g_c3_pro.dev_addr  = dev_addr;
+				g_c3_pro.instance  = instance; 
+				g_c3_pro.connected = true;
+				g_c3_pro.is_busy    = false; 			
+			} 							
 		}
 		else
 
 		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {	
 			debug_steady(3);
 			
-			if (vid == 0x3434 && pid == 0x0431) {				
-				g_c3_pro.dev_addr  = dev_addr;
-				g_c3_pro.instance  = instance; 
-				g_c3_pro.connected = true;
-				g_c3_pro.is_busy    = false; 			
-			} else {		
-				hid_gamepad_connected = true;	
-			}
+			hid_gamepad_connected = true;	
 		}	
 
 		enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
@@ -1404,10 +1407,9 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 			gamepad_bluetooth_handle_data();
 		}	
 	
-		//set_led_by_keycode(0x28, 255);	
+		set_led_by_keycode(0x28, 255);	
 		//force_static_lighting_mode();	
-		
-		force_static_lighting_mode();		
+	
 		midi_console_debug(g_c3_pro.connected ? 2 : 3, g_c3_pro.dev_addr, g_c3_pro.instance);			
 
 	}
