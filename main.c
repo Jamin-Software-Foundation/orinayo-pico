@@ -715,9 +715,9 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
     if (vid == 0x3434 && pid == 0x0431) {	
 		c3_pro_counter++;
-        debug_blink(c3_pro_counter);		
+        //debug_blink(c3_pro_counter);		
 		
-        if (c3_pro_counter == 2) {						
+        if (c3_pro_counter == 1) {						
             g_c3_pro.dev_addr  = dev_addr;
             g_c3_pro.instance  = instance; 
             g_c3_pro.connected = true;
@@ -726,7 +726,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
             debug_steady(3); // This will now safely fire on the secondary interface pass!
             return;          // Early exit to protect from clashing bottom logic
         } else {
-            debug_blink(4);  // This will flash exclusively for the typing interface pass (Instance 0)
+           // debug_blink(4);  // This will flash exclusively for the typing interface pass (Instance 0)
         }
     }
 	
@@ -1417,7 +1417,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		//force_static_lighting_mode();	
 		
 		force_static_lighting_mode();		
-		midi_console_debug(g_c3_pro.connected ? 2 : 3, g_c3_pro.dev_addr, g_c3_pro.instance);			
+		midi_console_debug(g_c3_pro.connected ? 2 : 3, g_c3_pro.dev_addr, c3_pro_counter);			
 
 	}
 
