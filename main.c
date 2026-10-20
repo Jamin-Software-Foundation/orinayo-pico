@@ -734,8 +734,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
             g_c3_pro.connected = true;
             g_c3_pro.is_busy = false; 
 			
-			force_static_lighting_mode();
-			//set_led_by_keycode(0x29, 255);			
+			force_static_lighting_mode();			
         }
     }	
 	
@@ -1422,7 +1421,9 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 			mbut0 = 1;
 			finished_processing = true;		
 			gamepad_bluetooth_handle_data();
-		}			
+		}	
+		
+		set_led_by_keycode(0x28, 255);		
 	}
 
 	if (keycode == 42) {											// BACKSPACE - fill
