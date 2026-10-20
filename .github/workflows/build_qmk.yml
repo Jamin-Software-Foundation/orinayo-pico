@@ -25,12 +25,11 @@ jobs:
         run: |
           cd ~/qmk_firmware
           
-          # 1. Force add the compilation overrides into the rule mapping configuration
+          # 1. Force add the compilation overrides into your exact ANSI RGB rule profile
           echo "RAW_ENABLE = yes" >> keyboards/keychron/c3_pro/ansi/rgb/rules.mk
           echo "VIA_ENABLE = yes" >> keyboards/keychron/c3_pro/ansi/rgb/rules.mk
           
-          # 2. Append your lightweight packet routing parser directly to the core keymap file
-          # This extracts the exact index and brightness values from your Pi Pico's array.
+          # 2. Append the corrected QMK RGB listener directly to the correct ANSI RGB keymap file
           cat << 'EOF' >> keyboards/keychron/c3_pro/ansi/rgb/keymaps/default/keymap.c
 
           #ifdef RAW_ENABLE
@@ -38,10 +37,14 @@ jobs:
           #define VIA_SUB_SET_PIXEL 0x07
           void raw_hid_receive_kb(uint8_t *data, uint8_t length) {
               if (data[0] == VIA_CMD_LIGHTING && data[1] == VIA_SUB_SET_PIXEL) {
-                  uint8_t led_index = data[2];
-                  uint8_t brightness = data[3];
-                  if (led_index < BACKLIGHT_LED_COUNT) {
-                      backlight_set_value_at_index(led_index, brightness);
+                  uint8_t led_index  = data[2];
+                  uint8_t brightness = data[3]; // Acts as your master Red intensity
+                  
+                  // Use the authentic, built-in QMK function for RGB layouts.
+                  // Since your C3 Pro has Red LEDs, passing (brightness, 0, 0) 
+                  // scales the Red channel duty-cycle perfectly.
+                  if (led_index < RGB_MATRIX_LED_COUNT) {
+                      rgb_matrix_set_color(led_index, brightness, 0, 0);
                   }
               }
           }
@@ -51,7 +54,9 @@ jobs:
       - name: Compile Keyboard Binary
         run: |
           cd ~/qmk_firmware
+          # Update target command to build the exact ANSI RGB firmware build
           qmk compile -kb keychron/c3_pro/ansi/rgb -km default
+
 
       - name: Upload Finished Firmware File
         uses: actions/upload-artifact@v4
