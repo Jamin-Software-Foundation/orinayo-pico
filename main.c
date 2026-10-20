@@ -705,7 +705,11 @@ void tuh_midi_umount_cb(uint8_t idx) {
 void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len) {
     uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
-
+	midi_console_debug(1, 1, 1);
+	
+	// HID\VID_3434&PID_0431&REV_0102&MI_00
+	// HID\VID_3434&PID_0431&REV_0102&MI_02&Col04	
+		
 	uint16_t vid, pid;
 	tuh_vid_pid_get(dev_addr, &vid, &pid);
 
@@ -2616,7 +2620,7 @@ void midi_console_debug(uint8_t value1, uint8_t value2, uint8_t value3) {
 	msg[0] = value1;
 	msg[1] = value2;
 	msg[2] = value3;	
-	midi_n_stream_write(0, 0, msg, 3);		
+	tud_midi_n_stream_write(0, 0, msg, 3);	
 }
 
 void midi_send_control_change(uint8_t command, uint8_t controller, uint8_t value) {
