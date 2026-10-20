@@ -1,0 +1,54 @@
+name: Build Custom Keychron C3 Pro Firmware
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-size: '3.x'
+
+      - name: Install QMK Compiler
+        run: |
+          python3 -m pip install qmk
+          qmk setup Keychron/qmk_firmware -b playground --yes
+
+      - name: Inject Custom RAW HID Modifications
+        run: |
+          # 1. Force add the compilation overrides into the rule mapping configuration
+          echo "RAW_ENABLE = yes" >> qmk_firmware/keyboards/keychron/c3_pro/iso/rules.mk
+          echo "VIA_ENABLE = yes" >> qmk_firmware/keyboards/keychron/c3_pro/iso/rules.mk
+          
+          # 2. Append our lightweight packet routing parser directly to the core keymap file
+          cat << 'EOF' >> qmk_firmware/keyboards/keychron/c3_pro/iso/keymaps/default/keymap.c
+          #ifdef RAW_ENABLE
+          #define VIA_CMD_LIGHTING  0x07
+          #define VIA_SUB_SET_PIXEL 0x07
+          void raw_hid_receive_kb(uint8_t *data, uint8_t length) {
+              if (data[0] == VIA_CMD_LIGHTING && data[1] == VIA_SUB_SET_PIXEL) {
+                  uint8_t led_index = data[2];
+                  uint8_t brightness = data[3];
+                  if (led_index < BACKLIGHT_LED_COUNT) {
+                      backlight_set_value_at_index(led_index, brightness);
+                  }
+              }
+          }
+          #endif
+          EOF
+
+      - name: Compile Keyboard Binary
+        run: |
+          cd qmk_firmware
+          qmk compile -kb keychron/c3_pro/iso -km default
+
+      - name: Upload Finished Firmware File
+        uses: actions/upload-artifact@v4
+        with:
+          name: keychron_c3_pro_custom_firmware
+          path: qmk_firmware/.build/*.bin
