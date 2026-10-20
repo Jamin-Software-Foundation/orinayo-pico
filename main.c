@@ -733,11 +733,6 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
         if (found_qmk_raw_usage_page) {				
 			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
             printf("Success! Target Keychron C3 Pro VIA Interface isolated on Instance %d\n", instance);
-            
-            g_c3_pro.dev_addr = dev_addr;
-            g_c3_pro.instance = instance; // This is now guaranteed to point to MI_02
-            g_c3_pro.connected = true;
-            g_c3_pro.is_busy = false; 			
         }
     }	
 	
@@ -759,7 +754,12 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
 		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {	
 
-			if (vid != 0x3434) {							// Not a Keychron C3 Pro
+			if (vid == 0x3434) {							// Keychron C3 Pro
+				g_c3_pro.dev_addr = dev_addr;
+				g_c3_pro.instance = instance; 
+				g_c3_pro.connected = true;
+				g_c3_pro.is_busy = false; 				
+			} else {
 				hid_gamepad_connected = true;	
 			}
 		}	
