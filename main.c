@@ -714,27 +714,38 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	tuh_vid_pid_get(dev_addr, &vid, &pid);
 
     if (vid == 0x3434 && pid == 0x0431) {	
-        //debug_blink(2);		
-		
-        // Isolate the lighting engine by descriptor size footprint.
-        // The main typing board descriptor is large (>60 bytes). 
-        // The RAW lighting interface report descriptor is tiny (<40 bytes).		
+        debug_blink(2);		
         
-        if (desc_len > 0 && desc_len < 40) {						
-            printf("Success! Target Keychron C3 Pro VIA Interface isolated on Instance %d\n", instance);
+        bool is_raw_hid_channel = false;
+
+        // Verify the descriptor payload actually contains data before running our loop
+        if (desc_len > 0 && desc_report != NULL) {
+            // Loop through the entire descriptor block to hunt down the 0xFF60 signature
+            for (uint16_t i = 0; i < desc_len - 2; i++) {
+                if (desc_report[i] == 0x06 && desc_report[i+1] == 0x60 && desc_report[i+2] == 0xFF) {
+                    is_raw_hid_channel = true;
+                    break;
+                }
+            }
+        }
+
+        // If the signature was found, this is officially the lighting channel!
+        if (is_raw_hid_channel) {						
+            printf("Success! Isolated Keychron C3 Pro VIA Interface via Signature on Instance %d\n", instance);
 		
             g_c3_pro.dev_addr = dev_addr;
             g_c3_pro.instance = instance; 
             g_c3_pro.connected = true;
             g_c3_pro.is_busy = false; 				
             
-            debug_steady(3); // This will now fire cleanly on the lighting pass!
+            debug_steady(3); // This will now fire cleanly when the signature pass crosses!
             return;          // Early exit so it doesn't get hijacked by the gamepad logic below
         } else {
-            // This is the standard typing interface pass (Instance 0)
+            // This is the standard typing interface pass (blinks 4 times)
             debug_blink(4);				
         }
     }	
+	
 	
 	
     // Check if the mounted device is a keyboard
