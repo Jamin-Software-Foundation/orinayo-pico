@@ -705,7 +705,7 @@ void tuh_midi_umount_cb(uint8_t idx) {
 
 void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len) {
     uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
-	debug_blink(1);	
+	//debug_blink(1);	
 	
 	// HID\VID_3434&PID_0431&REV_0102&MI_00
 	// HID\VID_3434&PID_0431&REV_0102&MI_02&Col04	
@@ -714,11 +714,13 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	tuh_vid_pid_get(dev_addr, &vid, &pid);
 
     if (vid == 0x3434 && pid == 0x0431) {	
-        debug_blink(2);		
+        //debug_blink(2);		
+		
+        // Isolate the lighting engine by descriptor size footprint.
+        // The main typing board descriptor is large (>60 bytes). 
+        // The RAW lighting interface report descriptor is tiny (<40 bytes).		
         
-        // Isolate the lighting engine by simply screening out the typing interface.
-        // If it's a Keychron C3 Pro interface, and it has NO boot protocol, it is your VIA RAW channel!
-        if (itf_protocol == HID_ITF_PROTOCOL_NONE) {						
+        if (desc_len > 0 && desc_len < 40) {						
             printf("Success! Target Keychron C3 Pro VIA Interface isolated on Instance %d\n", instance);
 		
             g_c3_pro.dev_addr = dev_addr;
