@@ -345,6 +345,7 @@ uint8_t previous_guitar_note = 0;
 bool midi_keyboard_connected = false;
 uint8_t keyboard_dev_addr;
 uint8_t keyboard_instance;
+uint8_t c3_pro_counter = 0;
 
 void config_guitar(uint8_t mode);
 void send_ble_midi(uint8_t* midi_data, int len);
@@ -444,29 +445,10 @@ bool is_wav_trigger_connected() {
 //--------------------------------------------------------------------+
 
 void core1_main() {
-	sleep_ms(1000);
 	tuh_init(BOARD_TUH_RHPORT);
-	
-    uint32_t last_scan_check = 0;	
 
 	while (true) {
-		tuh_task(); // tinyusb host task
-		
-        // === ENUMERATION KICKSTART ENGINE ===
-        // If the typing keyboard is mounted, but the lighting engine missed its pass,
-        // periodically poke the host controller to rescan for unmounted endpoints.
-		
-        if (hid_keyboard_connected && !g_c3_pro.connected) {
-            uint32_t now = board_millis();
-			
-            if (now - last_scan_check > 2000) { // Check every 2 seconds
-                last_scan_check = now;
-                
-                // Forces the low-level PIO engine to flush missed setups
-                // and rerun descriptors for remaining MI_XX interfaces
-                tuh_hid_receive_report(keyboard_dev_addr, keyboard_instance); 
-            }
-        }		
+		tuh_task(); // tinyusb host task		
 	}
 }
 
@@ -727,27 +709,15 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	
 	// HID\VID_3434&PID_0431&REV_0102&MI_00
 	// HID\VID_3434&PID_0431&REV_0102&MI_02&Col04	
-		
+
 	uint16_t vid, pid;
 	tuh_vid_pid_get(dev_addr, &vid, &pid);
 
     if (vid == 0x3434 && pid == 0x0431) {	
-        //debug_blink(2);		
-        
-        bool is_lighting_channel = false;
-
-        // Perform our safe direct descriptor memory scan
-        if (desc_len >= 3 && desc_report != NULL) {
-            for (uint16_t i = 0; i < desc_len - 2; i++) {
-                if (desc_report[i] == 0x06 && desc_report[i+1] == 0x60 && desc_report[i+2] == 0xFF) {
-                    is_lighting_channel = true;
-                    break;
-                }
-            }
-        }
-
-        // Catch block: If it carries the signature, lock it in!
-        if (is_lighting_channel) {						
+		c3_pro_counter++;
+        debug_blink(c3_pro_counter);		
+		
+        if (c3_pro_counter == 2) {						
             g_c3_pro.dev_addr  = dev_addr;
             g_c3_pro.instance  = instance; 
             g_c3_pro.connected = true;
@@ -794,6 +764,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
 void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
 	//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
+	c3_pro_counter = 0;
 	
     if (dev_addr == g_c3_pro.dev_addr && instance == g_c3_pro.instance) {
         g_c3_pro.connected = false;
