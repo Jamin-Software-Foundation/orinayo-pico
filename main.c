@@ -714,39 +714,33 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	tuh_vid_pid_get(dev_addr, &vid, &pid);
 
     if (vid == 0x3434 && pid == 0x0431) {	
-        debug_blink(2);		
+        //debug_blink(2);		
         
-        bool is_raw_hid_channel = false;
+        bool is_lighting_channel = false;
 
-        // Verify the descriptor payload actually contains data before running our loop
-        if (desc_len > 0 && desc_report != NULL) {
-            // Loop through the entire descriptor block to hunt down the 0xFF60 signature
+        // Perform our safe direct descriptor memory scan
+        if (desc_len >= 3 && desc_report != NULL) {
             for (uint16_t i = 0; i < desc_len - 2; i++) {
                 if (desc_report[i] == 0x06 && desc_report[i+1] == 0x60 && desc_report[i+2] == 0xFF) {
-                    is_raw_hid_channel = true;
+                    is_lighting_channel = true;
                     break;
                 }
             }
         }
 
-        // If the signature was found, this is officially the lighting channel!
-        if (is_raw_hid_channel) {						
-            printf("Success! Isolated Keychron C3 Pro VIA Interface via Signature on Instance %d\n", instance);
-		
-            g_c3_pro.dev_addr = dev_addr;
-            g_c3_pro.instance = instance; 
+        // Catch block: If it carries the signature, lock it in!
+        if (is_lighting_channel) {						
+            g_c3_pro.dev_addr  = dev_addr;
+            g_c3_pro.instance  = instance; 
             g_c3_pro.connected = true;
-            g_c3_pro.is_busy = false; 				
+            g_c3_pro.is_busy    = false; 				
             
-            debug_steady(3); // This will now fire cleanly when the signature pass crosses!
-            return;          // Early exit so it doesn't get hijacked by the gamepad logic below
+            debug_steady(3); // This will now safely fire on the secondary interface pass!
+            return;          // Early exit to protect from clashing bottom logic
         } else {
-            // This is the standard typing interface pass (blinks 4 times)
-            debug_blink(4);				
+            debug_blink(4);  // This will flash exclusively for the typing interface pass (Instance 0)
         }
-    }	
-	
-	
+    }
 	
     // Check if the mounted device is a keyboard
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || itf_protocol == HID_ITF_PROTOCOL_NONE) {
