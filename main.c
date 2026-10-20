@@ -732,7 +732,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
         // Step 3: Only mount this instance if it physically contains the 0xFF60 signature
 		
-        if (found_qmk_raw_usage_page) {						
+        if (found_qmk_raw_usage_page || instance == 2) {						
             printf("Success! Target Keychron C3 Pro VIA Interface isolated on Instance %d\n", instance);
 			debug_steady(3);				
 		
