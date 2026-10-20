@@ -412,6 +412,7 @@ void midi_n_stream_write(uint8_t itf, uint8_t cable_num, uint8_t *buffer, uint32
 void handle_keyboard_events(uint8_t modifier, uint8_t keycode);
 void hid_set_keyboard_leds(uint8_t led_mask);
 bool set_led_by_keycode(uint8_t hid_keycode, uint8_t brightness);
+bool force_static_lighting_mode(void);
 
 enum {
 	// Balanced size: enough to batch multiple MIDI packets per callback while keeping stack usage small.
@@ -731,9 +732,10 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
             g_c3_pro.dev_addr = dev_addr;
             g_c3_pro.instance = instance; // This is now guaranteed to point to MI_02
             g_c3_pro.connected = true;
-            g_v6.is_busy = false; 
+            g_c3_pro.is_busy = false; 
 			
-			set_led_by_keycode(0x29, 255);			
+			force_static_lighting_mode();
+			//set_led_by_keycode(0x29, 255);			
         }
     }	
 	
@@ -1652,6 +1654,24 @@ bool set_led_by_keycode(uint8_t hid_keycode, uint8_t brightness) {
         g_c3_pro.is_busy = false; 
     }
     return result;
+}
+
+bool force_static_lighting_mode(void) {
+	/**
+	 * Overrides the internal Keychron animation profile, forcing the keyboard's 
+	 * internal chip to drop into Static Mode (Effect 0) so your custom key updates take over.
+	*/
+ 
+    if (!g_c3_pro.connected || g_c3_pro.is_busy) return false;
+
+    uint8_t tx_packet[VIA_RAW_REPORT_SIZE] = {0};
+
+    tx_packet[0] = VIA_CMD_LIGHTING;      // 0x07
+    tx_packet[1] = 0x02;                  // VIA Sub-command: Set Lighting Effect/Mode
+    tx_packet[2] = 0x00;                  // Effect ID 0: Static Solid / Custom Matrix Mode
+
+    g_c3_pro.is_busy = true;
+    return tuh_hid_set_report(g_c3_pro.dev_addr, g_c3_pro.instance, 0, HID_REPORT_TYPE_OUTPUT, tx_packet, VIA_RAW_REPORT_SIZE);
 }
 
 //--------------------------------------------------------------------+
