@@ -345,7 +345,6 @@ uint8_t previous_guitar_note = 0;
 bool midi_keyboard_connected = false;
 uint8_t keyboard_dev_addr;
 uint8_t keyboard_instance;
-uint8_t c3_pro_counter = 0;
 
 void config_guitar(uint8_t mode);
 void send_ble_midi(uint8_t* midi_data, int len);
@@ -713,23 +712,6 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	uint16_t vid, pid;
 	tuh_vid_pid_get(dev_addr, &vid, &pid);
 
-    if (vid == 0x3434 && pid == 0x0431) {	
-		c3_pro_counter++;
-        //debug_blink(c3_pro_counter);		
-		
-        if (c3_pro_counter == 2) {						
-            g_c3_pro.dev_addr  = dev_addr;
-            g_c3_pro.instance  = instance; 
-            g_c3_pro.connected = true;
-            g_c3_pro.is_busy    = false; 				
-            
-            debug_steady(3); // This will now safely fire on the secondary interface pass!
-            return;          // Early exit to protect from clashing bottom logic
-        } else {
-           // debug_blink(4);  // This will flash exclusively for the typing interface pass (Instance 0)
-        }
-    }
-	
     // Check if the mounted device is a keyboard
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || itf_protocol == HID_ITF_PROTOCOL_NONE) {
 		printf("USB device mounted successfully!\n");			
@@ -742,6 +724,14 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
 			if (vid == 0x1A86 && pid == 0xE026) {			
 				ikkegol_pedal_enabled = true;
+			}
+			else
+				
+			if (vid == 0x3434 && pid == 0x0431) {				
+				g_c3_pro.dev_addr  = dev_addr;
+				g_c3_pro.instance  = instance; 
+				g_c3_pro.connected = true;
+				g_c3_pro.is_busy    = false; 			
 			}
 		}
 		else
@@ -764,7 +754,6 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
 void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
 	//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
-	c3_pro_counter = 0;
 	
     if (dev_addr == g_c3_pro.dev_addr && instance == g_c3_pro.instance) {
         g_c3_pro.connected = false;
@@ -1417,7 +1406,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		//force_static_lighting_mode();	
 		
 		force_static_lighting_mode();		
-		midi_console_debug(g_c3_pro.connected ? 2 : 3, g_c3_pro.dev_addr, c3_pro_counter);			
+		midi_console_debug(g_c3_pro.connected ? 2 : 3, g_c3_pro.dev_addr, g_c3_pro.instance);			
 
 	}
 
