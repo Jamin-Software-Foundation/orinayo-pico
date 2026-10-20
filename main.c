@@ -705,7 +705,6 @@ void tuh_midi_umount_cb(uint8_t idx) {
 void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len) {
     uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
-	midi_console_debug(1, 1, 1);
 	
 	// HID\VID_3434&PID_0431&REV_0102&MI_00
 	// HID\VID_3434&PID_0431&REV_0102&MI_02&Col04	
@@ -714,8 +713,6 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	tuh_vid_pid_get(dev_addr, &vid, &pid);
 
     if (vid == 0x3434 && pid == 0x0431) {
-		midi_console_debug(2, 2, 2);
-		
         // Step 1: Initialize helper search variables
         bool found_qmk_raw_usage_page = false;
 
@@ -734,7 +731,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
         // Step 3: Only mount this instance if it physically contains the 0xFF60 signature
 		
         if (found_qmk_raw_usage_page) {
-			midi_console_debug(3, 3, 3);			
+			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
             printf("Success! Target Keychron C3 Pro VIA Interface isolated on Instance %d\n", instance);
             
             g_c3_pro.dev_addr = dev_addr;
@@ -742,8 +739,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
             g_c3_pro.connected = true;
             g_c3_pro.is_busy = false; 
 			
-			force_static_lighting_mode();	
-			midi_console_debug(4,4,4);			
+			force_static_lighting_mode();			
         }
     }	
 	
@@ -1432,7 +1428,9 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 			gamepad_bluetooth_handle_data();
 		}	
 		
-		set_led_by_keycode(0x28, 255);		
+		set_led_by_keycode(0x28, 255);	
+		force_static_lighting_mode();	
+		midi_console_debug(1, 1, 1);
 	}
 
 	if (keycode == 42) {											// BACKSPACE - fill
