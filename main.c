@@ -704,7 +704,7 @@ void tuh_midi_umount_cb(uint8_t idx) {
 
 void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len) {
     uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
-	//debug_blink(1);	
+	debug_blink(1);	
 	
 	// HID\VID_3434&PID_0431&REV_0102&MI_00
 	// HID\VID_3434&PID_0431&REV_0102&MI_02&Col04	
@@ -714,6 +714,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
     // Check if the mounted device is a keyboard
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || itf_protocol == HID_ITF_PROTOCOL_NONE) {
+		debug_blink(2);			
 		printf("USB device mounted successfully!\n");			
 			
 		if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {		
@@ -725,19 +726,20 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 			if (vid == 0x1A86 && pid == 0xE026) {			
 				ikkegol_pedal_enabled = true;
 			}
-			else
-				
+		}
+		else
+
+		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {	
+			debug_steady(3);
+			
 			if (vid == 0x3434 && pid == 0x0431) {				
 				g_c3_pro.dev_addr  = dev_addr;
 				g_c3_pro.instance  = instance; 
 				g_c3_pro.connected = true;
 				g_c3_pro.is_busy    = false; 			
+			} else {		
+				hid_gamepad_connected = true;	
 			}
-		}
-		else
-
-		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {	
-			hid_gamepad_connected = true;	
 		}	
 
 		enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
