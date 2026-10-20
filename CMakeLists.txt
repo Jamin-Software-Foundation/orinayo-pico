@@ -85,6 +85,13 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     CFG_TUH_RPI_PIO_USB=1
     PIO_USB_USE_TINYUSB=1
     PICO_DEFAULT_PIO_USB_DP_PIN=17	
+	
+	# This injects your tusb_config overrides directly into the global compiler flags,
+	# forcing the TinyUSB library to see them inside the cloud runner environment	
+    CFG_TUH_HID=4
+    CFG_TUH_HID_MAX_INTERFACE=4
+    CFG_TUH_ENDPOINT_MAX=32
+    CFG_TUH_DEVICE_MAX=8	
 )
 # PicoTool binary information
 pico_set_program_name(${PROJECT_NAME} ${PROJECT_NAME})
