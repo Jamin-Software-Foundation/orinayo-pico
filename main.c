@@ -371,6 +371,7 @@ void midi_modx_arp(bool on);
 void midi_modx_arp_hold(uint8_t part, bool on);
 void midi_modx_arp_realtime(uint8_t part, bool on);
 void midi_modx_arp_octave(uint8_t octave);
+void midi_console_debug(uint8_t value1, uint8_t value2, uint8_t value3);
 void dream_set_delay(int tempo);
 void sampler_midi_note(uint8_t command, uint8_t note, uint8_t velocity);
 void config_mpc_sample();
@@ -709,6 +710,8 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	tuh_vid_pid_get(dev_addr, &vid, &pid);
 
     if (vid == 0x3434 && pid == 0x0431) {
+		midi_console_debug(2, 2, 2);
+		
         // Step 1: Initialize helper search variables
         bool found_qmk_raw_usage_page = false;
 
@@ -727,6 +730,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
         // Step 3: Only mount this instance if it physically contains the 0xFF60 signature
 		
         if (found_qmk_raw_usage_page) {
+			midi_console_debug(3, 3, 3);			
             printf("Success! Target Keychron C3 Pro VIA Interface isolated on Instance %d\n", instance);
             
             g_c3_pro.dev_addr = dev_addr;
@@ -734,7 +738,8 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
             g_c3_pro.connected = true;
             g_c3_pro.is_busy = false; 
 			
-			force_static_lighting_mode();			
+			force_static_lighting_mode();	
+			midi_console_debug(4,4,4);			
         }
     }	
 	
@@ -2604,6 +2609,14 @@ void midi_send_note(uint8_t command, uint8_t note, uint8_t velocity) {
 	msg[2] = velocity * (midi_guitar_volume / 127);	
 		
 	midi_n_stream_write(0, 0, msg, 3);			
+}
+
+void midi_console_debug(uint8_t value1, uint8_t value2, uint8_t value3) {
+	uint8_t msg[3];		
+	msg[0] = value1;
+	msg[1] = value2;
+	msg[2] = value3;	
+	midi_n_stream_write(0, 0, msg, 3);		
 }
 
 void midi_send_control_change(uint8_t command, uint8_t controller, uint8_t value) {
