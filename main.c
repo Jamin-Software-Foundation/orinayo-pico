@@ -502,7 +502,7 @@ int main() {
     while (true) {
 		tud_task(); // tinyusb device task		
 		
-		if (enable_midi_drums) cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);			
+		//if (enable_midi_drums) cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);			
 		
 		while (tud_midi_available()) {
 			uint8_t buffer[4] = {0};			
@@ -516,7 +516,7 @@ int main() {
 			uart_write_blocking(UART_ID, buffer, 4);
 			uart_tx_wait_blocking(UART_ID); 			
 		
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);				
+			//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);				
 		}
 
 		while (uart_is_readable(UART_ID)) {
@@ -660,7 +660,7 @@ void tuh_mount_cb(uint8_t daddr) {
 
     // Request the Product String (the device name)
     // 0x0409 is the Language ID for English (US)
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);	
+	//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);	
     tuh_descriptor_get_product_string(daddr, 0x0409, temp_buf, sizeof(temp_buf), name_received_cb, 0);
 }
 
@@ -670,7 +670,7 @@ void tuh_umount_cb(uint8_t daddr) {
 		launchkey_connected = false;
 		launchkey_daw_mode = false;
 	}
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
+	//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
 }
 
 void tuh_midi_mount_cb(uint8_t idx, const tuh_midi_mount_cb_t* mount_cb_data) {
@@ -700,7 +700,7 @@ void tuh_midi_umount_cb(uint8_t idx) {
 		launchkey_daw_mode    = false;
 		irig_pro_connected	  = false;
 	}
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+	//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
 }
 
 void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len) {
@@ -756,15 +756,16 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {	
 			debug_blink(3);	
 				
-			if (vid == 0x3434) {							// Keychron C3 Pro
+			//if (vid == 0x3434) {							// Keychron C3 Pro
+			if (instance == 2) {
 				debug_blink(4);	
 		
 				g_c3_pro.dev_addr = dev_addr;
 				g_c3_pro.instance = instance; 
 				g_c3_pro.connected = true;
 				g_c3_pro.is_busy = false; 				
-			} else {
-				hid_gamepad_connected = true;	
+			//} else {
+			//	hid_gamepad_connected = true;	
 			}
 		}	
 
@@ -781,7 +782,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 }
 
 void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
+	//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
 	
     if (dev_addr == g_c3_pro.dev_addr && instance == g_c3_pro.instance) {
         g_c3_pro.connected = false;
@@ -855,7 +856,7 @@ void tuh_hid_set_report_complete_cb(uint8_t dev_addr, uint8_t instance, uint8_t 
 
 void process_gamepad_report(uint8_t const* report, uint16_t len) {
 	finished_processing = true;	
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, keyboard_flash_led);	
+	//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, keyboard_flash_led);	
 	keyboard_flash_led = !keyboard_flash_led;		
 	
 	green = 1; red = 1; yellow = 1; blue = 1; orange = 1;
@@ -2254,7 +2255,7 @@ void tuh_midi_rx_cb(uint8_t idx, uint32_t xferred_bytes) {
 			}
 		}
 	
-		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
+		//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
 	}
 }
 
@@ -2264,11 +2265,11 @@ void tuh_midi_tx_cb(uint8_t idx, uint32_t xferred_bytes) {
 }
 
 void tud_mount_cb(void) {
-  cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+  //cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
 }
 
 void tud_umount_cb(void) {
-  cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
+  //cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
 }
 
 void tud_suspend_cb(bool remote_wakeup_en) {
@@ -2276,12 +2277,12 @@ void tud_suspend_cb(bool remote_wakeup_en) {
 	// remote_wakeup_en : if host allow us  to perform remote wakeup
 	// Within 7ms, device must draw an average of current less than 2.5 mA from bus	
   (void) remote_wakeup_en;
-  cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
+  //cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
 }
 
 void tud_resume_cb(void) {
 	// Invoked when usb bus is resumed	
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+	//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
 }
 
 //--------------------------------------------------------------------+
