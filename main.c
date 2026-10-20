@@ -446,9 +446,27 @@ bool is_wav_trigger_connected() {
 void core1_main() {
 	sleep_ms(1000);
 	tuh_init(BOARD_TUH_RHPORT);
+	
+    uint32_t last_scan_check = 0;	
 
 	while (true) {
 		tuh_task(); // tinyusb host task
+		
+        // === ENUMERATION KICKSTART ENGINE ===
+        // If the typing keyboard is mounted, but the lighting engine missed its pass,
+        // periodically poke the host controller to rescan for unmounted endpoints.
+		
+        if (hid_keyboard_connected && !g_c3_pro.connected) {
+            uint32_t now = board_millis();
+			
+            if (now - last_scan_check > 2000) { // Check every 2 seconds
+                last_scan_check = now;
+                
+                // Forces the low-level PIO engine to flush missed setups
+                // and rerun descriptors for remaining MI_XX interfaces
+                tuh_hid_receive_report(keyboard_dev_addr, keyboard_instance); 
+            }
+        }		
 	}
 }
 
