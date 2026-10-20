@@ -62,10 +62,83 @@ void pico_set_led(bool led_on) {
 #endif
 }
 
-// Define Attack Shark K86 Hardware Targets
-#define K86_VID          0x3151
-#define K86_PID_WIRED    0x4015
-#define K86_VENDOR_INTF  2       // Interface 2 is the configuration port
+// Define Keychron C3 Pro Hardware Targets
+#define VIA_RAW_REPORT_SIZE  32       
+#define VIA_CMD_LIGHTING     0x07 
+#define VIA_SUB_SET_PIXEL    0x07 
+
+// Global tracking structure for active Keychron C3 Pro USB host connection
+typedef struct {
+    uint8_t dev_addr;
+    uint8_t instance;
+    bool connected;
+    bool is_busy;
+} keychron_host_t;
+
+static keychron_host_t g_c3_pro = {0};
+
+/**
+ * USB HID Keycode to Physical LED Index translation table.
+ * Array index = Standard USB HID Keycode.
+ * Stored Value = Keychron C3 Pro LED Matrix ID.
+ * (A value of 255 represents an unmapped or invalid keycode slot).
+ */
+static const uint8_t hid_to_led_map[256] = {
+    [0x00] = 255, // No Event
+    [0x04] = 31,  // A
+    [0x05] = 45,  // B
+    [0x06] = 43,  // C
+    [0x07] = 33,  // D
+    [0x08] = 18,  // E
+    [0x09] = 34,  // F
+    [0x0A] = 35,  // G
+    [0x0B] = 36,  // H
+    [0x0C] = 23,  // I
+    [0x0D] = 37,  // J
+    [0x0E] = 38,  // K
+    [0x0F] = 39,  // L
+    [0x10] = 46,  // M
+    [0x11] = 47,  // N
+    [0x12] = 24,  // O
+    [0x13] = 25,  // P
+    [0x14] = 16,  // Q
+    [0x15] = 19,  // R
+    [0x16] = 32,  // S
+    [0x17] = 20,  // T
+    [0x18] = 22,  // U
+    [0x19] = 44,  // V
+    [0x1A] = 17,  // W
+    [0x1B] = 42,  // X
+    [0x1C] = 21,  // Y
+    [0x1D] = 41,  // Z
+    
+    // Top Row Numbers
+    [0x1E] = 1,   // 1
+    [0x1F] = 2,   // 2
+    [0x20] = 3,   // 3
+    [0x21] = 4,   // 4
+    [0x22] = 5,   // 5
+    [0x23] = 6,   // 6
+    [0x24] = 7,   // 7
+    [0x25] = 8,   // 8
+    [0x26] = 9,   // 9
+    [0x27] = 10,  // 0
+    
+    // Core Layout Control
+    [0x28] = 40,  // ENTER (The value you requested)
+    [0x29] = 0,   // ESC
+    [0x2A] = 13,  // BACKSPACE
+    [0x2B] = 15,  // TAB
+    [0x2C] = 49,  // SPACEBAR
+    
+    // Add peripheral navigation codes for TKL layout boundaries
+    [0x4A] = 70,  // HOME
+    [0x4D] = 71,  // END
+    [0x50] = 85,  // LEFT ARROW
+    [0x4F] = 86,  // RIGHT ARROW
+    [0x52] = 84,  // UP ARROW
+    [0x51] = 83,  // DOWN ARROW
+};
 
 // M5Stack Midi UART settings
 #define UART_ID uart0
@@ -330,6 +403,7 @@ uint8_t get_arp_template(void);
 void midi_n_stream_write(uint8_t itf, uint8_t cable_num, uint8_t *buffer, uint32_t bufsize);
 void handle_keyboard_events(uint8_t modifier, uint8_t keycode);
 void hid_set_keyboard_leds(uint8_t led_mask);
+bool set_led_by_keycode(uint8_t hid_keycode, uint8_t brightness);
 
 enum {
 	// Balanced size: enough to batch multiple MIDI packets per callback while keeping stack usage small.
@@ -624,7 +698,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
 	uint16_t vid, pid;
 	tuh_vid_pid_get(dev_addr, &vid, &pid);	
-
+	
     // Check if the mounted device is a keyboard
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || itf_protocol == HID_ITF_PROTOCOL_NONE) {
 		printf("USB device mounted successfully!\n");	
@@ -642,7 +716,18 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 		else
 
 		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {	
-			hid_gamepad_connected = true;			
+
+			if (vid == 0x3434) {
+				g_c3_pro.dev_addr = dev_addr;
+				g_c3_pro.instance = instance;
+				g_c3_pro.connected = true;
+				g_c3_pro.is_busy = false;
+
+				set_led_by_keycode(0x28, 255);
+				
+			} else {
+				hid_gamepad_connected = true;	
+			}
 		}	
 
 		enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
@@ -658,7 +743,12 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 }
 
 void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
-    printf("USB device unmounted.\n");			
+	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
+	
+    if (dev_addr == g_c3_pro.dev_addr && instance == g_c3_pro.instance) {
+        g_c3_pro.connected = false;
+        g_c3_pro.is_busy = false;
+    }	
 	
 	if (hid_gamepad_connected) {
 		hid_gamepad_connected = false;
@@ -668,9 +758,7 @@ void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
 		hid_keyboard_connected = false;
 		keyboard_dev_addr = dev_addr;
 		keyboard_instance = instance;
-	}
-		
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
+	}	
 }
 
 void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len) {
@@ -713,6 +801,12 @@ uint16_t tud_hid_get_report_cb(uint8_t instance, uint8_t report_id, hid_report_t
 
 void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_t report_type, uint8_t const* buffer, uint16_t bufsize) {
     (void) instance; (void) report_id; (void) report_type; (void) buffer; (void) bufsize;
+}
+
+void tuh_hid_set_report_complete_cb(uint8_t dev_addr, uint8_t instance, uint8_t report_id, uint8_t report_type, uint16_t num_bytes) {
+    if (dev_addr == g_c3_pro.dev_addr && instance == g_c3_pro.instance) {
+        g_c3_pro.is_busy = false; 
+    }
 }
 
 //--------------------------------------------------------------------+
@@ -1485,6 +1579,49 @@ void hid_set_keyboard_leds(uint8_t led_mask) {
         &report_data,           // Pointer to our data byte
         1                       // Length of report data (1 byte)
     );
+}
+
+bool set_led_by_keycode(uint8_t hid_keycode, uint8_t brightness) {
+	/**
+	 * TARGET FUNCTION: Directly sets a single key's LED brightness using its standard USB HID code.
+	 * 
+	 * @param hid_keycode  The standard USB HID structural key variable (e.g. 0x28 for Enter)
+	 * @param brightness   Brightness scale from 0 (completely off) to 255 (maximum red brightness)
+	 * @return true if packet was successfully passed to the USB host hardware pipe
+	 */
+ 
+    // Check if the keyboard is actively linked and the USB endpoint pipe is idle
+    if (!g_c3_pro.connected || g_c3_pro.is_busy) {
+        return false;
+    }
+
+    // Lookup the physical LED index mapped to this specific keycode
+    uint8_t led_index = hid_to_led_map[hid_keycode];
+
+    // Safety validation: Reject out-of-bounds or unmapped layout key values
+    if (led_index == 255 || led_index >= 87) {
+        return false; 
+    }
+
+    uint8_t tx_packet[VIA_RAW_REPORT_SIZE] = {0};
+
+    // Construct the official native VIA payload structure
+    tx_packet[0] = VIA_CMD_LIGHTING;  
+    tx_packet[1] = VIA_SUB_SET_PIXEL; 
+    tx_packet[2] = led_index;         // Verified target physical LED
+    tx_packet[3] = brightness;        // Scaled Red output power 
+    tx_packet[4] = 0x00;              // Grounded channel (No green chip available)
+    tx_packet[5] = 0x00;              // Grounded channel (No blue chip available)
+
+    g_c3_pro.is_busy = true;
+
+    // Report ID is 0 for unformatted RAW HID structures
+    bool result = tuh_hid_set_report(g_c3_pro.dev_addr, g_c3_pro.instance, 0, HID_REPORT_TYPE_OUTPUT, tx_packet, VIA_RAW_REPORT_SIZE);
+    
+    if (!result) {
+        g_c3_pro.is_busy = false; 
+    }
+    return result;
 }
 
 //--------------------------------------------------------------------+
