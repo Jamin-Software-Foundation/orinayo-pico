@@ -713,7 +713,8 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	uint16_t vid, pid;
 	tuh_vid_pid_get(dev_addr, &vid, &pid);
 
-    if (vid == 0x3434 && pid == 0x0431) {		
+    if (vid == 0x3434 && pid == 0x0431) {	
+		debug_blink(2);		
         // Step 1: Initialize helper search variables
         bool found_qmk_raw_usage_page = false;
 
@@ -733,13 +734,20 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 		
         if (found_qmk_raw_usage_page) {						
             printf("Success! Target Keychron C3 Pro VIA Interface isolated on Instance %d\n", instance);
-        }
+			debug_steady(3);				
+		
+			g_c3_pro.dev_addr = dev_addr;
+			g_c3_pro.instance = instance; 
+			g_c3_pro.connected = true;
+			g_c3_pro.is_busy = false; 				
+        } else {
+			debug_blink(4);				
+		}
     }	
 	
     // Check if the mounted device is a keyboard
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || itf_protocol == HID_ITF_PROTOCOL_NONE) {
-		printf("USB device mounted successfully!\n");	
-		debug_blink(2);			
+		printf("USB device mounted successfully!\n");			
 			
 		if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {		
 			hid_keyboard_connected = true;
@@ -754,19 +762,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 		else
 
 		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {	
-			debug_blink(3);	
-				
-			//if (vid == 0x3434) {							// Keychron C3 Pro
-			if (instance == 2) {
-				debug_blink(4);	
-		
-				g_c3_pro.dev_addr = dev_addr;
-				g_c3_pro.instance = instance; 
-				g_c3_pro.connected = true;
-				g_c3_pro.is_busy = false; 				
-			//} else {
-			//	hid_gamepad_connected = true;	
-			}
+			hid_gamepad_connected = true;	
 		}	
 
 		enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
@@ -2575,6 +2571,12 @@ void sampler_midi_note(uint8_t command, uint8_t note, uint8_t velocity) {
 	} else {
 		midi_n_stream_write(0, 0, msg, 3);	// includes sampler connected by UART0 MIDI	
 	}
+}
+
+void debug_steady(uint8_t count) {   
+	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+	sleep_ms(count * 1000);
+	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
 }
 
 void debug_blink(uint8_t count) {
