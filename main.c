@@ -1427,10 +1427,11 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 			finished_processing = true;		
 			gamepad_bluetooth_handle_data();
 		}	
-		
-		set_led_by_keycode(0x28, 255);	
+
+		midi_console_debug(1, 1, 1);		
+		//set_led_by_keycode(0x28, 255);	
 		force_static_lighting_mode();	
-		midi_console_debug(1, 1, 1);
+
 	}
 
 	if (keycode == 42) {											// BACKSPACE - fill
