@@ -414,6 +414,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode);
 void hid_set_keyboard_leds(uint8_t led_mask);
 bool set_led_by_keycode(uint8_t hid_keycode, uint8_t brightness);
 bool force_static_lighting_mode(void);
+void debug_blink(uint8_t count);
 
 enum {
 	// Balanced size: enough to batch multiple MIDI packets per callback while keeping stack usage small.
@@ -704,7 +705,7 @@ void tuh_midi_umount_cb(uint8_t idx) {
 
 void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len) {
     uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
-	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
+	debug_blink(1);	
 	
 	// HID\VID_3434&PID_0431&REV_0102&MI_00
 	// HID\VID_3434&PID_0431&REV_0102&MI_02&Col04	
@@ -730,8 +731,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
         // Step 3: Only mount this instance if it physically contains the 0xFF60 signature
 		
-        if (found_qmk_raw_usage_page) {				
-			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);		
+        if (found_qmk_raw_usage_page) {						
             printf("Success! Target Keychron C3 Pro VIA Interface isolated on Instance %d\n", instance);
         }
     }	
@@ -739,6 +739,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
     // Check if the mounted device is a keyboard
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || itf_protocol == HID_ITF_PROTOCOL_NONE) {
 		printf("USB device mounted successfully!\n");	
+		debug_blink(2);			
 			
 		if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {		
 			hid_keyboard_connected = true;
@@ -753,8 +754,11 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 		else
 
 		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {	
-
+			debug_blink(3);	
+				
 			if (vid == 0x3434) {							// Keychron C3 Pro
+				debug_blink(4);	
+		
 				g_c3_pro.dev_addr = dev_addr;
 				g_c3_pro.instance = instance; 
 				g_c3_pro.connected = true;
@@ -2570,6 +2574,17 @@ void sampler_midi_note(uint8_t command, uint8_t note, uint8_t velocity) {
 	} else {
 		midi_n_stream_write(0, 0, msg, 3);	// includes sampler connected by UART0 MIDI	
 	}
+}
+
+void debug_blink(uint8_t count) {
+   
+    for (int i = 0; i < count; i++) {
+		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);
+        sleep_ms(150);
+		cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
+        sleep_ms(150);
+    }
+    sleep_ms(1000); // 1-second pause between counts
 }
 
 void midi_send_note(uint8_t command, uint8_t note, uint8_t velocity) {
