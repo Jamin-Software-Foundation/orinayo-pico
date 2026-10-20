@@ -26,12 +26,12 @@ jobs:
           cd ~/qmk_firmware
           
           # 1. Force add the compilation overrides into the rule mapping configuration
-          echo "RAW_ENABLE = yes" >> keyboards/keychron/c3_pro/iso/rules.mk
-          echo "VIA_ENABLE = yes" >> keyboards/keychron/c3_pro/iso/rules.mk
+          echo "RAW_ENABLE = yes" >> keyboards/keychron/c3_pro/ansi/rgb/rules.mk
+          echo "VIA_ENABLE = yes" >> keyboards/keychron/c3_pro/ansi/rgb/rules.mk
           
           # 2. Append your lightweight packet routing parser directly to the core keymap file
           # This extracts the exact index and brightness values from your Pi Pico's array.
-          cat << 'EOF' >> keyboards/keychron/c3_pro/iso/keymaps/default/keymap.c
+          cat << 'EOF' >> keyboards/keychron/c3_pro/ansi/rgb/keymaps/default/keymap.c
 
           #ifdef RAW_ENABLE
           #define VIA_CMD_LIGHTING  0x07
@@ -51,7 +51,7 @@ jobs:
       - name: Compile Keyboard Binary
         run: |
           cd ~/qmk_firmware
-          qmk compile -kb keychron/c3_pro/iso -km default
+          qmk compile -kb keychron/c3_pro/ansi/rgb -km default
 
       - name: Upload Finished Firmware File
         uses: actions/upload-artifact@v4
