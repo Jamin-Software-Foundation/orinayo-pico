@@ -443,7 +443,7 @@ bool is_wav_trigger_connected() {
 //--------------------------------------------------------------------+
 
 void core1_main() {
-	//sleep_ms(10);
+	sleep_ms(1000);
 	tuh_init(BOARD_TUH_RHPORT);
 
 	while (true) {
@@ -742,7 +742,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
             g_c3_pro.connected = true;
             g_c3_pro.is_busy = false; 
 			
-			//force_static_lighting_mode();		
+			force_static_lighting_mode();		
 			midi_console_debug(2, dev_addr, instance);				
         }
     }	
@@ -1432,8 +1432,8 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 			gamepad_bluetooth_handle_data();
 		}	
 	
-		//set_led_by_keycode(0x28, 255);	
-		force_static_lighting_mode();	
+		set_led_by_keycode(0x28, 255);	
+		//force_static_lighting_mode();	
 
 	}
 
