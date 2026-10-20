@@ -1428,7 +1428,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 			gamepad_bluetooth_handle_data();
 		}	
 
-		midi_console_debug(1, 1, 1);		
+		midi_console_debug(1, g_c3_pro.dev_addr , g_c3_pro.instance);		
 		//set_led_by_keycode(0x28, 255);	
 		force_static_lighting_mode();	
 
@@ -2616,7 +2616,7 @@ void midi_send_note(uint8_t command, uint8_t note, uint8_t velocity) {
 
 void midi_console_debug(uint8_t value1, uint8_t value2, uint8_t value3) {
 	uint8_t msg[3];		
-	msg[0] = value1;
+	msg[0] = 0x90 + value1;
 	msg[1] = value2;
 	msg[2] = value3;	
 	tud_midi_n_stream_write(0, 0, msg, 3);	
