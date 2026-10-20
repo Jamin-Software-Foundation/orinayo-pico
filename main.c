@@ -717,7 +717,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 		c3_pro_counter++;
         //debug_blink(c3_pro_counter);		
 		
-        if (c3_pro_counter == 1) {						
+        if (c3_pro_counter == 2) {						
             g_c3_pro.dev_addr  = dev_addr;
             g_c3_pro.instance  = instance; 
             g_c3_pro.connected = true;
