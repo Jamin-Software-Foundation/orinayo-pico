@@ -714,36 +714,35 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	tuh_vid_pid_get(dev_addr, &vid, &pid);
 
     if (vid == 0x3434 && pid == 0x0431) {	
-		debug_blink(2);		
-        // Step 1: Initialize helper search variables
+        debug_blink(2);		
+        
         bool found_qmk_raw_usage_page = false;
 
-        // Step 2: Scan the HID Report Descriptor array bytes for the QMK RAW signature
-        // The standard USB HID item for a 16-bit Usage Page identifier is 0x06
-		
-        for (uint16_t i = 0; i < desc_len - 2; i++) 
-		{
-            if (desc_report[i] == 0x06 && desc_report[i+1] == 0x60 && desc_report[i+2] == 0xFF) {
-                // Found the byte sequence: [0x06, 0x60, 0xFF] which stands for Usage Page (0xFF60)
-                found_qmk_raw_usage_page = true;
-                break;
+        // CRITICAL PROTECTION: Only scan if desc_len is valid to prevent unsigned underflow crashes
+        if (desc_len >= 3) {
+            for (uint16_t i = 0; i < desc_len - 2; i++) {
+                if (desc_report[i] == 0x06 && desc_report[i+1] == 0x60 && desc_report[i+2] == 0xFF) {
+                    found_qmk_raw_usage_page = true;
+                    break;
+                }
             }
         }
 
-        // Step 3: Only mount this instance if it physically contains the 0xFF60 signature
-		
+        // Combine checks safely. If instance is exactly 2, we force the match 
+        // even if the descriptor payload buffer hasn't fully loaded yet.
         if (found_qmk_raw_usage_page || instance == 2) {						
-            printf("Success! Target Keychron C3 Pro VIA Interface isolated on Instance %d\n", instance);
-			debug_steady(3);				
-		
-			g_c3_pro.dev_addr = dev_addr;
-			g_c3_pro.instance = instance; 
-			g_c3_pro.connected = true;
-			g_c3_pro.is_busy = false; 				
+            g_c3_pro.dev_addr = dev_addr;
+            g_c3_pro.instance = instance; 
+            g_c3_pro.connected = true;
+            g_c3_pro.is_busy = false; 				
+            
+            debug_steady(3); // This will now safely fire on the second pass!
+            return;          // Early exit to protect from clashing bottom code
         } else {
-			debug_blink(4);				
-		}
-    }	
+            debug_blink(4);				
+        }
+    }
+	
 	
     // Check if the mounted device is a keyboard
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || itf_protocol == HID_ITF_PROTOCOL_NONE) {
