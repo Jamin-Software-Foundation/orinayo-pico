@@ -716,32 +716,23 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
     if (vid == 0x3434 && pid == 0x0431) {	
         debug_blink(2);		
         
-        bool found_qmk_raw_usage_page = false;
-
-        // CRITICAL PROTECTION: Only scan if desc_len is valid to prevent unsigned underflow crashes
-        if (desc_len >= 3) {
-            for (uint16_t i = 0; i < desc_len - 2; i++) {
-                if (desc_report[i] == 0x06 && desc_report[i+1] == 0x60 && desc_report[i+2] == 0xFF) {
-                    found_qmk_raw_usage_page = true;
-                    break;
-                }
-            }
-        }
-
-        // Combine checks safely. If instance is exactly 2, we force the match 
-        // even if the descriptor payload buffer hasn't fully loaded yet.
-        if (found_qmk_raw_usage_page || instance == 2) {						
+        // Isolate the lighting engine by simply screening out the typing interface.
+        // If it's a Keychron C3 Pro interface, and it has NO boot protocol, it is your VIA RAW channel!
+        if (itf_protocol == HID_ITF_PROTOCOL_NONE) {						
+            printf("Success! Target Keychron C3 Pro VIA Interface isolated on Instance %d\n", instance);
+		
             g_c3_pro.dev_addr = dev_addr;
             g_c3_pro.instance = instance; 
             g_c3_pro.connected = true;
             g_c3_pro.is_busy = false; 				
             
-            debug_steady(3); // This will now safely fire on the second pass!
-            return;          // Early exit to protect from clashing bottom code
+            debug_steady(3); // This will now fire cleanly on the lighting pass!
+            return;          // Early exit so it doesn't get hijacked by the gamepad logic below
         } else {
+            // This is the standard typing interface pass (Instance 0)
             debug_blink(4);				
         }
-    }
+    }	
 	
 	
     // Check if the mounted device is a keyboard
