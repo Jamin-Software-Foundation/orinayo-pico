@@ -63,6 +63,9 @@ void pico_set_led(bool led_on) {
 }
 
 // Define Keychron C3 Pro Hardware Targets
+#define KEYCHRON_VID      0x3434   // Keychron Vendor ID
+#define KEYCHRON_C3_PID   0x0431   // Your exact hardware Product ID (from PID_0431)
+
 #define VIA_RAW_REPORT_SIZE  32       
 #define VIA_CMD_LIGHTING     0x07 
 #define VIA_SUB_SET_PIXEL    0x07 
@@ -138,6 +141,11 @@ static const uint8_t hid_to_led_map[256] = {
     [0x4F] = 86,  // RIGHT ARROW
     [0x52] = 84,  // UP ARROW
     [0x51] = 83,  // DOWN ARROW
+
+    // Top-Right Utility Cluster Additions
+    [0x46] = 80,  // PRINT SCREEN (USB HID Code: 0x46)
+    [0x47] = 81,  // SCROLL LOCK  (USB HID Code: 0x47)
+    [0x48] = 82,  // PAUSE/BREAK  (USB HID Code: 0x48)	
 };
 
 // M5Stack Midi UART settings
@@ -697,7 +705,37 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);
 
 	uint16_t vid, pid;
-	tuh_vid_pid_get(dev_addr, &vid, &pid);	
+	tuh_vid_pid_get(dev_addr, &vid, &pid);
+
+    if (vid == 0x3434 && pid == 0x0431) {
+        // Step 1: Initialize helper search variables
+        bool found_qmk_raw_usage_page = false;
+
+        // Step 2: Scan the HID Report Descriptor array bytes for the QMK RAW signature
+        // The standard USB HID item for a 16-bit Usage Page identifier is 0x06
+		
+        for (uint16_t i = 0; i < desc_len - 2; i++) 
+		{
+            if (desc_report[i] == 0x06 && desc_report[i+1] == 0x60 && desc_report[i+2] == 0xFF) {
+                // Found the byte sequence: [0x06, 0x60, 0xFF] which stands for Usage Page (0xFF60)
+                found_qmk_raw_usage_page = true;
+                break;
+            }
+        }
+
+        // Step 3: Only mount this instance if it physically contains the 0xFF60 signature
+		
+        if (found_qmk_raw_usage_page) {
+            printf("Success! Target Keychron C3 Pro VIA Interface isolated on Instance %d\n", instance);
+            
+            g_c3_pro.dev_addr = dev_addr;
+            g_c3_pro.instance = instance; // This is now guaranteed to point to MI_02
+            g_c3_pro.connected = true;
+            g_v6.is_busy = false; 
+			
+			set_led_by_keycode(0x29, 255);			
+        }
+    }	
 	
     // Check if the mounted device is a keyboard
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || itf_protocol == HID_ITF_PROTOCOL_NONE) {
@@ -717,15 +755,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
 		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {	
 
-			if (vid == 0x3434) {
-				g_c3_pro.dev_addr = dev_addr;
-				g_c3_pro.instance = instance;
-				g_c3_pro.connected = true;
-				g_c3_pro.is_busy = false;
-
-				set_led_by_keycode(0x28, 255);
-				
-			} else {
+			if (vid != 0x3434) {							// Not a Keychron C3 Pro
 				hid_gamepad_connected = true;	
 			}
 		}	
