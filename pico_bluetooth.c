@@ -2998,7 +2998,7 @@ void sampler_trigger_loop() {
 		}
 	}
 		
-	if (sampler_old_bass_note != sampler_bass_note || enable_stacatto_mode || style_change_requested) 
+	if (sampler_old_bass_note != sampler_bass_note || enable_stacatto_mode) 
 	{ 
 		if (sampler_old_bass_note != 255)
 		{
@@ -3016,7 +3016,7 @@ void sampler_trigger_loop() {
 		sampler_old_bass_note = sampler_bass_note;		
 	}
 	
-	if (sampler_old_chord_note != sampler_chord_note || enable_stacatto_mode || style_change_requested)
+	if (sampler_old_chord_note != sampler_chord_note || enable_stacatto_mode)
 	{	
 		if (sampler_old_chord_note != 255)
 		{
