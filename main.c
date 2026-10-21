@@ -64,7 +64,7 @@ void pico_set_led(bool led_on) {
 
 // Define Keychron C3 Pro Hardware Targets
 #define KEYCHRON_VID      0x3434   // Keychron Vendor ID
-#define KEYCHRON_C3_PID   0x0431   // Your exact hardware Product ID (from PID_0431)
+#define KEYCHRON_V6_PID   0x0361   // Keychron V6 Standard Product ID
 
 #define VIA_RAW_REPORT_SIZE  32       
 #define VIA_CMD_LIGHTING     0x07 
@@ -78,7 +78,7 @@ typedef struct {
     bool is_busy;
 } keychron_host_t;
 
-static keychron_host_t g_c3_pro = {0};
+static keychron_host_t g_v6_led = {0};
 
 /**
  * USB HID Keycode to Physical LED Index translation table.
@@ -415,6 +415,7 @@ void hid_set_keyboard_leds(uint8_t led_mask);
 bool set_led_by_keycode(uint8_t hid_keycode, uint8_t brightness);
 bool force_static_lighting_mode(void);
 void debug_blink(uint8_t count);
+void debug_steady(uint8_t count);
 
 enum {
 	// Balanced size: enough to batch multiple MIDI packets per callback while keeping stack usage small.
@@ -704,22 +705,38 @@ void tuh_midi_umount_cb(uint8_t idx) {
 
 void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_report, uint16_t desc_len) {
     uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
-	debug_blink(1);	
-	
-	// HID\VID_3434&PID_0431&REV_0102&MI_00
-	// HID\VID_3434&PID_0431&REV_0102&MI_02&Col04	
-
 	uint16_t vid, pid;
 	tuh_vid_pid_get(dev_addr, &vid, &pid);
+	
+    if (vid == KEYCHRON_VID && pid == KEYCHRON_V6_PID) {
+        // Look through the descriptor buffer for the official QMK 0xFF60 signature
+        bool is_lighting = false;
+        if (desc_len >= 3 && desc_report != NULL) {
+            for (uint16_t i = 0; i < desc_len - 2; i++) {
+                if (desc_report[i] == 0x06 && desc_report[i+1] == 0x60 && desc_report[i+2] == 0xFF) {
+                    is_lighting = true;
+                    break;
+                }
+            }
+        }
+
+        if (is_lighting) {
+			debug_steady(3);			
+            g_v6_led.dev_addr = dev_addr;
+            g_v6_led.instance = instance; // Locks directly onto Interface 2/3
+            g_v6_led.connected = true;
+            g_v6_led.is_busy = false;
+            return; // Exit early to isolate the lighting line
+        } else {
+			debug_blink(4);	
+		}
+    }	
 
     // Check if the mounted device is a keyboard
-    if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || itf_protocol == HID_ITF_PROTOCOL_NONE) {
-		debug_blink(2);			
+    if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || itf_protocol == HID_ITF_PROTOCOL_NONE) {		
 		printf("USB device mounted successfully!\n");			
 			
 		if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD) {	
-			debug_steady(3);
-			
 			hid_keyboard_connected = true;
 			keyboard_dev_addr = dev_addr;
 			keyboard_instance = instance;
@@ -727,22 +744,12 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
 			if (vid == 0x1A86 && pid == 0xE026) {			
 				ikkegol_pedal_enabled = true;
-			}
-			else
-
-			if (vid == 0x3434 && pid == 0x0431) {				
-				g_c3_pro.dev_addr  = dev_addr;
-				g_c3_pro.instance  = instance; 
-				g_c3_pro.connected = true;
-				g_c3_pro.is_busy    = false; 			
-			} 							
+			}							
 		}
 		else
 
-		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {	
-			debug_steady(3);
-			
-			hid_gamepad_connected = true;	
+		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {		
+			hid_gamepad_connected = true;				
 		}	
 
 		enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
@@ -760,9 +767,9 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
 	//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
 	
-    if (dev_addr == g_c3_pro.dev_addr && instance == g_c3_pro.instance) {
-        g_c3_pro.connected = false;
-        g_c3_pro.is_busy = false;
+    if (dev_addr == g_v6_led.dev_addr && instance == g_v6_led.instance) {
+        g_v6_led.connected = false;
+        g_v6_led.is_busy = false;
     }	
 	
 	if (hid_gamepad_connected) {
@@ -819,8 +826,8 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
 }
 
 void tuh_hid_set_report_complete_cb(uint8_t dev_addr, uint8_t instance, uint8_t report_id, uint8_t report_type, uint16_t num_bytes) {
-    if (dev_addr == g_c3_pro.dev_addr && instance == g_c3_pro.instance) {
-        g_c3_pro.is_busy = false; 
+    if (dev_addr == g_v6_led.dev_addr && instance == g_v6_led.instance) {
+        g_v6_led.is_busy = false; 
     }
 }
 
@@ -1410,7 +1417,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		set_led_by_keycode(0x28, 255);	
 		//force_static_lighting_mode();	
 	
-		midi_console_debug(g_c3_pro.connected ? 2 : 3, g_c3_pro.dev_addr, g_c3_pro.instance);			
+		midi_console_debug(g_v6_led.connected ? 2 : 3, g_v6_led.dev_addr, g_v6_led.instance);			
 
 	}
 
@@ -1602,17 +1609,9 @@ void hid_set_keyboard_leds(uint8_t led_mask) {
     );
 }
 
-bool set_led_by_keycode(uint8_t hid_keycode, uint8_t brightness) {
-	/**
-	 * TARGET FUNCTION: Directly sets a single key's LED brightness using its standard USB HID code.
-	 * 
-	 * @param hid_keycode  The standard USB HID structural key variable (e.g. 0x28 for Enter)
-	 * @param brightness   Brightness scale from 0 (completely off) to 255 (maximum red brightness)
-	 * @return true if packet was successfully passed to the USB host hardware pipe
-	 */
- 
+bool set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t blue) {
     // Check if the keyboard is actively linked and the USB endpoint pipe is idle
-    if (!g_c3_pro.connected || g_c3_pro.is_busy) {
+    if (!g_v6_led.connected || g_v6_led.is_busy) {
         return false;
     }
 
@@ -1629,18 +1628,18 @@ bool set_led_by_keycode(uint8_t hid_keycode, uint8_t brightness) {
     // Construct the official native VIA payload structure
     tx_packet[0] = VIA_CMD_LIGHTING;  
     tx_packet[1] = VIA_SUB_SET_PIXEL; 
-    tx_packet[2] = led_index;         // Verified target physical LED
-    tx_packet[3] = brightness;        // Scaled Red output power 
-    tx_packet[4] = 0x00;              // Grounded channel (No green chip available)
-    tx_packet[5] = 0x00;              // Grounded channel (No blue chip available)
+    tx_packet[2] = led_index;          // Verified target physical LED
+    tx_packet[3] = red; 		       
+    tx_packet[4] = green;              
+    tx_packet[5] = blue;        	  
 
-    g_c3_pro.is_busy = true;
+    g_v6_led.is_busy = true;
 
     // Report ID is 0 for unformatted RAW HID structures
-    bool result = tuh_hid_set_report(g_c3_pro.dev_addr, g_c3_pro.instance, 0, HID_REPORT_TYPE_OUTPUT, tx_packet, VIA_RAW_REPORT_SIZE);
+    bool result = tuh_hid_set_report(g_v6_led.dev_addr, g_v6_led.instance, 0, HID_REPORT_TYPE_OUTPUT, tx_packet, VIA_RAW_REPORT_SIZE);
     
     if (!result) {
-        g_c3_pro.is_busy = false; 
+        g_v6_led.is_busy = false; 
     }
     return result;
 }
@@ -1651,7 +1650,7 @@ bool force_static_lighting_mode(void) {
 	 * internal chip to drop into Static Mode (Effect 0) so your custom key updates take over.
 	*/
  
-    if (!g_c3_pro.connected || g_c3_pro.is_busy) return false;
+    if (!g_v6_led.connected || g_v6_led.is_busy) return false;
 
     uint8_t tx_packet[VIA_RAW_REPORT_SIZE] = {0};
 
@@ -1659,8 +1658,8 @@ bool force_static_lighting_mode(void) {
     tx_packet[1] = 0x02;                  // VIA Sub-command: Set Lighting Effect/Mode
     tx_packet[2] = 0x00;                  // Effect ID 0: Static Solid / Custom Matrix Mode
 
-    g_c3_pro.is_busy = true;
-    return tuh_hid_set_report(g_c3_pro.dev_addr, g_c3_pro.instance, 0, HID_REPORT_TYPE_OUTPUT, tx_packet, VIA_RAW_REPORT_SIZE);
+    g_v6_led.is_busy = true;
+    return tuh_hid_set_report(g_v6_led.dev_addr, g_v6_led.instance, 0, HID_REPORT_TYPE_OUTPUT, tx_packet, VIA_RAW_REPORT_SIZE);
 }
 
 //--------------------------------------------------------------------+
