@@ -412,7 +412,7 @@ uint8_t get_arp_template(void);
 void midi_n_stream_write(uint8_t itf, uint8_t cable_num, uint8_t *buffer, uint32_t bufsize);
 void handle_keyboard_events(uint8_t modifier, uint8_t keycode);
 void hid_set_keyboard_leds(uint8_t led_mask);
-bool set_led_by_keycode(uint8_t hid_keycode, uint8_t brightness);
+bool set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t blue);
 bool force_static_lighting_mode(void);
 void debug_blink(uint8_t count);
 void debug_steady(uint8_t count);
@@ -1414,7 +1414,7 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 			gamepad_bluetooth_handle_data();
 		}	
 	
-		set_led_by_keycode(0x28, 255);	
+		set_led_by_keycode(0x28, 255, 0, 0);	
 		//force_static_lighting_mode();	
 	
 		midi_console_debug(g_v6_led.connected ? 2 : 3, g_v6_led.dev_addr, g_v6_led.instance);			
