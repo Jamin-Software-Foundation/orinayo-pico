@@ -235,7 +235,7 @@ void ble_midi_client_scan_end();
 void set_tempo(uint8_t tempo);
 
 void hid_set_keyboard_leds(uint8_t led_mask);
-bool set_led_by_keycode(uint8_t hid_keycode, uint8_t brightness);
+bool set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t blue);
 
 
 int chord_chart[12][3][6] = {
@@ -608,13 +608,17 @@ void gamepad_bluetooth_handle_data() {
 			if (but6) {
 				enable_drum_track = !enable_drum_track;
 				
+				if (enable_drum_track) {					// force style loop to replay if chord has not changed			
+					style_change_requested = true;
+				}
+				
 				if (enable_mpc_sample) 
 				{
 					if (!enable_drum_track) {
 						if (mpc_old_drum_note != 255) sampler_midi_note(0x94, mpc_old_drum_note, 1);
 						mpc_old_drum_note = 255;
 					
-					} else style_change_requested = true;
+					}
 				}				
 				else 
 					
@@ -624,7 +628,7 @@ void gamepad_bluetooth_handle_data() {
 						sampler_midi_note(0x90, sp404_old_drum_note, 1);
 						sp404_old_drum_note = 0;
 						
-					} else style_change_requested = true;
+					}
 				}
 				else 
 					
@@ -634,7 +638,7 @@ void gamepad_bluetooth_handle_data() {
 						if (sampler_old_drum_note != 255) sampler_midi_note(0x94, sampler_old_drum_note, 1);
 						sampler_old_drum_note = 255;
 					
-					} else style_change_requested = true;
+					}
 				}				
 				else 
 					
@@ -644,7 +648,7 @@ void gamepad_bluetooth_handle_data() {
 						if (sampler_old_drum_note != 255) sampler_midi_note(0x97, sampler_old_drum_note, 127);
 						sampler_old_drum_note = 255;
 					
-					} else style_change_requested = true;
+					}
 				}				
 			}				
 		}
@@ -1211,6 +1215,15 @@ void gamepad_bluetooth_handle_data() {
 		if (mbut0) {
 			style_started = !style_started;
 			cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, style_started);	
+		}
+		
+		if (style_started) {
+			if (style_section % 4 == 0) hid_set_keyboard_leds(1);
+			if (style_section % 4 == 1) hid_set_keyboard_leds(2);
+			if (style_section % 4 == 2) hid_set_keyboard_leds(4);
+			if (style_section % 4 == 3) hid_set_keyboard_leds(8);				
+		} else {
+			hid_set_keyboard_leds(style_group);
 		}
 
 		finished_processing = true;
@@ -2985,7 +2998,7 @@ void sampler_trigger_loop() {
 		}
 	}
 		
-	if (sampler_old_bass_note != sampler_bass_note || enable_stacatto_mode) 
+	if (sampler_old_bass_note != sampler_bass_note || enable_stacatto_mode || style_change_requested) 
 	{ 
 		if (sampler_old_bass_note != 255)
 		{
@@ -3003,7 +3016,7 @@ void sampler_trigger_loop() {
 		sampler_old_bass_note = sampler_bass_note;		
 	}
 	
-	if (sampler_old_chord_note != sampler_chord_note || enable_stacatto_mode)
+	if (sampler_old_chord_note != sampler_chord_note || enable_stacatto_mode || style_change_requested)
 	{	
 		if (sampler_old_chord_note != 255)
 		{
