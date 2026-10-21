@@ -66,6 +66,8 @@ bool enable_midi_drums = false;
 bool enable_worship_pads = false;
 bool gamepad_guitar_connected = false;
 bool finished_processing = true;
+bool bass_change_requested = false;
+bool chord_change_requested = false;
 bool style_change_requested = false;
 bool style_end_requested = false;
 bool style_end_started = false;
@@ -664,7 +666,7 @@ void gamepad_bluetooth_handle_data() {
 				enable_chord_track = !enable_chord_track;
 				
 				if (enable_chord_track) {
-					style_change_requested = true;
+					chord_change_requested = true;
 				}
 					
 				
@@ -717,7 +719,7 @@ void gamepad_bluetooth_handle_data() {
 				enable_bass_track = !enable_bass_track;	
 				
 				if (enable_bass_track) {
-					style_change_requested = true;
+					bass_change_requested = true;
 				}				
 
 				if (enable_mpc_sample) 
@@ -3003,7 +3005,7 @@ void sampler_trigger_loop() {
 		}
 	}
 		
-	if (sampler_old_bass_note != sampler_bass_note || enable_stacatto_mode || style_change_requested) 
+	if (sampler_old_bass_note != sampler_bass_note || enable_stacatto_mode || bass_change_requested) 
 	{ 
 		if (sampler_old_bass_note != 255)
 		{
@@ -3018,10 +3020,11 @@ void sampler_trigger_loop() {
 		}
 		
 		sampler_midi_note(0x95, sampler_bass_note, enable_bass_track ? sample_bass_velocity : 0);			
-		sampler_old_bass_note = sampler_bass_note;		
+		sampler_old_bass_note = sampler_bass_note;	
+		bass_change_requested = false;
 	}
 	
-	if (sampler_old_chord_note != sampler_chord_note || enable_stacatto_mode || style_change_requested)
+	if (sampler_old_chord_note != sampler_chord_note || enable_stacatto_mode || chord_change_requested)
 	{	
 		if (sampler_old_chord_note != 255)
 		{
@@ -3036,7 +3039,8 @@ void sampler_trigger_loop() {
 		}
 		
 		sampler_midi_note(0x96, sampler_chord_note, enable_chord_track ? sample_chord_velocity : 0);		
-		sampler_old_chord_note = sampler_chord_note;	
+		sampler_old_chord_note = sampler_chord_note;
+		chord_change_requested = false;
 	}
 			
 	if (style_change_requested) {
