@@ -242,6 +242,7 @@ extern bool enable_mpx_looper;
 extern bool enable_nanobox_tangerine;
 extern bool enable_wav_trigger_pro;
 extern bool enable_mpx_drums;
+extern bool enable_sampler_song_mode;
 extern bool style_end_requested;
 extern bool style_end_started;
 extern bool preferences_changed;
@@ -1404,12 +1405,13 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		gamepad_bluetooth_handle_data();		
 	}
 
-	if (keycode == 40) { 											// ENTER start/stop			
+	if (keycode == 40 || keycode == 88) { 											// ENTER start/stop			
 
 		if (transpose_mode_active && ikkegol_pedal_enabled) {
 			transpose_mode_active = false;
-		} else {			
+		} else {
 			mbut0 = 1;
+			if (keycode == 88) enable_sampler_song_mode = true;
 			finished_processing = true;		
 			gamepad_bluetooth_handle_data();
 		}	
