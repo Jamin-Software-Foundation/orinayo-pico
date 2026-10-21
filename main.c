@@ -1411,7 +1411,9 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 			transpose_mode_active = false;
 		} else {
 			mbut0 = 1;
+			enable_sampler_song_mode = false;
 			if (keycode == 88) enable_sampler_song_mode = true;
+			
 			finished_processing = true;		
 			gamepad_bluetooth_handle_data();
 		}	
