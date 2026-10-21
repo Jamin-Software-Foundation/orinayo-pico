@@ -608,17 +608,13 @@ void gamepad_bluetooth_handle_data() {
 			if (but6) {
 				enable_drum_track = !enable_drum_track;
 				
-				if (enable_drum_track) {					// force style loop to replay if chord has not changed			
-					style_change_requested = true;
-				}
-				
 				if (enable_mpc_sample) 
 				{
 					if (!enable_drum_track) {
 						if (mpc_old_drum_note != 255) sampler_midi_note(0x94, mpc_old_drum_note, 1);
 						mpc_old_drum_note = 255;
 					
-					}
+					} else style_change_requested = true;
 				}				
 				else 
 					
@@ -628,7 +624,7 @@ void gamepad_bluetooth_handle_data() {
 						sampler_midi_note(0x90, sp404_old_drum_note, 1);
 						sp404_old_drum_note = 0;
 						
-					}
+					} else style_change_requested = true;
 				}
 				else 
 					
@@ -638,7 +634,7 @@ void gamepad_bluetooth_handle_data() {
 						if (sampler_old_drum_note != 255) sampler_midi_note(0x94, sampler_old_drum_note, 1);
 						sampler_old_drum_note = 255;
 					
-					}
+					} else style_change_requested = true;
 				}				
 				else 
 					
@@ -648,7 +644,7 @@ void gamepad_bluetooth_handle_data() {
 						if (sampler_old_drum_note != 255) sampler_midi_note(0x97, sampler_old_drum_note, 127);
 						sampler_old_drum_note = 255;
 					
-					}
+					} else style_change_requested = true;
 				}				
 			}				
 		}
@@ -666,6 +662,11 @@ void gamepad_bluetooth_handle_data() {
 		{
 			if (but6) {
 				enable_chord_track = !enable_chord_track;
+				
+				if (enable_chord_track) {
+					style_change_requested = true;
+				}
+					
 				
 				if (enable_mpx_looper) {	// use whammy bar instead to mute/unmute
 					
@@ -714,6 +715,10 @@ void gamepad_bluetooth_handle_data() {
 		{				
 			if (but6) {
 				enable_bass_track = !enable_bass_track;	
+				
+				if (enable_bass_track) {
+					style_change_requested = true;
+				}				
 
 				if (enable_mpc_sample) 
 				{
@@ -2998,7 +3003,7 @@ void sampler_trigger_loop() {
 		}
 	}
 		
-	if (sampler_old_bass_note != sampler_bass_note || enable_stacatto_mode) 
+	if (sampler_old_bass_note != sampler_bass_note || enable_stacatto_mode || style_change_requested) 
 	{ 
 		if (sampler_old_bass_note != 255)
 		{
@@ -3016,7 +3021,7 @@ void sampler_trigger_loop() {
 		sampler_old_bass_note = sampler_bass_note;		
 	}
 	
-	if (sampler_old_chord_note != sampler_chord_note || enable_stacatto_mode)
+	if (sampler_old_chord_note != sampler_chord_note || enable_stacatto_mode || style_change_requested)
 	{	
 		if (sampler_old_chord_note != 255)
 		{
