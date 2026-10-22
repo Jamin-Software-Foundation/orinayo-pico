@@ -746,7 +746,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 			if (vid == 0x0FD9 && pid == 0x006C && instance == 0) {					// Stream Deck XL	
 				sd_dev_addr = dev_addr;
 				
-				stream_deck_xl_set_brightness(dev_addr, 0x1F); 		// Drop brightness down immediately to save Pico VBUS current
+				//stream_deck_xl_set_brightness(dev_addr, 0x1F); 		// Drop brightness down immediately to save Pico VBUS current
 				stream_deck_xl_clear_canvas(dev_addr, 0, 0, 40);	// Wipe the canvas to a starting color (e.g., dim blue)
 
 			} else {		
@@ -1737,7 +1737,7 @@ void stream_deck_xl_clear_canvas(uint8_t dev_addr, uint8_t r, uint8_t g, uint8_t
     tuh_hid_set_report(
         dev_addr, 
         0, 
-        0x03, 
+        0, 
         HID_REPORT_TYPE_FEATURE, 
         report_buffer, 
         sizeof(report_buffer)
@@ -1770,7 +1770,7 @@ void stream_deck_xl_set_key_color(uint8_t dev_addr, uint8_t key_id, uint8_t r, u
     tuh_hid_set_report(
         dev_addr, 
         0, 
-        0x03, 
+        0, 
         HID_REPORT_TYPE_FEATURE, 
         report_buffer, 
         sizeof(report_buffer)
@@ -1785,7 +1785,7 @@ void stream_deck_xl_set_brightness(uint8_t dev_addr, uint8_t brightness_percenta
     buf[2] = brightness_percentage; // 0x00 to 0x64 (0 to 100%)
 
     // Send the control command
-    tuh_hid_set_report(dev_addr, 0, 0x03, HID_REPORT_TYPE_FEATURE, buf, sizeof(buf));
+    tuh_hid_set_report(dev_addr, 0, 0, HID_REPORT_TYPE_FEATURE, buf, sizeof(buf));
 }
 
 
