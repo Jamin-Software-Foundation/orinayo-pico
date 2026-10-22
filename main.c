@@ -743,7 +743,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 			}
 			else
 				
-			if (vid == 0x0FD9 && pid == 0x006C) {					// Stream Deck XL	
+			if (vid == 0x0FD9 && pid == 0x006C && instance == 0) {					// Stream Deck XL	
 				sd_dev_addr = dev_addr;
 				
 				stream_deck_xl_set_brightness(dev_addr, 0x1F); 		// Drop brightness down immediately to save Pico VBUS current
