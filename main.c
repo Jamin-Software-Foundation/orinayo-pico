@@ -714,33 +714,6 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	// HID\VID_3434&PID_0363&REV_0200&MI_00
 	// HID\VID_3434&PID_0363&MI_00
 
-	
-    if (vid == KEYCHRON_VID && pid == KEYCHRON_V6_PID) 
-	{
-        //if (itf_protocol == HID_ITF_PROTOCOL_NONE) {
-            bool is_srgb_raw_hid = false;
-            
-            // Scan descriptor array to extract QMK/SignalRGB Usage Page (0xFF60)
-            for (uint16_t i = 0; i < desc_len - 2; i++) {
-                if (desc_report[i] == 0x06 && desc_report[i+1] == 0x60 && desc_report[i+2] == 0xFF) {
-                    is_srgb_raw_hid = true;
-                    break;
-                }
-            }
-
-            if (is_srgb_raw_hid) {
-                g_v6_led.dev_addr = dev_addr;
-                g_v6_led.instance = instance; // Lock directly onto the SignalRGB active channel
-                g_v6_led.connected = true;
-                g_v6_led.is_busy = false;
-                debug_steady(5);
-                return;
-            } else {
-				debug_blink(5);
-			}
-       // }
-    }
-
     // Check if the mounted device is a keyboard
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || itf_protocol == HID_ITF_PROTOCOL_NONE) {		
 		printf("USB device mounted successfully!\n");			
@@ -753,7 +726,15 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
 			if (vid == 0x1A86 && pid == 0xE026) {			
 				ikkegol_pedal_enabled = true;
-			}							
+			}
+			else
+				
+			if (vid == KEYCHRON_VID && pid == KEYCHRON_V6_PID) {
+                g_v6_led.dev_addr = dev_addr;
+                g_v6_led.instance = instance; 
+                g_v6_led.connected = true;
+                g_v6_led.is_busy = false;				
+			}
 		}
 		else
 
