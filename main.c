@@ -64,7 +64,7 @@ void pico_set_led(bool led_on) {
 
 // Define Keychron C3 Pro Hardware Targets
 #define KEYCHRON_VID      0x3434   // Keychron Vendor ID
-#define KEYCHRON_V6_PID   0x0361   // Keychron V6 Standard Product ID
+#define KEYCHRON_V6_PID   0x0363   // Keychron V6 Standard Product ID
 
 #define VIA_RAW_REPORT_SIZE  32       
 #define VIA_CMD_LIGHTING     0x07 
@@ -708,6 +708,12 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
     uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
 	uint16_t vid, pid;
 	tuh_vid_pid_get(dev_addr, &vid, &pid);
+	
+	// HID\VID_3434&PID_0363&REV_0200&MI_02&Col04
+	// HID\VID_3434&PID_0363&MI_02&Col04
+	// HID\VID_3434&PID_0363&REV_0200&MI_00
+	// HID\VID_3434&PID_0363&MI_00
+
 	
     if (vid == KEYCHRON_VID && pid == KEYCHRON_V6_PID) {
         // Look through the descriptor buffer for the official QMK 0xFF60 signature
