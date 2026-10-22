@@ -1,0 +1,30 @@
+name: Build Keychron V6 ISO Encoder Custom QMK
+on: [workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: qmkfm/qmk_cli
+    steps:
+      - name: Checkout Custom Keymap Code
+        uses: actions/checkout@v4
+
+      - name: Setup QMK Environment and Source Tree
+        run: |
+          qmk setup -y
+          # Strictly establish our directory path structure for the iso_encoder layout profile
+          TARGET_DIR="qmk_firmware/keyboards/keychron/v6/iso_encoder/keymaps/pico_led"
+          mkdir -p "$TARGET_DIR"
+          cp keymap.c "$TARGET_DIR/keymap.c"
+          cp rules.mk "$TARGET_DIR/rules.mk"
+
+      - name: Compile Target Binary via Cross-Compiler
+        run: |
+          cd qmk_firmware
+          qmk compile -kb keychron/v6/iso_encoder -km pico_led
+
+      - name: Export Flashable Binary File
+        uses: actions/upload-artifact@v4
+        with:
+          name: keychron_v6_iso_encoder_firmware
+          path: qmk_firmware/.build/keychron_v6_iso_encoder_pico_led.bin

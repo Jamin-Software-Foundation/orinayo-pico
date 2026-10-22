@@ -26,12 +26,12 @@ set(RING_BUFFER_PATH ${CMAKE_CURRENT_LIST_DIR}/ring_buffer_lib)
 set(PICO_BLE_MIDI_PATH ${CMAKE_CURRENT_LIST_DIR}/pico-w-ble-midi-lib) 
 set(PICO_PIO_USB_PATH ${CMAKE_CURRENT_LIST_DIR}/pico_pio_usb) 
 set(PICO_TINYUSB_PATH ${CMAKE_CURRENT_LIST_DIR}/tinyusb) 
-set(FAMILY rp2350)
+set(FAMILY rp2040)
 
 # Include build functions from the Pico SDK
 include($ENV{PICO_SDK_PATH}/external/pico_sdk_import.cmake)
 include(${PICO_TINYUSB_PATH}/hw/bsp/family_support.cmake)
-include(${PICO_TINYUSB_PATH}/hw/bsp/rp2350/family.cmake)
+include(${PICO_TINYUSB_PATH}/hw/bsp/rp2040/family.cmake)
 
 # Set project name and C/C++ standards
 string(TIMESTAMP DATEVER "%Y.%m.%d" UTC)
