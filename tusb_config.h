@@ -119,6 +119,8 @@ extern "C" {
 #define CFG_TUH_CONFIGURATION_MAX_LEN   512 
 
 #define TUH_CFG_RHP_PIO             1  // Ensures Host routes properly to PIO layer
+#define PIO_USB_DEVICE_CNT          8   // Matches your CFG_TUH_DEVICE_MAX
+#define PIO_USB_EP_CNT              32  // CRUCIAL: Must match your CFG_TUH_ENDPOINT_MAX
 
 
 
