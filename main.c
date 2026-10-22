@@ -727,19 +727,20 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 			if (vid == 0x1A86 && pid == 0xE026) {			
 				ikkegol_pedal_enabled = true;
 			}
-			else
-				
+		}
+		else
+
+		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {	
+			debug_steady(3);
+			
 			if (vid == KEYCHRON_VID && pid == KEYCHRON_V6_PID) {
                 g_v6_led.dev_addr = dev_addr;
                 g_v6_led.instance = instance; 
                 g_v6_led.connected = true;
                 g_v6_led.is_busy = false;				
+			} else {		
+				hid_gamepad_connected = true;				
 			}
-		}
-		else
-
-		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {		
-			hid_gamepad_connected = true;				
 		}	
 
 		enable_wav_trigger_pro = true;						// assume WAV Trigger Pro is available				
