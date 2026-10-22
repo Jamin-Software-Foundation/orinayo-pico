@@ -9,22 +9,31 @@ jobs:
       - name: Checkout Custom Keymap Code
         uses: actions/checkout@v4
 
-      - name: Setup QMK Environment and Source Tree
+      - name: Setup QMK Environment and Inject Keymap
         run: |
-          qmk setup -y
-          # Strictly establish our directory path structure for the iso_encoder layout profile
-          TARGET_DIR="qmk_firmware/keyboards/keychron/v6/iso_encoder/keymaps/pico_led"
+          # Automatically find where the active QMK repository home lives
+          QMK_HOME=$(qmk config user.qmk_home | cut -d'=' -f2 | xargs)
+          if [ -z "$QMK_HOME" ]; then QMK_HOME="/qmk_firmware"; fi
+          
+          echo "QMK Home detected at: $QMK_HOME"
+          
+          # Target path inside the official QMK tree structure
+          TARGET_DIR="$QMK_HOME/keyboards/keychron/v6/iso_encoder/keymaps/pico_led"
           mkdir -p "$TARGET_DIR"
+          
+          # Copy files from the repository checkout into the QMK compilation tree
           cp keymap.c "$TARGET_DIR/keymap.c"
           cp rules.mk "$TARGET_DIR/rules.mk"
 
-      - name: Compile Target Binary via Cross-Compiler
+      - name: Compile Target Binary
         run: |
-          cd qmk_firmware
           qmk compile -kb keychron/v6/iso_encoder -km pico_led
 
       - name: Export Flashable Binary File
         uses: actions/upload-artifact@v4
         with:
           name: keychron_v6_iso_encoder_firmware
-          path: qmk_firmware/.build/keychron_v6_iso_encoder_pico_led.bin
+          path: |
+            /qmk_firmware/.build/keychron_v6_iso_encoder_pico_led.bin
+            /root/qmk_firmware/.build/keychron_v6_iso_encoder_pico_led.bin
+          if-no-files-found: warn
