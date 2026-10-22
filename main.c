@@ -331,6 +331,9 @@ static uint8_t daw_itf_idx          = 0xFF;
 static uint8_t midi_dev_addr         = 0;
 static uint8_t daw_dev_addr         = 0;
 
+// Global to hold our Stream Deck address once mounted
+static uint8_t sd_dev_addr = 0;
+
 // Number of TX (OUT) virtual cables reported by the mounted device.
 // Must be >= 2 to use cable 1 for Launchkey DAW / LED / SysEx messages.
 static uint8_t launchkey_tx_cable_count = 0;
@@ -417,6 +420,10 @@ void set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t
 void force_static_lighting_mode(void);
 void debug_blink(uint8_t count);
 void debug_steady(uint8_t count);
+
+void stream_deck_xl_clear_canvas(uint8_t dev_addr, uint8_t r, uint8_t g, uint8_t b);
+void stream_deck_xl_set_key_color(uint8_t dev_addr, uint8_t key_id, uint8_t r, uint8_t g, uint8_t b);
+void set_stream_deck_brightness(uint8_t dev_addr, uint8_t brightness_percentage);
 
 enum {
 	// Balanced size: enough to batch multiple MIDI packets per callback while keeping stack usage small.
@@ -708,11 +715,6 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
     uint8_t const itf_protocol = tuh_hid_interface_protocol(dev_addr, instance);
 	uint16_t vid, pid;
 	tuh_vid_pid_get(dev_addr, &vid, &pid);
-	
-	// HID\VID_3434&PID_0363&REV_0200&MI_02&Col04
-	// HID\VID_3434&PID_0363&MI_02&Col04
-	// HID\VID_3434&PID_0363&REV_0200&MI_00
-	// HID\VID_3434&PID_0363&MI_00
 
     // Check if the mounted device is a keyboard
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || itf_protocol == HID_ITF_PROTOCOL_NONE) {		
@@ -737,7 +739,16 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
                 g_v6_led.dev_addr = dev_addr;
                 g_v6_led.instance = instance; 
                 g_v6_led.connected = true;
-                g_v6_led.is_busy = false;				
+                g_v6_led.is_busy = false;	
+			}
+			else
+				
+			if (vid == 0x0FD9 && pid == 0x006C) {					// Stream Deck XL	
+				sd_dev_addr = dev_addr;
+				
+				stream_deck_xl_set_brightness(dev_addr, 0x1F); 		// Drop brightness down immediately to save Pico VBUS current
+				stream_deck_xl_clear_canvas(dev_addr, 0, 0, 40);	// Wipe the canvas to a starting color (e.g., dim blue)
+
 			} else {		
 				hid_gamepad_connected = true;				
 			}
@@ -757,6 +768,10 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 
 void tuh_hid_unmount_cb(uint8_t dev_addr, uint8_t instance) {
 	//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
+	
+	if (dev_addr == sd_dev_addr) {
+        sd_dev_addr = 0;
+    }	
 	
     if (dev_addr == g_v6_led.dev_addr && instance == g_v6_led.instance) {
         g_v6_led.connected = false;
@@ -800,7 +815,30 @@ void tuh_hid_report_received_cb(uint8_t dev_addr, uint8_t instance, uint8_t cons
 		
     if (itf_protocol == HID_ITF_PROTOCOL_NONE) {
         // This is where generic HID gamepads and custom controllers end up!
-        process_gamepad_report(report, len);
+		
+		if (hid_gamepad_connected) {
+			process_gamepad_report(report, len);
+		}
+		else
+			
+		if (sd_dev_addr > 0) 
+		{
+			if (report[0] == 0x01 && len >= 36) {				
+				// Byte 4 through 35 represent Keys 0 through 31
+				
+				for (uint8_t key_id = 0; key_id < 32; key_id++) {
+					uint8_t is_pressed = report[4 + key_id];
+					
+					if (is_pressed) {
+						// Turn key bright Green on press
+						stream_deck_xl_set_key_color(dev_addr, key_id, 0, 255, 0);
+					} else {
+						// Revert to dim blue on release
+						stream_deck_xl_set_key_color(dev_addr, key_id, 0, 0, 40);
+					}
+				}
+			}			
+		}
     }
 	
 	// Continue listening for subsequent keyboard events
@@ -1660,7 +1698,6 @@ void set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t
     }
 }
 
-
 void force_static_lighting_mode(void) {
     if (!g_v6_led.connected) return;
     
@@ -1671,6 +1708,86 @@ void force_static_lighting_mode(void) {
     g_v6_led.is_busy = true;
     tuh_hid_send_report(g_v6_led.dev_addr, g_v6_led.instance, 0, tx_buffer, sizeof(tx_buffer));
 }
+
+//--------------------------------------------------------------------+
+//
+// Stream Deck
+//
+//--------------------------------------------------------------------+
+
+void stream_deck_xl_clear_canvas(uint8_t dev_addr, uint8_t r, uint8_t g, uint8_t b) {
+	/**
+	 * @brief Clears or fills the entire Stream Deck XL screen grid with a single solid color.
+	 * 
+	 * @param dev_addr The USB device address assigned by TinyUSB.
+	 * @param r        Red intensity value (0 to 255).
+	 * @param g        Green intensity value (0 to 255).
+	 * @param b        Blue intensity value (0 to 255).
+	 */	
+    // The master canvas clear command requires an exact 5-byte feature report
+    uint8_t report_buffer = {
+        0x03,   // Byte 0: Report ID
+        0x05,   // Byte 1: Command (Fill Entire LCD with Color)
+        r,      // Byte 2: Red
+        g,      // Byte 3: Green
+        b       // Byte 4: Blue
+    };
+
+    // Send the Feature Report over the USB Host control pipe
+    tuh_hid_set_report(
+        dev_addr, 
+        0, 
+        0x03, 
+        HID_REPORT_TYPE_FEATURE, 
+        report_buffer, 
+        sizeof(report_buffer)
+    );
+}
+
+void stream_deck_xl_set_key_color(uint8_t dev_addr, uint8_t key_id, uint8_t r, uint8_t g, uint8_t b) {
+	/**
+	 * @brief Sets a solid background color on an individual Stream Deck XL button.
+	 * 
+	 * @param dev_addr The USB device address assigned by TinyUSB during mount.
+	 * @param key_id   The target button index (0 to 31, counting row-by-row).
+	 * @param r        Red intensity value (0 to 255).
+	 * @param g        Green intensity value (0 to 255).
+	 * @param b        Blue intensity value (0 to 255).
+	 */	
+    // Crucial: The plain Stream Deck XL requires an exact 6-byte packet size for this feature report
+    uint8_t report_buffer[6] = {
+        0x03,   // Byte 0: Report ID
+        0x06,   // Byte 1: Command (Fill Key with Color)
+        key_id, // Byte 2: Target Key index (0 - 31)
+        r,      // Byte 3: Red
+        g,      // Byte 4: Green
+        b       // Byte 5: Blue
+    };
+
+    // Send the Feature Report over your working pico_pio_usb host stack.
+    // Parameter 2 is the HID instance (typically 0).
+    // Parameter 3 is the Report ID matching Byte 0.
+    tuh_hid_set_report(
+        dev_addr, 
+        0, 
+        0x03, 
+        HID_REPORT_TYPE_FEATURE, 
+        report_buffer, 
+        sizeof(report_buffer)
+    );
+}
+
+void set_stream_deck_brightness(uint8_t dev_addr, uint8_t brightness_percentage) {
+    // 32-byte Feature Report structure
+    uint8_t buf[32] = {0};
+    buf[0] = 0x03; // Report ID
+    buf[1] = 0x08; // Command: Set Brightness
+    buf[2] = brightness_percentage; // 0x00 to 0x64 (0 to 100%)
+
+    // Send the control command
+    tuh_hid_set_report(dev_addr, 0, 0x03, HID_REPORT_TYPE_FEATURE, buf, sizeof(buf));
+}
+
 
 //--------------------------------------------------------------------+
 //
