@@ -45,6 +45,18 @@ add_compile_definitions(
     CFG_TUH_ENDPOINT_MAX=32
     CFG_TUH_DEVICE_MAX=8
     CFG_TUH_ENUMERATION_BUFSIZE=512
+    
+	# Forces the build system to recognise standard booleans inside the broken SDK header
+    PICO_STDIO_USB_HEADER_INCLUDES="stdbool.h" 
+    
+    # Ensure PIO-USB tells TinyUSB it handles the Host side
+    CFG_TUH_RPI_PIO_USB=1
+    PIO_USB_USE_TINYUSB=1
+    PICO_DEFAULT_PIO_USB_DP_PIN=17	
+	
+	# Overrides the small default pool to allow full QMK composite profiles	
+    PIO_USB_EP_POOL_SIZE=32   
+	
 )
 
 # Initialize the Pico SDK
@@ -86,13 +98,6 @@ pico_add_extra_outputs(${PROJECT_NAME})
 # Link to libraries
 target_link_libraries(${PROJECT_NAME} pico_stdlib hardware_i2c hardware_clocks pico_multicore pico_cyw43_arch_none pico_cyw43_arch_threadsafe_background tinyusb_device tinyusb_host tinyusb_board pico_btstack_classic pico_pio_usb  tinyusb_pico_pio_usb pico_btstack_ble pico_btstack_cyw43 orinayobt)
 target_compile_definitions(${PROJECT_NAME} PRIVATE
-    # Forces the build system to recognise standard booleans inside the broken SDK header
-    PICO_STDIO_USB_HEADER_INCLUDES="stdbool.h" 
-    
-    # Ensure PIO-USB tells TinyUSB it handles the Host side
-    CFG_TUH_RPI_PIO_USB=1
-    PIO_USB_USE_TINYUSB=1
-    PICO_DEFAULT_PIO_USB_DP_PIN=17	
 )
 # PicoTool binary information
 pico_set_program_name(${PROJECT_NAME} ${PROJECT_NAME})

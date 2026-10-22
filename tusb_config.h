@@ -116,6 +116,7 @@ extern "C" {
 #define CFG_TUH_HID_KEYBOARD        0
 #define CFG_TUH_HID_MAX_INTERFACE   4  
 #define CFG_TUH_ENDPOINT_MAX        32
+#define CFG_TUH_CONFIGURATION_MAX_LEN   512 
 
 #define TUH_CFG_RHP_PIO             1  // Ensures Host routes properly to PIO layer
 
