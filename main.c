@@ -821,6 +821,12 @@ void tuh_hid_report_sent_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* r
     }
 }
 
+void tuh_hid_set_report_complete_cb(uint8_t dev_addr, uint8_t instance, uint8_t report_id, uint8_t report_type, uint16_t len) {
+    // Verify response originates from our Keychron asset target
+    if (dev_addr == g_v6_led.dev_addr && instance == g_v6_led.instance) {
+        g_v6_led.is_busy = false; // Unlock structural line for the next lighting transaction event
+    }
+}
 
 //--------------------------------------------------------------------+
 //
@@ -1411,7 +1417,8 @@ void handle_keyboard_events(uint8_t modifier, uint8_t keycode) {
 		set_led_by_keycode(0x28, 255, 0, 0);	
 		//force_static_lighting_mode();	
 	
-		midi_console_debug(g_v6_led.connected ? 2 : 3, g_v6_led.dev_addr, g_v6_led.instance);			
+		midi_console_debug(g_v6_led.connected ? 2 : 3, g_v6_led.dev_addr, g_v6_led.instance);	
+		set_led_by_keycode(0x29, 255, 255, 255);
 
 	}
 
@@ -1606,7 +1613,7 @@ void hid_set_keyboard_leds(uint8_t led_mask) {
 void set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t blue) {
     // Check if the keyboard is actively linked and the USB endpoint pipe is idle
     if (!g_v6_led.connected || g_v6_led.is_busy) {
-        return false;
+        return;
     }
 
     // Lookup the physical LED index mapped to this specific keycode
@@ -1614,25 +1621,44 @@ void set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t
 
     // Safety validation: Reject out-of-bounds or unmapped layout key values
     if (led_index == 255 || led_index >= 87) {
-        return false; 
+        return; 
     }
 
+    // Allocate a fixed 64-byte transaction payload matching the SignalRGB QMK frame spec
     uint8_t tx_packet[64] = {0};
 
-    // Construct the official native VIA payload structure
+    // Construct the official native SignalRGB protocol payload structure
     tx_packet[0] = SRGB_MAGIC_BYTE;  
     tx_packet[1] = SRGB_CMD_SET_LEDS; 
     tx_packet[2] = 0x01;              // Number of LEDs being updated in this frame	
-    tx_packet[3] = led_index;          // Verified target physical LED
+    tx_packet[3] = led_index;         // Verified target physical LED index mapping offset
     tx_packet[4] = red; 		       
     tx_packet[5] = green;              
     tx_packet[6] = blue;        	  
 
     g_v6_led.is_busy = true;
 
-    // Report ID is 0 for unformatted RAW HID structures
-   tuh_hid_send_report(g_v6_led.dev_addr, g_v6_led.instance, 0, tx_packet, sizeof(tx_packet));
+    // --- REPAIR METHOD FOR SINGLE HID KEYBOARD INTERFACES ---
+    // Param 1: dev_addr -> Active layout device tracking slot
+    // Param 2: instance -> Bound keyboard interface instance number (Instance 0)
+    // Param 3: report_id-> 0 (Un-prefixed custom Raw HID packet structures)
+    // Param 4: report_type -> HID_REPORT_TYPE_OUTPUT (Forces control line EP0 transaction)
+    // Param 5: report -> Pointer to raw frame payload data buffer array
+    // Param 6: len -> 64 (Strictly force the full allocation envelope down the wire)
+    bool status = tuh_hid_set_report(
+        g_v6_led.dev_addr, 
+        g_v6_led.instance, 
+        0, 
+        HID_REPORT_TYPE_OUTPUT, 
+        tx_packet, 
+        sizeof(tx_packet)
+    );
+
+    if (!status) {
+        g_v6_led.is_busy = false; // Release lock right away if transaction failed to schedule
+    }
 }
+
 
 void force_static_lighting_mode(void) {
     if (!g_v6_led.connected) return;
