@@ -1635,7 +1635,7 @@ void set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t
         return false; 
     }
 
-    uint8_t tx_packet[VIA_RAW_REPORT_SIZE] = {0};
+    uint8_t tx_packet[64] = {0};
 
     // Construct the official native VIA payload structure
     tx_packet[0] = SRGB_MAGIC_BYTE;  
@@ -1649,7 +1649,7 @@ void set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t
     g_v6_led.is_busy = true;
 
     // Report ID is 0 for unformatted RAW HID structures
-   tuh_hid_send_report(g_v6_led.dev_addr, g_v6_led.instance, 0, tx_packet, sizeof(tx_buffer));
+   tuh_hid_send_report(g_v6_led.dev_addr, g_v6_led.instance, 0, tx_packet, sizeof(tx_packet));
 }
 
 void force_static_lighting_mode(void) {
