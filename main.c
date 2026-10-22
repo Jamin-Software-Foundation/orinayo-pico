@@ -715,19 +715,9 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	// HID\VID_3434&PID_0363&MI_00
 
 	
-    if (vid == KEYCHRON_VID && pid == KEYCHRON_V6_PID) {
-        // Look through the descriptor buffer for the official QMK 0xFF60 signature
-        bool is_lighting = false;
-        if (desc_len >= 3 && desc_report != NULL) {
-            for (uint16_t i = 0; i < desc_len - 2; i++) {
-                if (desc_report[i] == 0x06 && desc_report[i+1] == 0x60 && desc_report[i+2] == 0xFF) {
-                    is_lighting = true;
-                    break;
-                }
-            }
-        }
-
-        if (is_lighting) {
+    if (vid == KEYCHRON_VID && pid == KEYCHRON_V6_PID) 
+	{
+        if (instance > 0 && itf_protocol == HID_ITF_PROTOCOL_NONE) {
 			debug_steady(3);			
             g_v6_led.dev_addr = dev_addr;
             g_v6_led.instance = instance; // Locks directly onto Interface 2/3
