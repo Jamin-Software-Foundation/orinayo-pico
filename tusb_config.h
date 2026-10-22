@@ -113,7 +113,7 @@ extern "C" {
 #define CFG_TUH_MIDI_STREAM_API		1
 
 #define CFG_TUH_HID                 4
-#define CFG_TUH_HID_KEYBOARD        1
+#define CFG_TUH_HID_KEYBOARD        0
 #define CFG_TUH_HID_MAX_INTERFACE   4  
 #define CFG_TUH_ENDPOINT_MAX        32
 
