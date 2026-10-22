@@ -414,7 +414,7 @@ void midi_n_stream_write(uint8_t itf, uint8_t cable_num, uint8_t *buffer, uint32
 void handle_keyboard_events(uint8_t modifier, uint8_t keycode);
 void hid_set_keyboard_leds(uint8_t led_mask);
 void set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t blue);
-bool force_static_lighting_mode(void);
+void force_static_lighting_mode(void);
 void debug_blink(uint8_t count);
 void debug_steady(uint8_t count);
 
@@ -1652,22 +1652,15 @@ void set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t
    tuh_hid_send_report(g_v6_led.dev_addr, g_v6_led.instance, 0, tx_packet, sizeof(tx_buffer));
 }
 
-bool force_static_lighting_mode(void) {
-	/**
-	 * Overrides the internal Keychron animation profile, forcing the keyboard's 
-	 * internal chip to drop into Static Mode (Effect 0) so your custom key updates take over.
-	*/
- 
-    if (!g_v6_led.connected || g_v6_led.is_busy) return false;
-
-    uint8_t tx_packet[VIA_RAW_REPORT_SIZE] = {0};
-
-    tx_packet[0] = VIA_CMD_LIGHTING;      // 0x07
-    tx_packet[1] = 0x02;                  // VIA Sub-command: Set Lighting Effect/Mode
-    tx_packet[2] = 0x00;                  // Effect ID 0: Static Solid / Custom Matrix Mode
-
+void force_static_lighting_mode(void) {
+    if (!g_v6_led.connected) return;
+    
+    uint8_t tx_buffer[64] = {0};
+    tx_buffer[0] = SRGB_MAGIC_BYTE; // 0xFF
+    tx_buffer[1] = 0x30;            // SignalRGB Command: Lock/Enter Stream Mode
+    
     g_v6_led.is_busy = true;
-    return tuh_hid_set_report(g_v6_led.dev_addr, g_v6_led.instance, 0, HID_REPORT_TYPE_OUTPUT, tx_packet, VIA_RAW_REPORT_SIZE);
+    tuh_hid_send_report(g_v6_led.dev_addr, g_v6_led.instance, 0, tx_buffer, sizeof(tx_buffer));
 }
 
 //--------------------------------------------------------------------+
