@@ -237,7 +237,7 @@ void ble_midi_client_scan_end();
 void set_tempo(uint8_t tempo);
 
 void hid_set_keyboard_leds(uint8_t led_mask);
-bool set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t blue);
+void set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t blue);
 
 
 int chord_chart[12][3][6] = {

@@ -66,9 +66,9 @@ void pico_set_led(bool led_on) {
 #define KEYCHRON_VID      0x3434   // Keychron Vendor ID
 #define KEYCHRON_V6_PID   0x0363   // Keychron V6 Standard Product ID
 
-#define VIA_RAW_REPORT_SIZE  32       
-#define VIA_CMD_LIGHTING     0x07 
-#define VIA_SUB_SET_PIXEL    0x07 
+// SignalRGB Custom Protocol Definitions
+#define SRGB_MAGIC_BYTE      0xFF
+#define SRGB_CMD_SET_LEDS    0x31
 
 // Global tracking structure for active Keychron C3 Pro USB host connection
 typedef struct {
@@ -76,9 +76,9 @@ typedef struct {
     uint8_t instance;
     bool connected;
     bool is_busy;
-} keychron_host_t;
+} srgb_v6_led_t;
 
-static keychron_host_t g_v6_led = {0};
+srgb_v6_led_t g_v6_led = {0};
 
 /**
  * USB HID Keycode to Physical LED Index translation table.
@@ -413,7 +413,7 @@ uint8_t get_arp_template(void);
 void midi_n_stream_write(uint8_t itf, uint8_t cable_num, uint8_t *buffer, uint32_t bufsize);
 void handle_keyboard_events(uint8_t modifier, uint8_t keycode);
 void hid_set_keyboard_leds(uint8_t led_mask);
-bool set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t blue);
+void set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t blue);
 bool force_static_lighting_mode(void);
 void debug_blink(uint8_t count);
 void debug_steady(uint8_t count);
@@ -715,19 +715,30 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	// HID\VID_3434&PID_0363&MI_00
 
 	
-    if (vid == KEYCHRON_VID && pid == KEYCHRON_V6_PID) 
-	{
-        if (instance > 0 && itf_protocol == HID_ITF_PROTOCOL_NONE) {
-			debug_steady(3);			
-            g_v6_led.dev_addr = dev_addr;
-            g_v6_led.instance = instance; // Locks directly onto Interface 2/3
-            g_v6_led.connected = true;
-            g_v6_led.is_busy = false;
-            return; // Exit early to isolate the lighting line
-        } else {
-			debug_blink(4);	
-		}
-    }	
+    if (vid == KEYCHRON_VID && pid == KEYCHRON_V6_PID) {
+        if (itf_protocol == HID_ITF_PROTOCOL_NONE) {
+            bool is_srgb_raw_hid = false;
+            
+            // Scan descriptor array to extract QMK/SignalRGB Usage Page (0xFF60)
+            for (uint16_t i = 0; i < desc_len - 2; i++) {
+                if (desc_report[i] == 0x06 && desc_report[i+1] == 0x60 && desc_report[i+2] == 0xFF) {
+                    is_srgb_raw_hid = true;
+                    break;
+                }
+            }
+
+            if (is_srgb_raw_hid) {
+                g_v6_led.dev_addr = dev_addr;
+                g_v6_led.instance = instance; // Lock directly onto the SignalRGB active channel
+                g_v6_led.connected = true;
+                g_v6_led.is_busy = false;
+                debug_steady(5);
+                return;
+            } else {
+				debug_blink(5);
+			}
+        }
+    }
 
     // Check if the mounted device is a keyboard
     if (itf_protocol == HID_ITF_PROTOCOL_KEYBOARD || itf_protocol == HID_ITF_PROTOCOL_NONE) {		
@@ -822,11 +833,12 @@ void tud_hid_set_report_cb(uint8_t instance, uint8_t report_id, hid_report_type_
     (void) instance; (void) report_id; (void) report_type; (void) buffer; (void) bufsize;
 }
 
-void tuh_hid_set_report_complete_cb(uint8_t dev_addr, uint8_t instance, uint8_t report_id, uint8_t report_type, uint16_t num_bytes) {
+void tuh_hid_report_sent_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* report, uint16_t len) {
     if (dev_addr == g_v6_led.dev_addr && instance == g_v6_led.instance) {
-        g_v6_led.is_busy = false; 
+        g_v6_led.is_busy = false;
     }
 }
+
 
 //--------------------------------------------------------------------+
 //
@@ -1609,7 +1621,7 @@ void hid_set_keyboard_leds(uint8_t led_mask) {
     );
 }
 
-bool set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t blue) {
+void set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t blue) {
     // Check if the keyboard is actively linked and the USB endpoint pipe is idle
     if (!g_v6_led.connected || g_v6_led.is_busy) {
         return false;
@@ -1626,22 +1638,18 @@ bool set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t
     uint8_t tx_packet[VIA_RAW_REPORT_SIZE] = {0};
 
     // Construct the official native VIA payload structure
-    tx_packet[0] = VIA_CMD_LIGHTING;  
-    tx_packet[1] = VIA_SUB_SET_PIXEL; 
-    tx_packet[2] = led_index;          // Verified target physical LED
-    tx_packet[3] = red; 		       
-    tx_packet[4] = green;              
-    tx_packet[5] = blue;        	  
+    tx_packet[0] = SRGB_MAGIC_BYTE;  
+    tx_packet[1] = SRGB_CMD_SET_LEDS; 
+    tx_packet[2] = 0x01;              // Number of LEDs being updated in this frame	
+    tx_packet[3] = led_index;          // Verified target physical LED
+    tx_packet[4] = red; 		       
+    tx_packet[5] = green;              
+    tx_packet[6] = blue;        	  
 
     g_v6_led.is_busy = true;
 
     // Report ID is 0 for unformatted RAW HID structures
-    bool result = tuh_hid_set_report(g_v6_led.dev_addr, g_v6_led.instance, 0, HID_REPORT_TYPE_OUTPUT, tx_packet, VIA_RAW_REPORT_SIZE);
-    
-    if (!result) {
-        g_v6_led.is_busy = false; 
-    }
-    return result;
+   tuh_hid_send_report(g_v6_led.dev_addr, g_v6_led.instance, 0, tx_packet, sizeof(tx_buffer));
 }
 
 bool force_static_lighting_mode(void) {
