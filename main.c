@@ -423,7 +423,7 @@ void debug_steady(uint8_t count);
 
 void stream_deck_xl_clear_canvas(uint8_t dev_addr, uint8_t r, uint8_t g, uint8_t b);
 void stream_deck_xl_set_key_color(uint8_t dev_addr, uint8_t key_id, uint8_t r, uint8_t g, uint8_t b);
-void set_stream_deck_brightness(uint8_t dev_addr, uint8_t brightness_percentage);
+void stream_deck_xl_set_brightness(uint8_t dev_addr, uint8_t brightness_percentage);
 
 enum {
 	// Balanced size: enough to batch multiple MIDI packets per callback while keeping stack usage small.
@@ -1777,7 +1777,7 @@ void stream_deck_xl_set_key_color(uint8_t dev_addr, uint8_t key_id, uint8_t r, u
     );
 }
 
-void set_stream_deck_brightness(uint8_t dev_addr, uint8_t brightness_percentage) {
+void stream_deck_xl_set_brightness(uint8_t dev_addr, uint8_t brightness_percentage) {
     // 32-byte Feature Report structure
     uint8_t buf[32] = {0};
     buf[0] = 0x03; // Report ID
