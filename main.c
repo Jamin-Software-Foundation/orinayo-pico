@@ -717,7 +717,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 	
     if (vid == KEYCHRON_VID && pid == KEYCHRON_V6_PID) 
 	{
-        if (itf_protocol == HID_ITF_PROTOCOL_NONE) {
+        //if (itf_protocol == HID_ITF_PROTOCOL_NONE) {
             bool is_srgb_raw_hid = false;
             
             // Scan descriptor array to extract QMK/SignalRGB Usage Page (0xFF60)
@@ -738,7 +738,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
             } else {
 				debug_blink(5);
 			}
-        }
+       // }
     }
 
     // Check if the mounted device is a keyboard
