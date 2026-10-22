@@ -9,35 +9,39 @@ jobs:
       - name: Checkout Custom Keymap Code
         uses: actions/checkout@v4
 
-      - name: Setup QMK Repository Structure
+      - name: Setup QMK and Inject Custom Keymap
         run: |
-          # 1. This re-enables the 'compile' command by hydrating the QMK ecosystem
+          # Hydrate repository framework targets
           qmk setup -y
           
-          # 2. Extract the actual workspace location dynamically
-          QMK_HOME=$(qmk config user.qmk_home | cut -d'=' -f2 | xargs)
-          if [ -z "$QMK_HOME" ]; then QMK_HOME="/qmk_firmware"; fi
+          # Use standard fallback directory path for this official builder container
+          QMK_HOME="/qmk_firmware"
+          if [ ! -d "$QMK_HOME" ]; then QMK_HOME="/root/qmk_firmware"; fi
           
-          echo "Injecting files into QMK Tree: $QMK_HOME"
+          echo "Target build tree home: $QMK_HOME"
           
-          # 3. Formulate target map directory
+          # Inject your specific keymap directly into the source target directory
           TARGET_DIR="$QMK_HOME/keyboards/keychron/v6/iso_encoder/keymaps/pico_led"
           mkdir -p "$TARGET_DIR"
-          
-          # 4. Safely push local keymap files into the compiler sandbox
           cp keymap.c "$TARGET_DIR/keymap.c"
           cp rules.mk "$TARGET_DIR/rules.mk"
+          
+          # Explicitly pass the home tree location into the next steps via environment variables
+          echo "WORKSPACE_QMK_HOME=$QMK_HOME" >> $GITHUB_ENV
 
-      - name: Compile Custom V6 Firmware
+      - name: Compile via Native Make System
         run: |
-          # The command will now parse natively without throwing sub-choice errors
-          qmk compile -kb keychron/v6/iso_encoder -km pico_led
+          cd ${{ env.WORKSPACE_QMK_HOME }}
+          
+          # Fetch ChibiOS and critical matrix submodules needed for Keychron architecture
+          make git-submodule
+          
+          # Trigger direct compiler chain bypassing the qmk wrapper layer entirely
+          make keychron/v6/iso_encoder:pico_led
 
       - name: Export Flashable Binary File
         uses: actions/upload-artifact@v4
         with:
           name: keychron_v6_iso_encoder_firmware
-          path: |
-            /qmk_firmware/.build/keychron_v6_iso_encoder_pico_led.bin
-            /root/qmk_firmware/.build/keychron_v6_iso_encoder_pico_led.bin
+          path: ${{ env.WORKSPACE_QMK_HOME }}/.build/keychron_v6_iso_encoder_pico_led.bin
           if-no-files-found: warn
