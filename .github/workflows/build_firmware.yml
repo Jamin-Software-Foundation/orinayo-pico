@@ -9,24 +9,28 @@ jobs:
       - name: Checkout Custom Keymap Code
         uses: actions/checkout@v4
 
-      - name: Setup QMK Environment and Inject Keymap
+      - name: Setup QMK Repository Structure
         run: |
-          # Automatically find where the active QMK repository home lives
+          # 1. This re-enables the 'compile' command by hydrating the QMK ecosystem
+          qmk setup -y
+          
+          # 2. Extract the actual workspace location dynamically
           QMK_HOME=$(qmk config user.qmk_home | cut -d'=' -f2 | xargs)
           if [ -z "$QMK_HOME" ]; then QMK_HOME="/qmk_firmware"; fi
           
-          echo "QMK Home detected at: $QMK_HOME"
+          echo "Injecting files into QMK Tree: $QMK_HOME"
           
-          # Target path inside the official QMK tree structure
+          # 3. Formulate target map directory
           TARGET_DIR="$QMK_HOME/keyboards/keychron/v6/iso_encoder/keymaps/pico_led"
           mkdir -p "$TARGET_DIR"
           
-          # Copy files from the repository checkout into the QMK compilation tree
+          # 4. Safely push local keymap files into the compiler sandbox
           cp keymap.c "$TARGET_DIR/keymap.c"
           cp rules.mk "$TARGET_DIR/rules.mk"
 
-      - name: Compile Target Binary
+      - name: Compile Custom V6 Firmware
         run: |
+          # The command will now parse natively without throwing sub-choice errors
           qmk compile -kb keychron/v6/iso_encoder -km pico_led
 
       - name: Export Flashable Binary File
