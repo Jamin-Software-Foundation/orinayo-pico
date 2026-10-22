@@ -103,7 +103,7 @@ extern "C" {
 #define CFG_TUH_RPI_PIO_USB         1
 
 // Size of buffer to hold descriptors and other data used for enumeration.
-#define CFG_TUH_ENUMERATION_BUFSIZE 1024
+#define CFG_TUH_ENUMERATION_BUFSIZE 2048
 
 // Host class enablement.
 #define CFG_TUH_HUB                 1
@@ -116,7 +116,7 @@ extern "C" {
 #define CFG_TUH_HID_KEYBOARD        0
 #define CFG_TUH_HID_MAX_INTERFACE   4  
 #define CFG_TUH_ENDPOINT_MAX        32
-#define CFG_TUH_CONFIGURATION_MAX_LEN   512 
+#define CFG_TUH_CONFIGURATION_MAX_LEN   1024 
 
 #define TUH_CFG_RHP_PIO             1  // Ensures Host routes properly to PIO layer
 #define PIO_USB_DEVICE_CNT          8   // Matches your CFG_TUH_DEVICE_MAX

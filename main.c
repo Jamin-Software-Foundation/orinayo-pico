@@ -722,7 +722,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 			hid_keyboard_connected = true;
 			keyboard_dev_addr = dev_addr;
 			keyboard_instance = instance;
-			hid_set_keyboard_leds(15); 	// switch on all 4 leds		
+			//hid_set_keyboard_leds(15); 	// switch on all 4 leds		
 
 			if (vid == 0x1A86 && pid == 0xE026) {			
 				ikkegol_pedal_enabled = true;
@@ -731,7 +731,7 @@ void tuh_hid_mount_cb(uint8_t dev_addr, uint8_t instance, uint8_t const* desc_re
 		else
 
 		if (itf_protocol == HID_ITF_PROTOCOL_NONE) {	
-			debug_steady(3);
+			//debug_steady(3);
 			
 			if (vid == KEYCHRON_VID && pid == KEYCHRON_V6_PID) {
                 g_v6_led.dev_addr = dev_addr;
