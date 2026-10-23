@@ -460,6 +460,126 @@ void core1_main() {
 	}
 }
 
+// ---- Web UI control over USB MIDI (Universal SysEx, educational/non-commercial ID 0x7D) ----
+// Frame: F0 7D 4F <cmd> [data...] F7  (all data bytes 7-bit)
+//  host->device: 01 <hid keycode> key press | 02 request state | 03 <track 0-3> <value> set volume
+//  device->host: 10 <style_group> <transpose> <style_section> <flags> <neck_pos> <strum_pattern+1> <drums> <bass> <chords> <melody>
+//  flags: bit0 style started, bit1 drums on, bit2 bass on, bit3 chords on
+#define WEB_SYSEX_ID	0x7D
+#define WEB_SYSEX_DEV	0x4F
+#define WEB_STATE_LEN	10
+
+extern bool enable_drum_track;
+
+static uint8_t web_sysex_buf[8];
+static uint8_t web_sysex_len = 0;
+static bool web_sysex_active = false;
+static bool web_state_requested = false;
+static uint8_t web_last_state[WEB_STATE_LEN];
+static uint32_t web_last_state_ms = 0;
+
+static void web_get_state(uint8_t *st) {
+	st[0] = style_group & 0x7F;
+	st[1] = transpose & 0x7F;
+	st[2] = style_section & 0x7F;
+	st[3] = (style_started ? 1 : 0) | (enable_drum_track ? 2 : 0) | (enable_bass_track ? 4 : 0) | (enable_chord_track ? 8 : 0);
+	st[4] = active_neck_pos & 0x7F;
+	st[5] = (active_strum_pattern + 1) & 0x7F;
+	st[6] = sample_drum_velocity & 0x7F;
+	st[7] = sample_bass_velocity & 0x7F;
+	st[8] = sample_chord_velocity & 0x7F;
+	st[9] = midi_guitar_volume & 0x7F;
+}
+
+static void web_send_state(const uint8_t *st) {
+	uint8_t msg[5 + WEB_STATE_LEN];
+	msg[0] = 0xF0; msg[1] = WEB_SYSEX_ID; msg[2] = WEB_SYSEX_DEV; msg[3] = 0x10;
+	memcpy(&msg[4], st, WEB_STATE_LEN);
+	msg[4 + WEB_STATE_LEN] = 0xF7;
+	tud_midi_n_stream_write(0, 0, msg, sizeof(msg));
+}
+
+static void web_handle_command(const uint8_t *d, uint8_t len) {
+	if (len < 1) return;
+	
+	if (d[0] == 0x01 && len >= 2) {
+		handle_keyboard_events(0, d[1]);
+		handle_keyboard_events(0, 0);	// release
+	}
+	else
+		
+	if (d[0] == 0x02) {
+		web_state_requested = true;
+	}
+	else
+		
+	if (d[0] == 0x03 && len >= 3) {
+		uint8_t v = d[2] > 127 ? 127 : d[2];
+		if (d[1] == 0) sample_drum_velocity = v;
+		if (d[1] == 1) sample_bass_velocity = v;
+		if (d[1] == 2) sample_chord_velocity = v;
+		if (d[1] == 3) midi_guitar_volume = v;
+	}
+}
+
+// Returns true if the USB MIDI packet belongs to a web control SysEx and must not be forwarded.
+static bool web_sysex_consume(const uint8_t *pkt) {
+	uint8_t cin = pkt[0] & 0x0F;
+	uint8_t n;
+	
+	if (cin == 0x4 || cin == 0x7) n = 3;
+	else if (cin == 0x6) n = 2;
+	else if (cin == 0x5) n = 1;
+	else return false;
+	
+	bool consumed = web_sysex_active;
+	
+	for (uint8_t i = 0; i < n; i++) {
+		uint8_t b = pkt[1 + i];
+		
+		if (b == 0xF0) {
+			web_sysex_active = false;
+			web_sysex_len = 0;
+			consumed = false;
+			if (cin == 0x4 && pkt[2] == WEB_SYSEX_ID && pkt[3] == WEB_SYSEX_DEV) {
+				web_sysex_active = true;
+				consumed = true;
+				i = 2;	// skip manufacturer id and device marker
+			}
+		}
+		else
+			
+		if (b == 0xF7) {
+			if (web_sysex_active) web_handle_command(web_sysex_buf, web_sysex_len);
+			web_sysex_active = false;
+		}
+		else
+			
+		if (web_sysex_active && web_sysex_len < sizeof(web_sysex_buf)) {
+			web_sysex_buf[web_sysex_len++] = b;
+		}
+	}
+	
+	return consumed;
+}
+
+static void web_state_task(void) {
+	if (!tud_midi_mounted()) return;
+	
+	uint8_t st[WEB_STATE_LEN];
+	web_get_state(st);
+	
+	uint32_t now = to_ms_since_boot(get_absolute_time());
+	bool changed = memcmp(st, web_last_state, WEB_STATE_LEN) != 0;
+	
+	if ((changed || web_state_requested) && (now - web_last_state_ms) >= 20) {
+		web_send_state(st);
+		memcpy(web_last_state, st, WEB_STATE_LEN);
+		web_last_state_ms = now;
+		web_state_requested = false;
+	}
+}
+
 int main() {	
 	set_sys_clock_khz(120000, true);
 	sleep_ms(10);
@@ -516,6 +636,8 @@ int main() {
 			uint8_t buffer[4] = {0};			
 			tud_midi_packet_read(buffer);
 			
+			if (web_sysex_consume(buffer)) continue;
+			
 			if (midi_itf_idx != 0xFF) {
 				tuh_midi_stream_write(midi_itf_idx, 0, buffer, 4);
 				tuh_midi_write_flush(midi_itf_idx);
@@ -533,6 +655,7 @@ int main() {
 		}		
 		
 		note_scheduler_dispatch_pending();
+		web_state_task();
 
 		// Poll for incoming MIDI events from any connected BLE MIDI peripheral.
 		// BAO disable BLE for now
