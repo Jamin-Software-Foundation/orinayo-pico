@@ -595,7 +595,7 @@ int main() {
 
 int32_t read_encoder_1() {
     uint8_t reg_addr = REG_ENCODER_1;
-    uint8_t buffer[4];
+     uint8_t buffer[4] = {0, 0, 0, 0}; 
 
     // Write register index to read from, nostop = true
     int write_res = i2c_write_blocking(I2C_BUS_ENCODER, ENCODER_ADDR, &reg_addr, 1, true);
