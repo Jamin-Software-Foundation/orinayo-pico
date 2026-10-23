@@ -459,7 +459,7 @@ bool is_wav_trigger_connected() {
 
 #define WEB_SYSEX_ID	0x7D
 #define WEB_SYSEX_DEV	0x4F
-#define WEB_STATE_LEN	10
+#define WEB_STATE_LEN	13
 
 extern bool enable_drum_track;
 
@@ -481,6 +481,10 @@ static void web_get_state(uint8_t *st) {
 	st[7] = sample_bass_velocity & 0x7F;
 	st[8] = sample_chord_velocity & 0x7F;
 	st[9] = midi_guitar_volume & 0x7F;
+	
+	st[10] = (uint8_t) (advanced_chord / 256) - 1;
+	st[11]= (uint8_t) ((advanced_chord % 256) / 16) - 1;			
+	st[12] = (uint8_t) ((advanced_chord % 256) % 16);	
 }
 
 static void web_send_state(const uint8_t *st) {
