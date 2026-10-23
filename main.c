@@ -448,23 +448,15 @@ bool is_wav_trigger_connected() {
 
 //--------------------------------------------------------------------+
 //
-// core main handle handlers
+// Web UI  -  Web UI control over USB MIDI (Universal SysEx, educational/non-commercial ID 0x7D)
 //
 //--------------------------------------------------------------------+
 
-void core1_main() {
-	tuh_init(BOARD_TUH_RHPORT);
-
-	while (true) {
-		tuh_task(); // tinyusb host task		
-	}
-}
-
-// ---- Web UI control over USB MIDI (Universal SysEx, educational/non-commercial ID 0x7D) ----
-// Frame: F0 7D 4F <cmd> [data...] F7  (all data bytes 7-bit)
+//  Frame: F0 7D 4F <cmd> [data...] F7  (all data bytes 7-bit)
 //  host->device: 01 <hid keycode> key press | 02 request state | 03 <track 0-3> <value> set volume
 //  device->host: 10 <style_group> <transpose> <style_section> <flags> <neck_pos> <strum_pattern+1> <drums> <bass> <chords> <melody>
 //  flags: bit0 style started, bit1 drums on, bit2 bass on, bit3 chords on
+
 #define WEB_SYSEX_ID	0x7D
 #define WEB_SYSEX_DEV	0x4F
 #define WEB_STATE_LEN	10
@@ -579,6 +571,21 @@ static void web_state_task(void) {
 		web_state_requested = false;
 	}
 }
+
+//--------------------------------------------------------------------+
+//
+// core main handle handlers
+//
+//--------------------------------------------------------------------+
+
+void core1_main() {
+	tuh_init(BOARD_TUH_RHPORT);
+
+	while (true) {
+		tuh_task(); // tinyusb host task		
+	}
+}
+
 
 int main() {	
 	set_sys_clock_khz(120000, true);
