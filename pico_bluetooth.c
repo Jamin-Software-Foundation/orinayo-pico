@@ -173,6 +173,7 @@ uint8_t sp404_old_bass_cmd = 0;
 uint8_t sp404_old_chord_cmd = 0;
 
 int transpose = 0; 
+int global_tempo = 0;
 int midi_current_step = 0;
 
 uint8_t voice_note = 0;

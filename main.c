@@ -207,6 +207,7 @@ static const uint8_t hid_to_led_map[256] = {
 
 #define constrain(amt, low, high) ((amt) < (low) ? (low) : ((amt) > (high) ? (high) : (amt)))
 
+extern looper_status_t looper_status;
 extern int transpose;
 extern int midi_current_step;
 extern int style_section;
@@ -459,7 +460,7 @@ bool is_wav_trigger_connected() {
 
 #define WEB_SYSEX_ID	0x7D
 #define WEB_SYSEX_DEV	0x4F
-#define WEB_STATE_LEN	13
+#define WEB_STATE_LEN	14
 
 extern bool enable_drum_track;
 
@@ -485,6 +486,7 @@ static void web_get_state(uint8_t *st) {
 	st[10] = (uint8_t) (advanced_chord / 256) - 1;
 	st[11]= (uint8_t) ((advanced_chord % 256) / 16) - 1;			
 	st[12] = (uint8_t) ((advanced_chord % 256) % 16);	
+	st[13] = (uint8_t) looper_status.bpm % 128;
 }
 
 static void web_send_state(const uint8_t *st) {

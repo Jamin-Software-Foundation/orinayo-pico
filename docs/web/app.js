@@ -37,7 +37,7 @@ function onMidi(ev) {
   const d = ev.data;
   if (d[0] !== 0xF0 || d[1] !== SYSEX_ID || d[2] !== DEV_ID || d[3] !== EVT_STATE || d.length < 15) return;
   render({
-    group: d[4], key: d[5], section: d[6], chord_root: d[14], chord_bass: d[15], chord_type: d[16],
+    group: d[4], key: d[5], section: d[6], chord_root: d[14], chord_bass: d[15], chord_type: d[16], bpm: d[17],
     started: !!(d[7] & 1), drums: !!(d[7] & 2), bass: !!(d[7] & 4), chords: !!(d[7] & 8),
     neck: d[8], pattern: d[9] - 1,
     vol: [d[10], d[11], d[12], d[13]],
@@ -49,11 +49,13 @@ function render(s) {
   $("#styleSection").textContent = (s.section % 8) + 1;
   $$("#sectionLeds i").forEach((el, i) => el.classList.toggle("on", s.started && i === s.section % 4));
   $("#songKey").textContent = NOTES[s.key % 12];
-  $("#activeChord").textContent = NOTES[s.chord_root % 12] + "<small>" + YPES[s.chord_type] + "</small>";
+  $("#activeChord").innerHTML = NOTES[s.chord_root % 12] + TYPES[s.chord_type];
   
   if (s.chord_root != s.chord_bass) {
-	  $("#activeChord").innerHTML = NOTES[s.chord_root % 12] + "<small>" + TYPES[s.chord_type] + "</small>/" + NOTES[s.chord_bass % 12];
+	  $("#activeChord").innerHTML = NOTES[s.chord_root % 12] + TYPES[s.chord_type] + "/" + NOTES[s.chord_bass % 12];
   }
+  
+  $("#strum_bpm").innerHTML = "Strum" + "<br/>" + s.bpm;
   
   const b = $("#startBtn");
   b.classList.toggle("running", s.started);
