@@ -142,3 +142,15 @@ This is a general-purpose wireless translation utility.
 
 ## License
 Licensed under the **Apache License, Version 2.0**
+## Web controller (PWA)
+
+`web/` contains an installable, responsive PWA (phone portrait, tablet/desktop landscape) that mirrors the guitar controller buttons and shows device status over WebMIDI. Serve `web/` over HTTPS (or `localhost`), open it in Chrome/Edge/Opera, tap **Connect** and allow MIDI with SysEx access.
+
+Messages are Universal SysEx using the non-commercial ID `0x7D`, frame `F0 7D 4F <cmd> [data...] F7` (7-bit data):
+
+| Direction | Cmd | Data | Meaning |
+|---|---|---|---|
+| host → device | `01` | `keycode` | Same as pressing that USB HID keyboard key (see `handle_keyboard_events` in `main.c`) |
+| host → device | `02` | – | Request state |
+| host → device | `03` | `track` (0 drums, 1 bass, 2 chords, 3 melody), `value` | Set volume |
+| device → host | `10` | `style_group, transpose, style_section, flags, active_neck_pos, active_strum_pattern+1, drums, bass, chords, melody` | State (sent on change and on request); flags: bit0 style started, bit1 drums on, bit2 bass on, bit3 chords on |

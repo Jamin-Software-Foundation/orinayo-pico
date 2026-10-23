@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1220">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Orinayo Controller</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Orinayo</h1>
+  <div id="conn" class="conn off"><span class="dot"></span><span id="connText">Disconnected</span></div>
+  <button id="connectBtn" class="btn small">Connect</button>
+</header>
+
+<div id="notice" class="notice" hidden></div>
+
+<main>
+  <section class="panel transport">
+    <h2>Transport</h2>
+    <button id="startBtn" class="btn big" data-key="40"><span class="led" id="startLed"></span><span id="startText">START</span></button>
+    <div class="row">
+      <button class="btn" data-key="42">Fill</button>
+      <button class="btn" data-key="43">Break</button>
+      <button class="btn" data-key="44">Whammy</button>
+      <button class="btn" data-key="53">Pads</button>
+    </div>
+  </section>
+
+  <section class="panel style">
+    <h2>Style</h2>
+    <div class="readout">
+      <div><small>Group</small><b id="styleGroup">-</b></div>
+      <div><small>Variation</small><b id="styleSection">-</b></div>
+    </div>
+    <div class="leds" id="sectionLeds"><i></i><i></i><i></i><i></i></div>
+    <div class="row">
+      <button class="btn" data-key="80">&#9664; Prev</button>
+      <button class="btn" data-key="79">Next &#9654;</button>
+    </div>
+    <small class="hint">When stopped: style group. When playing: style variation.</small>
+  </section>
+
+  <section class="panel songkey">
+    <h2>Song Key</h2>
+    <div class="readout single"><div><b id="songKey" class="huge">-</b></div></div>
+    <div class="row">
+      <button class="btn" data-key="86">&minus;</button>
+      <button class="btn" data-key="38">C</button>
+      <button class="btn" data-key="87">+</button>
+    </div>
+  </section>
+
+  <section class="panel strum">
+    <h2>Strum</h2>
+    <div class="row" id="patterns">
+      <button class="btn" data-key="30" data-pat="0">Strum</button>
+      <button class="btn" data-key="31" data-pat="1">Strum+Bass</button>
+      <button class="btn" data-key="32" data-pat="2">Arp 1</button>
+      <button class="btn" data-key="33" data-pat="3">Arp 2</button>
+      <button class="btn" data-key="34" data-pat="4">Arp 3</button>
+      <button class="btn" data-key="39">Melody Off</button>
+    </div>
+    <h3>Neck position</h3>
+    <div class="row" id="neck">
+      <button class="btn" data-key="35" data-neck="1">Low</button>
+      <button class="btn" data-key="36" data-neck="2">Mid</button>
+      <button class="btn" data-key="37" data-neck="3">High</button>
+    </div>
+  </section>
+
+  <section class="panel mixer">
+    <h2>Mixer</h2>
+    <div class="faders">
+      <div class="ch" data-track="0"><button class="btn mute" data-key="70">Drums</button><input type="range" min="10" max="127" orient="vertical"><output></output></div>
+      <div class="ch" data-track="1"><button class="btn mute" data-key="71">Bass</button><input type="range" min="10" max="127" orient="vertical"><output></output></div>
+      <div class="ch" data-track="2"><button class="btn mute" data-key="72">Chords</button><input type="range" min="10" max="127" orient="vertical"><output></output></div>
+      <div class="ch" data-track="3"><button class="btn nomute">Melody</button><input type="range" min="10" max="127" orient="vertical"><output></output></div>
+    </div>
+  </section>
+
+  <section class="panel presets">
+    <h2>Device</h2>
+    <div class="grid">
+      <button class="btn" data-key="58">F1 Ketron</button>
+      <button class="btn" data-key="59">F2 Ample</button>
+      <button class="btn" data-key="60">F3 Dream Drums</button>
+      <button class="btn" data-key="61">F4 WAV Trigger</button>
+      <button class="btn" data-key="62">F5 MODX</button>
+      <button class="btn" data-key="63">F6 Nanobox</button>
+      <button class="btn" data-key="64">F7 MPX Looper</button>
+      <button class="btn" data-key="65">F8 MPC Sample</button>
+      <button class="btn" data-key="66">F9 SP-404</button>
+      <button class="btn" data-key="67">F10 SeqTrak</button>
+      <button class="btn" data-key="68">F11 Synth</button>
+      <button class="btn" data-key="69">F12 Guitar</button>
+    </div>
+  </section>
+</main>
+
+<dialog id="devDialog">
+  <form method="dialog">
+    <h2>MIDI ports</h2>
+    <label>Input <select id="inSel"></select></label>
+    <label>Output <select id="outSel"></select></label>
+    <button class="btn">Close</button>
+  </form>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>
