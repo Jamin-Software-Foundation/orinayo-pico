@@ -35,11 +35,11 @@ const setVolume = (track, v) => send([CMD_SET_VOLUME, track, v & 0x7F]);
 
 function onMidi(ev) {
   const d = ev.data;
-  if (d[0] !== 0xF0 || d[1] !== SYSEX_ID || d[2] !== DEV_ID || d[3] !== EVT_STATE || d.length < 15) return;
+  if (d[0] !== 0xF0 || d[1] !== SYSEX_ID || d[2] !== DEV_ID || d[3] !== EVT_STATE || d.length < 19) return;
   render({
     group: d[4], key: d[5], section: d[6], chord_root: d[14], chord_bass: d[15], chord_type: d[16], bpm: d[17],
     started: !!(d[7] & 1), drums: !!(d[7] & 2), bass: !!(d[7] & 4), chords: !!(d[7] & 8),
-    neck: d[8], pattern: d[9] - 1,
+    neck: d[8], pattern: d[9],
     vol: [d[10], d[11], d[12], d[13]],
   });
 }
@@ -52,7 +52,7 @@ function render(s) {
   $("#activeChord").innerHTML = NOTES[s.chord_root % 12] + TYPES[s.chord_type];
   
   if (s.chord_root != s.chord_bass) {
-	  $("#activeChord").innerHTML = NOTES[s.chord_root % 12] + TYPES[s.chord_type] + "/" + NOTES[s.chord_bass % 12];
+	  $("#activeChord").innerHTML = NOTES[s.chord_root % 12] + TYPES[s.chord_type % 3] + "/" + NOTES[s.chord_bass % 12];
   }
   
   $("#strum_bpm").innerHTML = "Strum" + "<br/>" + s.bpm;
