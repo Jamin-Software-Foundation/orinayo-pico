@@ -49,10 +49,10 @@ function render(s) {
   $("#styleSection").textContent = (s.section % 8) + 1;
   $$("#sectionLeds i").forEach((el, i) => el.classList.toggle("on", s.started && i === s.section % 4));
   $("#songKey").textContent = NOTES[s.key % 12];
-  $("#activeChord").innerHTML = NOTES[s.chord_root % 12] + TYPES[s.chord_type];
+  $("#activeChord").innerHTML = NOTES[(s.chord_root + s.key) % 12] + TYPES[s.chord_type];
   
   if (s.chord_root != s.chord_bass) {
-	  $("#activeChord").innerHTML = NOTES[s.chord_root % 12] + TYPES[s.chord_type % 3] + "/" + NOTES[s.chord_bass % 12];
+	  $("#activeChord").innerHTML = NOTES[(s.chord_root + s.key) % 12] + TYPES[s.chord_type % 3] + "/" + NOTES[(s.chord_bass + s.key) % 12];
   }
   
   $("#strum_bpm").innerHTML = "Strum" + "<br/>" + s.bpm;
