@@ -161,6 +161,13 @@ static const uint8_t hid_to_led_map[256] = {
 #define UART_TX_PIN_1  4
 #define UART_RX_PIN_1  5
 
+// 8ENCODER
+#define I2C_BUS_ENCODER   i2c0
+#define PIN_SDA0          8
+#define PIN_SCL0          9
+#define ENCODER_ADDR      0x41
+#define REG_ENCODER_1     0x00
+
 // WAV Trigger I2C Peripheral Block and Pin Mapping
 #define I2C_ID          i2c1
 #define I2C_SDA_PIN     6
@@ -425,6 +432,8 @@ void stream_deck_xl_clear_canvas(uint8_t dev_addr, uint8_t r, uint8_t g, uint8_t
 void stream_deck_xl_set_key_color(uint8_t dev_addr, uint8_t key_id, uint8_t r, uint8_t g, uint8_t b);
 void stream_deck_xl_set_brightness(uint8_t dev_addr, uint8_t brightness_percentage);
 
+int32_t read_encoder_1();
+
 enum {
 	// Balanced size: enough to batch multiple MIDI packets per callback while keeping stack usage small.
 	HOST_MIDI_RX_BUFFER_SIZE = 48,
@@ -482,6 +491,14 @@ int main() {
 	gpio_set_function(UART_RX_PIN, GPIO_FUNC_UART);
 	uart_set_fifo_enabled(UART_ID, true);
 	uart_set_translate_crlf(UART_ID, false);
+	sleep_ms(500);
+
+    // ---- Initialize I2C0 (Encoder Bus) ----
+    i2c_init(I2C_BUS_ENCODER, 400 * 1000); // 400 kHz Fast Mode
+    gpio_set_function(PIN_SDA0, GPIO_FUNC_I2C);
+    gpio_set_function(PIN_SCL0, GPIO_FUNC_I2C);
+    gpio_pull_up(PIN_SDA0);
+    gpio_pull_up(PIN_SCL0);	
 	sleep_ms(500);	
 	
 	// setup I2C - WAV Trigger Pro	
@@ -506,9 +523,22 @@ int main() {
 	wav_trigger_pro_connected = is_wav_trigger_connected();	
 	printf("Debug Log: Orinayo Pico Ready!\n");
 	
+    int32_t last_position = 0;
+	
 	
     while (true) {
-		tud_task(); // tinyusb device task		
+		tud_task(); // tinyusb device task	
+
+        int32_t current_position = read_encoder_1();	
+
+        if (current_position != -9999 && current_position != last_position) 
+		{
+            if (current_position > last_position) {
+				debug_blink(2);
+            }
+            
+            last_position = current_position;
+        }		
 		
 		//if (enable_midi_drums) cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, false);			
 		
@@ -561,6 +591,22 @@ int main() {
     }
 	
     //cancel_repeating_timer(&timer);	
+}
+
+int32_t read_encoder_1() {
+    uint8_t reg_addr = REG_ENCODER_1;
+    uint8_t buffer[4];
+
+    // Write register index to read from, nostop = true
+    int write_res = i2c_write_blocking(I2C_BUS_ENCODER, ENCODER_ADDR, &reg_addr, 1, true);
+    if (write_res < 0) return -9999; // Error fallback value
+
+    // Read 4 bytes back
+    int read_res = i2c_read_blocking(I2C_BUS_ENCODER, ENCODER_ADDR, buffer, 4, false);
+    if (read_res < 0) return -9999;
+
+    // Convert raw little-endian bytes to signed 32-bit int
+    return (int32_t)(buffer[0] | (buffer[1] << 8) | (buffer[2] << 16) | (buffer[3] << 24));
 }
 
 //--------------------------------------------------------------------+
