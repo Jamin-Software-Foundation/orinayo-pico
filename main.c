@@ -570,7 +570,7 @@ static void web_state_task(void) {
 	uint32_t now = to_ms_since_boot(get_absolute_time());
 	bool changed = memcmp(st, web_last_state, WEB_STATE_LEN) != 0;
 	
-	if ((changed || web_state_requested) && (now - web_last_state_ms) >= 10) {
+	if ((changed || web_state_requested) && (now - web_last_state_ms) >= 20) {
 		web_send_state(st);
 		memcpy(web_last_state, st, WEB_STATE_LEN);
 		web_last_state_ms = now;
