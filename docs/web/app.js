@@ -55,7 +55,7 @@ function render(s) {
 	  $("#activeChord").innerHTML = NOTES[(s.chord_root + s.key) % 12] + TYPES[s.chord_type % 3] + "/" + NOTES[(s.chord_bass + s.key) % 12];
   }
   
-  $("#songMode").classList.toggle("active", song_mode);
+  $("#songMode").classList.toggle("active", s.song_mode);
   
   const b = $("#startBtn");
   b.classList.toggle("running", s.started);
