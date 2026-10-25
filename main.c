@@ -475,7 +475,7 @@ static void web_get_state(uint8_t *st) {
 	st[0] = style_group & 0x7F;
 	st[1] = transpose & 0x7F;
 	st[2] = style_section & 0x7F;
-	st[3] = (style_started ? 1 : 0) | (enable_drum_track ? 2 : 0) | (enable_bass_track ? 4 : 0) | (enable_chord_track ? 8 : 0);
+	st[3] = (style_started ? 1 : 0) | (enable_drum_track ? 2 : 0) | (enable_bass_track ? 4 : 0) | (enable_chord_track ? 8 : 0) | (enable_sampler_song_mode ? 16 : 0);
 	st[4] = active_neck_pos & 0x7F;
 	st[5] = (active_strum_pattern + 1) & 0x7F;
 	st[6] = sample_drum_velocity & 0x7F;
@@ -570,7 +570,7 @@ static void web_state_task(void) {
 	uint32_t now = to_ms_since_boot(get_absolute_time());
 	bool changed = memcmp(st, web_last_state, WEB_STATE_LEN) != 0;
 	
-	if ((changed || web_state_requested) && (now - web_last_state_ms) >= 20) {
+	if ((changed || web_state_requested) && (now - web_last_state_ms) >= 10) {
 		web_send_state(st);
 		memcpy(web_last_state, st, WEB_STATE_LEN);
 		web_last_state_ms = now;
