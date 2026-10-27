@@ -236,7 +236,7 @@ void sampler_trigger_fill();
 void sampler_trigger_break();
 void ble_midi_client_scan_end();
 void set_tempo(uint8_t tempo);
-
+void web_state_task(void);
 void hid_set_keyboard_leds(uint8_t led_mask);
 void set_led_by_keycode(uint8_t hid_keycode, uint8_t red, uint8_t green, uint8_t blue);
 
@@ -943,6 +943,7 @@ void gamepad_bluetooth_handle_data() {
 		}
 		
 		finished_processing = true;
+		web_state_task();
 		return;
 	}
 
@@ -960,7 +961,8 @@ void gamepad_bluetooth_handle_data() {
 		}
 		
 		hid_set_keyboard_leds(transpose);
-		finished_processing = true;		
+		finished_processing = true;	
+		web_state_task();		
 		return;			
 	}
 
@@ -975,6 +977,7 @@ void gamepad_bluetooth_handle_data() {
 			worship_pad_velocity = 127;			
 		}	
 		finished_processing = true;	
+		web_state_task();				
 		return;			
 	}						
 
@@ -995,7 +998,8 @@ void gamepad_bluetooth_handle_data() {
 			}
 		}		
 		hid_set_keyboard_leds(transpose);		
-		finished_processing = true;		
+		finished_processing = true;	
+		web_state_task();				
 		return;
 	}		
 
@@ -1235,6 +1239,7 @@ void gamepad_bluetooth_handle_data() {
 		}
 
 		finished_processing = true;
+		web_state_task();				
 		return;
 	}		
 
@@ -1392,6 +1397,7 @@ void gamepad_bluetooth_handle_data() {
 		if (style_section % 4 == 3) hid_set_keyboard_leds(8);		
 		
 		finished_processing = true;		
+		web_state_task();				
 		return;			
 	}
 
@@ -1580,7 +1586,8 @@ void gamepad_bluetooth_handle_data() {
 		// Now check what device ia active and act accordingly
 		handle_group_change();
 					
-		finished_processing = true;			
+		finished_processing = true;	
+		web_state_task();				
 		return;		
 	}		
 
@@ -1626,6 +1633,7 @@ void gamepad_bluetooth_handle_data() {
 		}
 
 		finished_processing = true;		
+		web_state_task();				
 		return;			
 	}
 
@@ -1758,6 +1766,7 @@ void gamepad_bluetooth_handle_data() {
 		}
 		
 		finished_processing = true;		
+		web_state_task();				
 		return;
 	}
 
@@ -1773,6 +1782,7 @@ void gamepad_bluetooth_handle_data() {
 					params->ghost_intensity = 0.843;	
 
 					finished_processing = true;
+					web_state_task();							
 					return;
 				}
 			}
@@ -1788,6 +1798,7 @@ void gamepad_bluetooth_handle_data() {
 					params->ghost_intensity = 0.0;
 
 					finished_processing = true;
+					web_state_task();							
 					return;
 				}
 			}
@@ -1807,6 +1818,7 @@ void gamepad_bluetooth_handle_data() {
 					looper_status.current_step = 0;
 					
 					finished_processing = true;					
+					web_state_task();							
 					return;
 				}
 			}
@@ -1821,6 +1833,7 @@ void gamepad_bluetooth_handle_data() {
 					looper_status.state = LOOPER_STATE_TAP_TEMPO;
 
 					finished_processing = true;
+					web_state_task();		
 					return;	
 				}
 			}
@@ -1853,6 +1866,7 @@ void gamepad_bluetooth_handle_data() {
 		}
 
 		finished_processing = true;
+		web_state_task();		
 		return;			
 	}
 
@@ -1860,6 +1874,7 @@ void gamepad_bluetooth_handle_data() {
 		logo_knob_up = knob_up;	
 
 		finished_processing = true;		
+		web_state_task();				
 		return;			
 	}
 
@@ -1867,6 +1882,7 @@ void gamepad_bluetooth_handle_data() {
 		logo_knob_down = knob_down;	
 			
 		finished_processing = true;
+		web_state_task();				
 		return;			
 	}
 
@@ -1892,7 +1908,8 @@ void gamepad_bluetooth_handle_data() {
 
 		if (!style_started) cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, !!dpad_right);	
 
-		finished_processing = true;		
+		finished_processing = true;	
+		web_state_task();				
 		return;
 	}	
 
@@ -1918,11 +1935,13 @@ void gamepad_bluetooth_handle_data() {
 		
 		if (!style_started) cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, !!dpad_left);
 
-		finished_processing = true;		
+		finished_processing = true;	
+		web_state_task();		
 		return;
 	}	
 
 	finished_processing = true;				
+	web_state_task();			
 }
 
 void handle_group_change() {

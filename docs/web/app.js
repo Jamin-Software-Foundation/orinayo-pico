@@ -39,10 +39,12 @@ function onMidi(ev) {
   render({
     group: d[4], key: d[5], section: d[6], chord_root: d[14], chord_bass: d[15], chord_type: d[16], bpm: d[17],
     started: !!(d[7] & 1), drums: !!(d[7] & 2), bass: !!(d[7] & 4), chords: !!(d[7] & 8), song_mode: !!(d[7] & 16),
-    neck: d[8], pattern: d[9],
+    neck: d[8], pattern: d[9], 
+	mode_66: !!(d[18] & 1), mode_59: !!(d[18] & 2), mode_60: !!(d[18] & 4),  mode_61: !!(d[18] & 8), mode_63: !!(d[18] & 16), mode_64: !!(d[18] & 32), mode_65: !!(d[18] & 64),
     vol: [d[10], d[11], d[12], d[13]],
   });
 }
+
 
 function render(s) {
   $("#styleGroup").textContent = s.group + 1;
@@ -56,6 +58,14 @@ function render(s) {
   }
   
   $("#songMode").classList.toggle("active", s.song_mode);
+  
+  $('data-key="66"]').classList.toggle("active", s.mode_66);  
+  $('data-key="59"]').classList.toggle("active", s.mode_59);  
+  $('data-key="60"]').classList.toggle("active", s.mode_60);  
+  $('data-key="61"]').classList.toggle("active", s.mode_61);  
+  $('data-key="63"]').classList.toggle("active", s.mode_63);  
+  $('data-key="64"]').classList.toggle("active", s.mode_64);  
+  $('data-key="65"]').classList.toggle("active", s.mode_65);    
   
   const b = $("#startBtn");
   b.classList.toggle("running", s.started);

@@ -231,6 +231,8 @@ extern uint8_t sampler_old_chord_note;
 extern uint8_t midi_guitar_volume;
 
 extern bool style_started;
+
+extern bool enable_arranger_mode;
 extern bool enable_ample_guitar;
 extern bool enable_midi_drums;
 extern bool enable_seqtrak;
@@ -460,7 +462,7 @@ bool is_wav_trigger_connected() {
 
 #define WEB_SYSEX_ID	0x7D
 #define WEB_SYSEX_DEV	0x4F
-#define WEB_STATE_LEN	14
+#define WEB_STATE_LEN	15
 
 extern bool enable_drum_track;
 
@@ -487,6 +489,7 @@ static void web_get_state(uint8_t *st) {
 	st[11]= (uint8_t) ((advanced_chord % 256) / 16) - 1;			
 	st[12] = (uint8_t) ((advanced_chord % 256) % 16);	
 	st[13] = (uint8_t) looper_status.bpm % 128;
+	st[14] = (enable_sp404mk2 ? 1 : 0) | (enable_ample_guitar ? 2 : 0) | (enable_midi_drums ? 4 : 0) | (enable_wav_trigger_pro ? 8 : 0) | (enable_mpx_looper ? 16 : 0) | (enable_nanobox_tangerine ? 32 : 0) | (enable_mpc_sample ? 64 : 0);	
 }
 
 static void web_send_state(const uint8_t *st) {
@@ -561,7 +564,7 @@ static bool web_sysex_consume(const uint8_t *pkt) {
 	return consumed;
 }
 
-static void web_state_task(void) {
+void web_state_task(void) {
 	if (!tud_midi_mounted()) return;
 	
 	uint8_t st[WEB_STATE_LEN];
