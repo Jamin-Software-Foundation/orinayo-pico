@@ -59,13 +59,13 @@ function render(s) {
   
   $("#songMode").classList.toggle("active", s.song_mode);
   
-  $('data-key="66"]').classList.toggle("active", s.mode_66);  
-  $('data-key="59"]').classList.toggle("active", s.mode_59);  
-  $('data-key="60"]').classList.toggle("active", s.mode_60);  
-  $('data-key="61"]').classList.toggle("active", s.mode_61);  
-  $('data-key="63"]').classList.toggle("active", s.mode_63);  
-  $('data-key="64"]').classList.toggle("active", s.mode_64);  
-  $('data-key="65"]').classList.toggle("active", s.mode_65);    
+  $("div [data-key='66']").classList.toggle("active", s.mode_66);  
+  $("div [data-key='59']").classList.toggle("active", s.mode_59);  
+  $("div [data-key='60']").classList.toggle("active", s.mode_60);  
+  $("div [data-key='61']").classList.toggle("active", s.mode_61);  
+  $("div [data-key='63']").classList.toggle("active", s.mode_63);  
+  $("div [data-key='64']").classList.toggle("active", s.mode_64);  
+  $("div [data-key='65']").classList.toggle("active", s.mode_65);    
   
   const b = $("#startBtn");
   b.classList.toggle("running", s.started);
