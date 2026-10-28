@@ -812,11 +812,7 @@ void tuh_mount_cb(uint8_t daddr) {
 }
 
 void tuh_umount_cb(uint8_t daddr) {
-	if (daddr == midi_dev_addr && midi_itf_idx != 0xFF) {
-		irig_pro_connected = false;
-		launchkey_connected = false;
-		launchkey_daw_mode = false;
-	}
+	(void) daddr;
 	//cyw43_arch_gpio_put(CYW43_WL_GPIO_LED_PIN, true);	
 }
 
@@ -2471,9 +2467,13 @@ void process_midi_byte(uint8_t b) {
 	buffer[0] = b;	
 	tud_midi_n_stream_write(0, 0, buffer, 1);
 
-	if (!enable_mpx_looper && !mute_midi_controller) { 	// filter midi events from mpx pads	to midi synth			
+	if (!enable_mpx_looper && !mute_midi_controller) { 	// filter midi events from mpx pads. Pass on to midi synth or nanobox on MIDI		
 		uart_write_blocking(UART_ID, buffer, 1);
 		uart_tx_wait_blocking(UART_ID);			
+	}	
+	
+	if (enable_wav_trigger_pro && midi_keyboard_connected) {	// pass on to wav trigger pro sampler (channel 1)
+		wav_trigger_pro_forward_midi_message(buffer, 1);
 	}	
 	
 }
