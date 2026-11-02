@@ -1897,7 +1897,7 @@ void gamepad_bluetooth_handle_data() {
 		} else {
 			strum_neutral = true;
 			
-			if ((!green && !red && !yellow && !blue && !orange) || active_strum_pattern == 0 || active_strum_pattern == 1 || enable_auto_hold || enable_arranger_mode) {
+			if ((!green && !red && !yellow && !blue && !orange) || active_strum_pattern == 0 || active_strum_pattern == 1 || enable_auto_hold) {
 				stop_chord();	// sustain arpeggios only
 			}	
 
@@ -1924,7 +1924,7 @@ void gamepad_bluetooth_handle_data() {
 		} else {
 			strum_neutral = true;
 			
-			if ((!green && !red && !yellow && !blue && !orange) || active_strum_pattern == 0 || active_strum_pattern == 1 || enable_auto_hold || enable_arranger_mode) {
+			if ((!green && !red && !yellow && !blue && !orange) || active_strum_pattern == 0 || active_strum_pattern == 1 || enable_auto_hold) {
 				stop_chord();	// sustain arpeggios only
 			}
 			
@@ -2177,6 +2177,7 @@ void config_guitar(uint8_t mode) {
 	if (mode == 1) {  										// Arranger (ketron, giglad)
 		enable_arranger_mode = !enable_arranger_mode;
 		enable_style_play = enable_arranger_mode;	
+		enable_auto_hold = enable_arranger_mode;	
 		
 		enable_wav_trigger_pro = false;
 		enable_midi_drums = false;

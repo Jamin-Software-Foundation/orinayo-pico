@@ -2841,7 +2841,7 @@ void midi_send_note(uint8_t command, uint8_t note, uint8_t velocity) {
 	previous_guitar_note = note;
 	uint8_t channel = 0;
 
-	if (velocity == 0) velocity = 127;
+	if (velocity == 0) velocity = midi_guitar_volume;
 	
 	if (enable_seqtrak) {
 		channel = 8;
