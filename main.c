@@ -2846,6 +2846,11 @@ void midi_send_note(uint8_t command, uint8_t note, uint8_t velocity) {
 	}
 	else
 		
+	if (enable_arranger_mode) {	
+		channel = 0;
+	}
+	else
+		
 	if (enable_nanobox_tangerine) {	
 		channel = 0;
 	}
@@ -2874,7 +2879,7 @@ void midi_send_note(uint8_t command, uint8_t note, uint8_t velocity) {
 	
 	msg[0] = command + channel;
 	msg[1] = note;
-	msg[2] = (velocity * (1000 * midi_guitar_volume / 127)) / 1000;	
+	msg[2] = 111; //(velocity * (1000 * midi_guitar_volume / 127)) / 1000;	
 		
 	midi_n_stream_write(0, 0, msg, 3);			
 }
