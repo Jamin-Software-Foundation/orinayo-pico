@@ -2023,8 +2023,6 @@ void config_guitar(uint8_t mode) {
 		return;
 	}
 		
-	
-		
 	if (mode == 19) {										// SeqTrak			
 		enable_seqtrak = !enable_seqtrak;
 		enable_style_play = enable_seqtrak;

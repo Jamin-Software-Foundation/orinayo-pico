@@ -566,6 +566,7 @@ static bool web_sysex_consume(const uint8_t *pkt) {
 
 void web_state_task(void) {
 	if (!tud_midi_mounted()) return;
+	if (!enable_arranger_mode) return;
 	
 	uint8_t st[WEB_STATE_LEN];
 	web_get_state(st);
@@ -671,7 +672,7 @@ int main() {
 		}		
 		
 		note_scheduler_dispatch_pending();
-		if (!enable_arranger_mode) web_state_task();
+		web_state_task();
 
 		// Poll for incoming MIDI events from any connected BLE MIDI peripheral.
 		// BAO disable BLE for now
