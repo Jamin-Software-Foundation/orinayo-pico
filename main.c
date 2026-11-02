@@ -653,7 +653,7 @@ int main() {
 			uint8_t buffer[4] = {0};			
 			tud_midi_packet_read(buffer);
 			
-			if (!enable_arranger_mode && !enable_modx) {
+			if (!enable_arranger_mode && !enable_modx && !enable_seqtrak) {	// TUD is being used by these devices. UI not available
 				if (web_sysex_consume(buffer)) continue;
 			}
 			

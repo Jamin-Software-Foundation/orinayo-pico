@@ -775,7 +775,7 @@ void gamepad_bluetooth_handle_data() {
 			if (but6) 
 			{
 				if (enable_arranger_mode) 	{
-					midi_send_program_change(0xC0, guitar_pc_code);	// electric jazz guitar on channel 1						
+					//midi_send_program_change(0xC0, guitar_pc_code);	// electric jazz guitar on channel 1						
 				}
 				else
 					
@@ -792,7 +792,7 @@ void gamepad_bluetooth_handle_data() {
 			if (but6) 
 			{
 				if (enable_arranger_mode) 	{
-					midi_send_program_change(0xC0, guitar_pc_code);	// electric jazz guitar on channel 1						
+					//midi_send_program_change(0xC0, guitar_pc_code);	// electric jazz guitar on channel 1						
 				}
 				else
 					
@@ -809,7 +809,7 @@ void gamepad_bluetooth_handle_data() {
 			if (but6) 
 			{
 				if (enable_arranger_mode) 	{
-					midi_send_program_change(0xC0, 33);	// electric bass guitar on channel 1						
+					//midi_send_program_change(0xC0, 33);	// electric bass guitar on channel 1						
 					active_strum_pattern = 3;			// force arpeggios, no strumming
 				}
 				else
@@ -1897,7 +1897,7 @@ void gamepad_bluetooth_handle_data() {
 		} else {
 			strum_neutral = true;
 			
-			if ((!green && !red && !yellow && !blue && !orange) || active_strum_pattern == 0 || active_strum_pattern == 1 || enable_auto_hold) {
+			if ((!green && !red && !yellow && !blue && !orange) || active_strum_pattern == 0 || active_strum_pattern == 1 || enable_auto_hold || enable_arranger_mode) {
 				stop_chord();	// sustain arpeggios only
 			}	
 
@@ -1924,7 +1924,7 @@ void gamepad_bluetooth_handle_data() {
 		} else {
 			strum_neutral = true;
 			
-			if ((!green && !red && !yellow && !blue && !orange) || active_strum_pattern == 0 || active_strum_pattern == 1 || enable_auto_hold) {
+			if ((!green && !red && !yellow && !blue && !orange) || active_strum_pattern == 0 || active_strum_pattern == 1 || enable_auto_hold || enable_arranger_mode) {
 				stop_chord();	// sustain arpeggios only
 			}
 			
@@ -2814,9 +2814,9 @@ void play_chord(bool on, bool up) {
 						note = ((last_bass_note ? last_bass_note : last_chord_note) % 12) + (O * (active_neck_pos + 1));
 						if ((note % 12) > 4) note = note - 12;
 
-						if (!enable_modx && !enable_ample_guitar && !enable_seqtrak && !enable_wav_trigger_pro && !enable_nanobox_tangerine && !enable_synth && active_neck_pos > 1) midi_send_program_change(0xC0, 33);						
+						if (!enable_arranger_mode && !enable_modx && !enable_ample_guitar && !enable_seqtrak && !enable_wav_trigger_pro && !enable_nanobox_tangerine && !enable_synth && active_neck_pos > 1) midi_send_program_change(0xC0, 33);						
 						midi_send_note(0x90, note, 120);
-						if (!enable_modx && !enable_ample_guitar && !enable_seqtrak && !enable_wav_trigger_pro && !enable_nanobox_tangerine && !enable_synth && active_neck_pos > 1) midi_send_program_change(0xC0, guitar_pc_code);	
+						if (!enable_arranger_mode && !enable_modx && !enable_ample_guitar && !enable_seqtrak && !enable_wav_trigger_pro && !enable_nanobox_tangerine && !enable_synth && active_neck_pos > 1) midi_send_program_change(0xC0, guitar_pc_code);	
 						
 						old_midinotes[0] = note;						
 					}					
@@ -3698,7 +3698,7 @@ void midi_process_state(uint64_t start_us) {		// called by looper.c real-timer f
 			qsort(auto_chord_midinotes, 6, sizeof(uint8_t), compUp);
 			
 			if (start_action == 83) {	// mute
-				if (!enable_modx && !enable_seqtrak && !enable_synth && !enable_ample_guitar && !enable_wav_trigger_pro && !enable_nanobox_tangerine) midi_send_program_change(0xC0, 28);
+				if (!enable_arranger_mode && !enable_modx && !enable_seqtrak && !enable_synth && !enable_ample_guitar && !enable_wav_trigger_pro && !enable_nanobox_tangerine) midi_send_program_change(0xC0, 28);
 			}
 			
 			for (int n=0; n<6; n++) {
@@ -3708,7 +3708,7 @@ void midi_process_state(uint64_t start_us) {		// called by looper.c real-timer f
 			}
 			
 			if (start_action == 83) {	// normal
-				if (!enable_modx && !enable_seqtrak && !enable_synth && !enable_ample_guitar && !enable_wav_trigger_pro && !enable_nanobox_tangerine) midi_send_program_change(0xC0, guitar_pc_code);
+				if (!enable_arranger_mode && !enable_modx && !enable_seqtrak && !enable_synth && !enable_ample_guitar && !enable_wav_trigger_pro && !enable_nanobox_tangerine) midi_send_program_change(0xC0, guitar_pc_code);
 			}			
 		} 
 		else
@@ -3719,7 +3719,7 @@ void midi_process_state(uint64_t start_us) {		// called by looper.c real-timer f
 			qsort(auto_chord_midinotes, 6, sizeof(uint8_t), compDown);
 			
 			if (start_action == 79 || start_action == 81) {	// mute
-				if (!enable_modx && !enable_seqtrak && !enable_synth && !enable_ample_guitar && !enable_wav_trigger_pro && !enable_nanobox_tangerine) midi_send_program_change(0xC0, 28);
+				if (!enable_arranger_mode && !enable_modx && !enable_seqtrak && !enable_synth && !enable_ample_guitar && !enable_wav_trigger_pro && !enable_nanobox_tangerine) midi_send_program_change(0xC0, 28);
 			}
 			
 			for (int n=0; n<6; n++) {
@@ -3729,7 +3729,7 @@ void midi_process_state(uint64_t start_us) {		// called by looper.c real-timer f
 			}
 			
 			if (start_action == 79 || start_action == 81) {	// normal
-				if (!enable_modx && !enable_seqtrak && !enable_synth && !enable_ample_guitar && !enable_wav_trigger_pro && !enable_nanobox_tangerine) midi_send_program_change(0xC0, guitar_pc_code);
+				if (!enable_arranger_mode && !enable_modx && !enable_seqtrak && !enable_synth && !enable_ample_guitar && !enable_wav_trigger_pro && !enable_nanobox_tangerine) midi_send_program_change(0xC0, guitar_pc_code);
 			}			
 		}
 		else
