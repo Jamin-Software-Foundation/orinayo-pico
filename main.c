@@ -566,7 +566,7 @@ static bool web_sysex_consume(const uint8_t *pkt) {
 
 void web_state_task(void) {
 	if (!tud_midi_mounted()) return;
-	if (!enable_arranger_mode) return;
+	if (enable_arranger_mode || enable_modx) return;
 	
 	uint8_t st[WEB_STATE_LEN];
 	web_get_state(st);
@@ -653,7 +653,9 @@ int main() {
 			uint8_t buffer[4] = {0};			
 			tud_midi_packet_read(buffer);
 			
-			if (web_sysex_consume(buffer)) continue;
+			if (!enable_arranger_mode && !enable_modx) {
+				if (web_sysex_consume(buffer)) continue;
+			}
 			
 			if (midi_itf_idx != 0xFF) {
 				tuh_midi_stream_write(midi_itf_idx, 0, buffer, 4);
