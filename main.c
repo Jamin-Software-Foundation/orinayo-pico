@@ -671,7 +671,7 @@ int main() {
 		}		
 		
 		note_scheduler_dispatch_pending();
-		web_state_task();
+		if (!enable_arranger_mode) web_state_task();
 
 		// Poll for incoming MIDI events from any connected BLE MIDI peripheral.
 		// BAO disable BLE for now
@@ -2871,7 +2871,7 @@ void midi_send_note(uint8_t command, uint8_t note, uint8_t velocity) {
 	
 	msg[0] = command + channel;
 	msg[1] = note;
-	msg[2] = velocity * (midi_guitar_volume / 127);	
+	msg[2] = (velocity * (1000 * midi_guitar_volume / 127)) / 1000;	
 		
 	midi_n_stream_write(0, 0, msg, 3);			
 }

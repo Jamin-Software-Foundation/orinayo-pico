@@ -2180,6 +2180,9 @@ void config_guitar(uint8_t mode) {
 		enable_arranger_mode = !enable_arranger_mode;
 		enable_style_play = enable_arranger_mode;	
 		
+		enable_wav_trigger_pro = false;
+		enable_midi_drums = false;
+		
 		if (enable_style_play) 		config_style_play();
 		if (enable_arranger_mode) 	config_arranger();						
 	}
@@ -2232,7 +2235,7 @@ void config_guitar(uint8_t mode) {
 void config_style_play() {
 	midi_play_chord(false, 0, 0, 0);					// reset chord  keys
 	
-	if (!enable_modx) {
+	if (!enable_modx && !enable_arranger_mode) {
 		midi_send_control_change(0xB0, 7, midi_guitar_volume);	
 		midi_send_control_change(0xB1, 7, midi_guitar_volume);
 		midi_send_control_change(0xB2, 7, midi_guitar_volume);			
@@ -2313,10 +2316,10 @@ void config_midi_drums() {
 }
 
 void config_arranger() {
-	midi_send_program_change(0xC0, guitar_pc_code);	// jazz guitar on channel 1	
-	midi_send_control_change(0xB0, 7, midi_guitar_volume);	
-	midi_send_control_change(0xB1, 7, midi_guitar_volume);
-	midi_send_control_change(0xB2, 7, midi_guitar_volume);	
+	//midi_send_program_change(0xC0, guitar_pc_code);	// jazz guitar on channel 1	
+	//midi_send_control_change(0xB0, 7, midi_guitar_volume);	
+	//midi_send_control_change(0xB1, 7, midi_guitar_volume);
+	//midi_send_control_change(0xB2, 7, midi_guitar_volume);	
 }
 
 void config_ample_guitar() {
