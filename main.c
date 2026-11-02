@@ -2879,7 +2879,7 @@ void midi_send_note(uint8_t command, uint8_t note, uint8_t velocity) {
 	
 	msg[0] = command + channel;
 	msg[1] = note;
-	msg[2] = ((uint16_t)velocity * midi_guitar_volume) / 127;
+	msg[2] = velocity; //((uint16_t)velocity * midi_guitar_volume) / 127;
 	
 	midi_n_stream_write(0, 0, msg, 3);			
 }
