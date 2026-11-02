@@ -2839,7 +2839,9 @@ void debug_blink(uint8_t count) {
 
 void midi_send_note(uint8_t command, uint8_t note, uint8_t velocity) {
 	previous_guitar_note = note;
-	uint8_t channel = 0;	
+	uint8_t channel = 0;
+
+	if (velocity == 0) velocity = 127;
 	
 	if (enable_seqtrak) {
 		channel = 8;
@@ -2879,7 +2881,7 @@ void midi_send_note(uint8_t command, uint8_t note, uint8_t velocity) {
 	
 	msg[0] = command + channel;
 	msg[1] = note;
-	msg[2] = velocity; //((uint16_t)velocity * midi_guitar_volume) / 127;
+	msg[2] = ((uint16_t)velocity * midi_guitar_volume) / 127;
 	
 	midi_n_stream_write(0, 0, msg, 3);			
 }
